@@ -26,7 +26,8 @@ VLM-LGT/
 │
 ├── data/
 │   ├── common/
-│   │   └── utils.py                           Shared helpers used by both approaches (jsonl read/write, etc)
+│   │   ├── utils.py                           Shared helpers used by both approaches (jsonl read/write, etc)
+│   │   └── dataset_entry.py                   Shared DatasetEntry structure (repo id, config, source, notes)
 │   │
 │   ├── approach1_latent_self_correction/       Datasets for the self-correction approach
 │   │   ├── dataset_config.py                  List of datasets and where they come from
@@ -44,7 +45,12 @@ VLM-LGT/
 │       ├── processed/
 │       └── failure_pool/
 │
+├── tests/
+│   └── test_config.py                         Smoke tests for the model and dataset configs, no network needed
+│
 ├── requirements.txt
+├── DATASETS.md                                Reference table of every dataset id, with source links and known quirks
+├── CONTRIBUTING.md                            How to add a model, add a dataset, and code style expectations
 └── README.md
 ```
 
@@ -75,18 +81,32 @@ VLM-LGT/
 
    The same pattern applies under `data/approach2_verifier_reranking/`.
 
+4. Check that the configs are still sane before a long download run:
+
+   ```
+   python -m tests.test_config
+   ```
+
 ## Notes
 
 - Model loading defaults to bfloat16 and picks a GPU automatically if one is available,
   falling back to CPU otherwise.
-- Ref-Adv-S and Ref-L4, used in the Approach 1 testbed, are not on the Hugging Face Hub and
-  need to be requested separately. `download.py` will tell you if a local copy is missing.
+- Every dataset id in `dataset_config.py` was checked against the live Hugging Face Hub.
+  See [DATASETS.md](DATASETS.md) for the full table, the verification date, and known
+  quirks (split naming, required configs, file formats). If `download.py` errors on a
+  dataset, check that file before assuming the code is wrong, dataset owners do rename
+  and restructure repos over time.
+- Ref-Adv-S, used in the Approach 1 testbed, is not on the Hugging Face Hub and needs to
+  be downloaded manually from its GitHub repo. `download.py` will tell you if a local
+  copy is missing. Ref-L4 is on the Hub and downloads automatically.
+- If you hit Hugging Face rate limits, log in once with `huggingface-cli login`.
 - `build_failure_pool.py` under Approach 2 is a starting scaffold. The exact candidate
   sampling format is still an open decision, so the sampling function is left as a
   placeholder until that is settled.
 
 ## Contributing
 
-If you are experimenting with a different model size or dataset, add it to the relevant
-config file rather than hardcoding paths in a script, so everyone else picks it up
-automatically.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add a model size, add a dataset, and
+the code style this repo follows. Short version: if you are experimenting with a
+different model size or dataset, add it to the relevant config file rather than
+hardcoding paths in a script, so everyone else picks it up automatically.

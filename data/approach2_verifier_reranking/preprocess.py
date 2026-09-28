@@ -62,7 +62,7 @@ def normalize_vqa_example(example: dict, source: str) -> dict:
 def preprocess_group(dataset_names: dict, normalize_fn, split_out_dir: str) -> None:
     """Load each raw dataset in a group and write it out in the shared format.
 
-    dataset_names maps a short dataset name to its Hugging Face repo id
+    dataset_names maps a short dataset name to its DatasetEntry metadata
     (only the keys are used here, the raw data itself is read from
     disk). normalize_fn is the function used to convert one raw example
     into the shared record schema for this group of datasets.
