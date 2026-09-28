@@ -1,0 +1,92 @@
+# VLM-LGT: Look, Ground, Then Think
+
+This repo holds the code for our project on teaching vision-language models to notice when
+their visual evidence is weak and do something about it before answering, instead of just
+guessing.
+
+We are testing two ways to do this:
+
+1. **Latent Self-Correction.** The model scores its own uncertainty and, when it is not
+   confident, updates its own internal representation and re-answers, without necessarily
+   fetching new pixels.
+2. **Verifier Reranking.** The model produces several candidate answers and a separately
+   trained verifier picks the best one.
+
+Both approaches build on Qwen3-VL and share the same broad evaluation goals, but the code for
+each one lives in its own folder so they can be developed independently.
+
+## Repo layout
+
+```
+VLM-LGT/
+├── models/                                    Scripts for loading and running Qwen3-VL (2B and 4B)
+│   ├── model_config.py                        Registry of model sizes and their Hugging Face repo ids
+│   ├── load_model.py                          Loads a model and processor for a given size
+│   └── run_inference.py                       CLI script to run the model on an image and a question
+│
+├── data/
+│   ├── common/
+│   │   └── utils.py                           Shared helpers used by both approaches (jsonl read/write, etc)
+│   │
+│   ├── approach1_latent_self_correction/       Datasets for the self-correction approach
+│   │   ├── dataset_config.py                  List of datasets and where they come from
+│   │   ├── download.py                        Downloads the raw datasets
+│   │   ├── preprocess.py                      Converts raw data into a shared training format
+│   │   ├── raw/                               Downloaded datasets land here (not tracked in git)
+│   │   └── processed/                         Preprocessed jsonl output lands here (not tracked in git)
+│   │
+│   └── approach2_verifier_reranking/          Datasets for the verifier reranking approach
+│       ├── dataset_config.py
+│       ├── download.py
+│       ├── preprocess.py
+│       ├── build_failure_pool.py              Builds the failure-inclusive pool the verifier trains on
+│       ├── raw/
+│       ├── processed/
+│       └── failure_pool/
+│
+├── requirements.txt
+└── README.md
+```
+
+## Getting started
+
+1. Install dependencies:
+
+   ```
+   pip install -r requirements.txt
+   ```
+
+2. Try the model:
+
+   ```
+   python -m models.run_inference --size 2b --image path/to/image.jpg --question "What is in this image?"
+   ```
+
+   Swap `--size 2b` for `--size 4b` to compare the larger checkpoint on the same input. Both
+   sizes share the same loading code in `models/load_model.py`, so anyone on the project can
+   switch between them without changing anything else.
+
+3. Pull and prepare data for an approach:
+
+   ```
+   python -m data.approach1_latent_self_correction.download
+   python -m data.approach1_latent_self_correction.preprocess
+   ```
+
+   The same pattern applies under `data/approach2_verifier_reranking/`.
+
+## Notes
+
+- Model loading defaults to bfloat16 and picks a GPU automatically if one is available,
+  falling back to CPU otherwise.
+- Ref-Adv-S and Ref-L4, used in the Approach 1 testbed, are not on the Hugging Face Hub and
+  need to be requested separately. `download.py` will tell you if a local copy is missing.
+- `build_failure_pool.py` under Approach 2 is a starting scaffold. The exact candidate
+  sampling format is still an open decision, so the sampling function is left as a
+  placeholder until that is settled.
+
+## Contributing
+
+If you are experimenting with a different model size or dataset, add it to the relevant
+config file rather than hardcoding paths in a script, so everyone else picks it up
+automatically.

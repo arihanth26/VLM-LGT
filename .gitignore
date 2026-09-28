@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Downloaded and generated dataset files (large, regenerate via download.py / preprocess.py)
+**/raw/*
+!**/raw/.gitkeep
+**/processed/*
+!**/processed/.gitkeep
+**/failure_pool/*
+!**/failure_pool/.gitkeep
+
+# Model checkpoints and local weights
+*.pt
+*.bin
+*.safetensors
+
+# OS / editor
+.DS_Store
+.vscode/
