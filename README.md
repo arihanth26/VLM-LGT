@@ -72,6 +72,27 @@ VLM-LGT/
    sizes share the same loading code in `models/load_model.py`, so anyone on the project can
    switch between them without changing anything else.
 
+### Working with both model sizes
+
+The project standardizes on two Qwen3-VL checkpoints, registered in
+`models/model_config.py`:
+
+- `2b` (`Qwen/Qwen3-VL-2B-Instruct`), good for fast local iteration when you are testing an
+  idea or debugging a script.
+- `4b` (`Qwen/Qwen3-VL-4B-Instruct`), closer to what full experiments will actually run on.
+
+Everyone should default to `2b` while developing, then confirm results hold on `4b` before
+reporting them. Both sizes go through the same `load_qwen3_vl(size)` function, so any script
+that takes a `--size` flag works with either one without code changes:
+
+```
+python -m models.run_inference --size 2b --image example.jpg --question "What is happening here?"
+python -m models.run_inference --size 4b --image example.jpg --question "What is happening here?"
+```
+
+Run both on the same input when you want to check whether a behavior is specific to model
+scale before you build on top of it.
+
 3. Pull and prepare data for an approach:
 
    ```
