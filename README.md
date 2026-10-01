@@ -72,6 +72,38 @@ VLM-LGT/
    sizes share the same loading code in `models/load_model.py`, so anyone on the project can
    switch between them without changing anything else.
 
+### Full-image baseline for latent self-correction
+
+Before adding latent interventions, Approach 1 measures the unmodified Qwen3-VL model over a
+complete dataset split. Each example receives exactly one full-image generation. Token
+likelihood is logged for later calibration analysis but never selects or replaces an answer.
+
+On the ICE Slurm cluster, submit the included GPU job from the repository root instead of
+running inference on a login node. First create the project environment with a CPU job:
+
+```
+sbatch slurm/setup_environment.sbatch
+```
+
+Wait for that job to finish successfully. Download the configured Approach 1 datasets with a
+CPU job:
+
+```
+sbatch --export=ALL,DATASET=chartqa,DATA_GROUP=ood slurm/download_approach1.sbatch
+```
+
+Then run the 2B baseline over the complete ChartQA test split on an H200:
+
+```
+sbatch --export=ALL,DATASET=chartqa,DATA_GROUP=ood,SPLIT=test,MODEL_SIZE=2b,MAX_NEW_TOKENS=512 \
+    slurm/run_baseline.sbatch
+```
+
+The output defaults to `chartqa_test_2b_baseline.jsonl` plus a readable Markdown report in the
+Approach 1 `results/` directory. ChartQA uses relaxed accuracy: numeric answers within 5% of
+the reference count as correct, while text answers require normalized exact matching. Output
+is appended per example, so a repeated job resumes missing indices after interruption.
+
 ### Working with both model sizes
 
 The project standardizes on two Qwen3-VL checkpoints, registered in

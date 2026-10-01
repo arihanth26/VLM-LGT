@@ -35,7 +35,7 @@ def load_qwen3_vl(size: str = "4b", device: str = None, dtype=torch.bfloat16):
     processor = AutoProcessor.from_pretrained(variant.hf_repo_id)
     model = AutoModelForImageTextToText.from_pretrained(
         variant.hf_repo_id,
-        torch_dtype=dtype,
+        dtype=dtype,
         device_map=device,
     )
     model.eval()

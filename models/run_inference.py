@@ -13,7 +13,9 @@ import argparse
 
 from PIL import Image
 
+from models.inference_result import InferenceResult
 from models.load_model import load_qwen3_vl
+from models.uncertainty import summarize_token_log_probabilities
 
 
 def build_messages(image: Image.Image, question: str) -> list:
@@ -34,18 +36,9 @@ def build_messages(image: Image.Image, question: str) -> list:
     ]
 
 
-def run_inference(size: str, image_path: str, question: str, max_new_tokens: int = 256) -> str:
-    """Run a single image and question through the chosen model size.
-
-    Loads the requested model, applies the chat template, generates a
-    response, and returns the decoded text. Kept as one function so it
-    can be imported and reused by dataset or evaluation scripts, not
-    just the CLI below.
-    """
-    model, processor = load_qwen3_vl(size)
-    image = Image.open(image_path).convert("RGB")
+def generate_with_confidence(model, processor, image: Image.Image, question: str, max_new_tokens: int = 256) -> InferenceResult:
+    """Generate one answer and calculate confidence from selected-token probabilities."""
     messages = build_messages(image, question)
-
     inputs = processor.apply_chat_template(
         messages,
         tokenize=True,
@@ -54,11 +47,54 @@ def run_inference(size: str, image_path: str, question: str, max_new_tokens: int
         return_tensors="pt",
     ).to(model.device)
 
-    output_ids = model.generate(**inputs, max_new_tokens=max_new_tokens)
-    generated_ids = output_ids[:, inputs["input_ids"].shape[1] :]
-    response = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
+    outputs = model.generate(
+        **inputs,
+        max_new_tokens=max_new_tokens,
+        return_dict_in_generate=True,
+        output_scores=True,
+    )
+    input_length = inputs["input_ids"].shape[1]
+    generated_ids = outputs.sequences[:, input_length:]
+    response = processor.batch_decode(generated_ids, skip_special_tokens=True)[0].strip()
 
-    return response.strip()
+    transition_scores = model.compute_transition_scores(
+        outputs.sequences,
+        outputs.scores,
+        getattr(outputs, "beam_indices", None),
+        normalize_logits=True,
+    )
+    token_log_probabilities = transition_scores[0].detach().float().cpu().tolist()
+    confidence, mean_log_probability, minimum_probability = summarize_token_log_probabilities(
+        token_log_probabilities
+    )
+    return InferenceResult(
+        answer=response,
+        confidence=confidence,
+        mean_log_probability=mean_log_probability,
+        minimum_token_probability=minimum_probability,
+        token_probabilities=[float(value) for value in transition_scores[0].exp().detach().cpu().tolist()],
+    )
+
+
+def run_inference_detailed(
+    size: str, image_path: str, question: str, max_new_tokens: int = 256
+) -> InferenceResult:
+    """Load a model and return an answer together with confidence statistics."""
+    model, processor = load_qwen3_vl(size)
+    with Image.open(image_path) as source_image:
+        image = source_image.convert("RGB")
+    return generate_with_confidence(model, processor, image, question, max_new_tokens)
+
+
+def run_inference(size: str, image_path: str, question: str, max_new_tokens: int = 256) -> str:
+    """Run a single image and question through the chosen model size.
+
+    Loads the requested model, applies the chat template, generates a
+    response, and returns the decoded text. Kept as one function so it
+    can be imported and reused by dataset or evaluation scripts, not
+    just the CLI below.
+    """
+    return run_inference_detailed(size, image_path, question, max_new_tokens).answer
 
 
 def main() -> None:

@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Confidence Estimation on ChartQA</title>
+  <style>
+    :root { --ink:#172033; --muted:#64748b; --line:#dbe3ee; --paper:#fff; --bg:#f3f6fa; --geo:#94a3b8; --pre:#8b5cf6; --linear:#3b82f6; --ver:#14b8a6; --early:#f59e0b; --warn:#b45309; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    main { max-width:1040px; margin:auto; padding:48px 24px 64px; }
+    header, section { background:var(--paper); border:1px solid var(--line); border-radius:16px; padding:28px; margin-bottom:20px; }
+    h1 { margin:0 0 8px; font-size:32px; line-height:1.15; }
+    h2 { margin:0 0 14px; font-size:21px; }
+    h3 { margin:0 0 5px; font-size:16px; }
+    p { margin:7px 0; }
+    .muted { color:var(--muted); }
+    .callout { border-left:4px solid var(--ver); padding:10px 14px; background:#f0fdfa; margin-top:18px; }
+    .warning { border-left-color:var(--warn); background:#fff7ed; }
+    .eq { overflow-x:auto; padding:12px 14px; border-radius:9px; background:#f8fafc; color:#243047; font:16px/1.6 Georgia,"Times New Roman",serif; text-align:center; }
+    .approaches, .charts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+    .card { border:1px solid var(--line); border-radius:12px; padding:18px; }
+    .wide { grid-column:1/-1; }
+    .legend { display:flex; flex-wrap:wrap; gap:16px; margin:4px 0 14px; color:var(--muted); }
+    .dot { display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:6px; }
+    svg { width:100%; height:auto; display:block; }
+    .axis { stroke:#cbd5e1; stroke-width:1; }
+    .grid { stroke:#e8edf4; stroke-width:1; }
+    .label { fill:#64748b; font-size:12px; }
+    .value { fill:#172033; font-size:12px; font-weight:650; }
+    table { width:100%; border-collapse:collapse; font-size:14px; }
+    th, td { padding:10px 9px; text-align:right; border-bottom:1px solid var(--line); }
+    th:first-child, td:first-child { text-align:left; }
+    th { color:var(--muted); font-weight:600; }
+    .best { color:#087f73; font-weight:700; }
+    dl { display:grid; grid-template-columns:150px 1fr; gap:8px 16px; margin:0; }
+    details { border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+    summary { cursor:pointer; font-weight:700; }
+    .table-scroll { overflow-x:auto; margin-top:12px; }
+    .raw-table { min-width:900px; font-size:12px; }
+    .raw-table th, .raw-table td { padding:7px 8px; }
+    dt { font-weight:700; } dd { margin:0; color:#475569; }
+    footer { color:var(--muted); text-align:center; font-size:13px; }
+    @media (max-width:760px) { .approaches,.charts { grid-template-columns:1fr; } .wide { grid-column:auto; } main { padding:20px 12px; } header,section { padding:20px; } }
+    @media print { body { background:#fff; } main { max-width:none; padding:0; } header,section { break-inside:avoid; box-shadow:none; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Confidence Estimation on ChartQA</h1>
+    <p class="muted">Qwen3-VL-2B · 2,500 test questions · baseline accuracy 75.84%</p>
+    <div class="callout"><strong>Result:</strong> learned Q-heads identify unreliable answers much better than geometric-mean token confidence. After a 72-fit sweep, a linear pre-generation probe ranked errors best; the answer-conditioned verifier remains the appropriate head for judging a specific generated answer.</div>
+  </header>
+
+  <section>
+    <h2>Approaches</h2>
+    <div class="approaches">
+      <div class="card">
+        <h3>1. Geometric-mean token confidence</h3>
+        <p>Average the generated tokens' log probabilities, then exponentiate. This uses the model's own next-token certainty and requires no training.</p>
+        <p class="muted">Problem: 1,921 of 2,500 scores were exactly 1.0, even though many answers were wrong.</p>
+      </div>
+      <div class="card">
+        <h3>2. Learned Q-heads</h3>
+        <p>Train small neural heads on frozen VLM representations with correctness labels.</p>
+        <p><strong>Pre-generation:</strong> predicts whether the question will be answered correctly before seeing the answer.</p>
+        <p><strong>Verifier:</strong> judges the specific generated answer and also learns to rank reference answers above incorrect candidates.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>How the Q-heads were trained</h2>
+    <p>We ran Qwen3-VL-2B once and saved frozen representations for the ChartQA train, validation, and test splits. Only the small correctness heads were trained; the VLM itself was not updated.</p>
+    <div class="approaches">
+      <div class="card">
+        <h3>Head and optimization</h3>
+        <p>The initial heads used a two-layer MLP: layer normalization, a 512-unit linear layer, GELU, 10% dropout, and a one-value output. The later sweep also tested a linear probe and an MLP with 256 hidden units.</p>
+        <p class="muted">AdamW · learning rate 0.001 · weight decay 0.0001 · batch size 512 · 20 epochs</p>
+      </div>
+      <div class="card">
+        <h3>Training objective</h3>
+        <p>Both heads use binary cross-entropy plus a ranking loss that pushes correct examples above incorrect ones. For incorrect candidates, the verifier receives an additional paired-ranking objective that pushes the reference answer above the generated answer.</p>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h3>Loss and contrastive ranking</h3>
+      <p class="eq">L<sub>BCE</sub> = −[y log σ(s) + (1−y) log(1−σ(s))]</p>
+      <p class="eq">L<sub>rank</sub> = mean<sub>i∈correct, j∈wrong</sub> softplus[−(s<sub>i</sub>−s<sub>j</sub>)]</p>
+      <p class="eq">L<sub>pair</sub> = mean<sub>j∈wrong</sub> softplus[−(s<sub>reference,j</sub>−s<sub>candidate,j</sub>)]</p>
+      <p class="eq">L<sub>pre</sub> = L<sub>BCE</sub> + 0.25L<sub>rank</sub><br>L<sub>verifier</sub> = L<sub>BCE</sub> + 0.25L<sub>rank</sub> + 0.25L<sub>pair</sub></p>
+      <p class="muted">The batchwise term contrasts every correct example with every incorrect example in the batch. The paired term contrasts an incorrect generated answer with the reference answer for the same image and question.</p>
+      <h3 style="margin-top:18px">How the paired contrast is constructed</h3>
+      <p>For each training example, Qwen3-VL receives two completed conversations in separate teacher-forced forward passes:</p>
+      <p class="eq">[image, question, generated answer] → h<sub>candidate</sub> → Q(h<sub>candidate</sub>) = s<sub>candidate</sub><br>[image, question, correct reference answer] → h<sub>reference</sub> → Q(h<sub>reference</sub>) = s<sub>reference</sub></p>
+      <p>The image and question remain identical; only the assistant answer changes. We take the final layer's hidden state at the last answer token and pass both states through the same verifier head. When the generated answer is wrong, L<sub>pair</sub> trains the verifier to score the correct reference higher.</p>
+      <p class="muted">The reference answer is training supervision only. At deployment, the verifier sees the image, question, and generated candidate—never the unknown correct answer.</p>
+    </div>
+    <p>The validation split selects a scalar temperature for probability calibration. The test split is used only for the final metrics shown below.</p>
+  </section>
+
+  <section>
+    <h2>Small architecture and hyperparameter sweep</h2>
+    <p>Using the cached frozen features, we trained 36 configurations for each approach (72 fits total):</p>
+    <p class="eq">architecture ∈ {linear, MLP-256, MLP-512}<br>learning rate ∈ {3×10<sup>−4</sup>, 10<sup>−3</sup>}<br>ranking weight ∈ {0, 0.25}<br>seed ∈ {1, 2, 3}</p>
+    <p>Configurations were selected by validation error AUPRC, with validation AUROC as the tie-breaker. The test set was then used for final evaluation.</p>
+    <div class="approaches">
+      <div class="card">
+        <h3>Winning pre-generation head</h3>
+        <p><strong>Linear · LR 3×10<sup>−4</sup> · ranking weight 0 · seed 3</strong></p>
+        <p>A linear probe learns only <span style="font-family:Georgia,serif">s = w<sup>T</sup>h + b</span> over the frozen prompt representation. It has no hidden layer, activation, normalization, or dropout.</p>
+        <p class="muted">This result suggests expected question difficulty is already close to linearly separable in the frozen representation.</p>
+      </div>
+      <div class="card">
+        <h3>Winning candidate verifier</h3>
+        <p><strong>Initial sweep: MLP-512 · LR 10<sup>−3</sup> · ranking weight 0 · seed 1</strong></p>
+        <p>The verifier sees the generated answer and can judge that particular candidate. It is the relevant head for deciding whether self-correction should run.</p>
+        <p class="muted">Across the sweep, plain BCE beat the contrastive objective: a ranking weight of 0 was selected for both winners.</p>
+      </div>
+    </div>
+    <table style="margin-top:16px">
+      <thead><tr><th>Test metric</th><th>Geometric mean</th><th>Pre-gen MLP</th><th>Linear probe</th><th>MLP verifier</th><th>Early-stop verifier</th></tr></thead>
+      <tbody>
+        <tr><td>Correctness AUROC ↑</td><td>0.750</td><td>0.863</td><td class="best">0.895</td><td>0.887</td><td>0.891 ± 0.001</td></tr>
+        <tr><td>Error AUPRC ↑</td><td>0.583</td><td>0.669</td><td>0.732</td><td>0.723</td><td class="best">0.738 ± 0.005</td></tr>
+        <tr><td>Brier score ↓</td><td>0.178</td><td>0.123</td><td class="best">0.109</td><td>0.112</td><td>0.111 ± 0.001</td></tr>
+        <tr><td>ECE ↓</td><td>0.172</td><td>0.055</td><td>0.036</td><td class="best">0.030</td><td>0.038 ± 0.014</td></tr>
+        <tr><td>Accuracy at 50% coverage ↑</td><td>92.40%</td><td>95.12%</td><td class="best">97.04%</td><td>96.64%</td><td class="best">97.04%</td></tr>
+      </tbody>
+    </table>
+    <div class="callout warning"><strong>Interpretation:</strong> the linear probe won as a predictor of whether the VLM is likely to succeed before generation. It does not verify answer content. The MLP verifier scored slightly lower overall, but it evaluates the actual generated candidate.</div>
+  </section>
+
+  <section>
+    <h2>Raw sweep results</h2>
+    <p class="muted">All values below are validation-set results. The test set was reserved for the selected winners reported above.</p>
+    <details>
+      <summary>Show all 72 runs</summary>
+      <div class="table-scroll">
+        <table class="raw-table">
+          <thead><tr><th>Approach</th><th>Architecture</th><th>LR</th><th>Rank wt.</th><th>Seed</th><th>Error AUPRC</th><th>AUROC</th><th>Brier</th><th>ECE</th><th>Pearson</th><th>Acc. @ 50%</th></tr></thead>
+          <tbody>
+            <tr><td>Pre-generation</td><td>linear</td><td>3e-04</td><td>0.00</td><td>1</td><td>0.6576</td><td>0.8410</td><td>0.1338</td><td>0.0153</td><td>0.5504</td><td>93.85%</td></tr>
+            <tr><td>Pre-generation</td><td>linear</td><td>3e-04</td><td>0.00</td><td>2</td><td>0.6709</td><td>0.8457</td><td>0.1313</td><td>0.0090</td><td>0.5612</td><td>93.65%</td></tr>
+            <tr><td>Pre-generation</td><td>linear</td><td>3e-04</td><td>0.00</td><td>3</td><td>0.6710</td><td>0.8426</td><td>0.1327</td><td>0.0189</td><td>0.5562</td><td>93.65%</td></tr>
+            <tr><td>Pre-generation</td><td>linear</td><td>3e-04</td><td>0.25</td><td>1</td><td>0.6520</td><td>0.8396</td><td>0.1346</td><td>0.0167</td><td>0.5468</td><td>93.75%</td></tr>
+            <tr><td>Pre-generation</td><td>linear</td><td>3e-04</td><td>0.25</td><td>2</td><td>0.6686</td><td>0.8446</td><td>0.1317</td><td>0.0100</td><td>0.5590</td><td>93.33%</td></tr>
+            <tr><td>Pre-generation</td><td>linear</td><td>3e-04</td><td>0.25</td><td>3</td><td>0.6671</td><td>0.8418</td><td>0.1332</td><td>0.0214</td><td>0.5536</td><td>93.65%</td></tr>
+            <tr><td>Pre-generation</td><td>linear</td><td>1e-03</td><td>0.00</td><td>1</td><td>0.6381</td><td>0.8362</td><td>0.1360</td><td>0.0164</td><td>0.5387</td><td>93.12%</td></tr>
+            <tr><td>Pre-generation</td><td>linear</td><td>1e-03</td><td>0.00</td><td>2</td><td>0.6549</td><td>0.8400</td><td>0.1346</td><td>0.0225</td><td>0.5480</td><td>93.23%</td></tr>
+            <tr><td>Pre-generation</td><td>linear</td><td>1e-03</td><td>0.00</td><td>3</td><td>0.6508</td><td>0.8385</td><td>0.1346</td><td>0.0163</td><td>0.5465</td><td>93.85%</td></tr>
+            <tr><td>Pre-generation</td><td>linear</td><td>1e-03</td><td>0.25</td><td>1</td><td>0.6289</td><td>0.8333</td><td>0.1373</td><td>0.0150</td><td>0.5327</td><td>92.92%</td></tr>
+            <tr><td>Pre-generation</td><td>linear</td><td>1e-03</td><td>0.25</td><td>2</td><td>0.6502</td><td>0.8380</td><td>0.1350</td><td>0.0227</td><td>0.5440</td><td>93.02%</td></tr>
+            <tr><td>Pre-generation</td><td>linear</td><td>1e-03</td><td>0.25</td><td>3</td><td>0.6465</td><td>0.8366</td><td>0.1357</td><td>0.0230</td><td>0.5431</td><td>93.65%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_256</td><td>3e-04</td><td>0.00</td><td>1</td><td>0.6422</td><td>0.8363</td><td>0.1364</td><td>0.0235</td><td>0.5417</td><td>93.33%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_256</td><td>3e-04</td><td>0.00</td><td>2</td><td>0.6367</td><td>0.8338</td><td>0.1362</td><td>0.0167</td><td>0.5379</td><td>93.23%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_256</td><td>3e-04</td><td>0.00</td><td>3</td><td>0.6516</td><td>0.8353</td><td>0.1421</td><td>0.0723</td><td>0.5433</td><td>92.92%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_256</td><td>3e-04</td><td>0.25</td><td>1</td><td>0.6395</td><td>0.8364</td><td>0.1367</td><td>0.0285</td><td>0.5422</td><td>93.44%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_256</td><td>3e-04</td><td>0.25</td><td>2</td><td>0.6358</td><td>0.8329</td><td>0.1368</td><td>0.0157</td><td>0.5348</td><td>93.23%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_256</td><td>3e-04</td><td>0.25</td><td>3</td><td>0.6539</td><td>0.8361</td><td>0.1415</td><td>0.0715</td><td>0.5459</td><td>93.12%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_256</td><td>1e-03</td><td>0.00</td><td>1</td><td>0.6074</td><td>0.8266</td><td>0.1402</td><td>0.0195</td><td>0.5195</td><td>92.29%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_256</td><td>1e-03</td><td>0.00</td><td>2</td><td>0.6090</td><td>0.8153</td><td>0.1440</td><td>0.0427</td><td>0.5090</td><td>91.77%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_256</td><td>1e-03</td><td>0.00</td><td>3</td><td>0.6197</td><td>0.8193</td><td>0.1416</td><td>0.0390</td><td>0.5201</td><td>92.60%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_256</td><td>1e-03</td><td>0.25</td><td>1</td><td>0.5951</td><td>0.8208</td><td>0.1434</td><td>0.0412</td><td>0.5125</td><td>92.40%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_256</td><td>1e-03</td><td>0.25</td><td>2</td><td>0.6012</td><td>0.8108</td><td>0.1461</td><td>0.0483</td><td>0.5009</td><td>91.56%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_256</td><td>1e-03</td><td>0.25</td><td>3</td><td>0.6106</td><td>0.8188</td><td>0.1444</td><td>0.0558</td><td>0.5145</td><td>92.40%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_512</td><td>3e-04</td><td>0.00</td><td>1</td><td>0.6251</td><td>0.8306</td><td>0.1390</td><td>0.0325</td><td>0.5304</td><td>92.92%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_512</td><td>3e-04</td><td>0.00</td><td>2</td><td>0.6279</td><td>0.8300</td><td>0.1383</td><td>0.0186</td><td>0.5291</td><td>92.50%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_512</td><td>3e-04</td><td>0.00</td><td>3</td><td>0.6492</td><td>0.8351</td><td>0.1369</td><td>0.0436</td><td>0.5477</td><td>93.33%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_512</td><td>3e-04</td><td>0.25</td><td>1</td><td>0.6266</td><td>0.8316</td><td>0.1392</td><td>0.0345</td><td>0.5321</td><td>92.81%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_512</td><td>3e-04</td><td>0.25</td><td>2</td><td>0.6250</td><td>0.8284</td><td>0.1386</td><td>0.0207</td><td>0.5269</td><td>92.50%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_512</td><td>3e-04</td><td>0.25</td><td>3</td><td>0.6458</td><td>0.8332</td><td>0.1387</td><td>0.0524</td><td>0.5443</td><td>93.23%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_512</td><td>1e-03</td><td>0.00</td><td>1</td><td>0.5998</td><td>0.8188</td><td>0.1435</td><td>0.0410</td><td>0.5126</td><td>91.98%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_512</td><td>1e-03</td><td>0.00</td><td>2</td><td>0.6048</td><td>0.8134</td><td>0.1457</td><td>0.0487</td><td>0.5059</td><td>91.77%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_512</td><td>1e-03</td><td>0.00</td><td>3</td><td>0.6070</td><td>0.8130</td><td>0.1439</td><td>0.0448</td><td>0.5075</td><td>91.98%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_512</td><td>1e-03</td><td>0.25</td><td>1</td><td>0.6009</td><td>0.8149</td><td>0.1441</td><td>0.0391</td><td>0.5081</td><td>91.56%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_512</td><td>1e-03</td><td>0.25</td><td>2</td><td>0.6072</td><td>0.8108</td><td>0.1455</td><td>0.0542</td><td>0.5064</td><td>91.67%</td></tr>
+            <tr><td>Pre-generation</td><td>mlp_512</td><td>1e-03</td><td>0.25</td><td>3</td><td>0.6143</td><td>0.8168</td><td>0.1416</td><td>0.0359</td><td>0.5159</td><td>91.67%</td></tr>
+            <tr><td>Candidate verifier</td><td>linear</td><td>3e-04</td><td>0.00</td><td>1</td><td>0.6275</td><td>0.8308</td><td>0.1381</td><td>0.0178</td><td>0.5294</td><td>92.81%</td></tr>
+            <tr><td>Candidate verifier</td><td>linear</td><td>3e-04</td><td>0.00</td><td>2</td><td>0.6253</td><td>0.8314</td><td>0.1376</td><td>0.0202</td><td>0.5312</td><td>92.81%</td></tr>
+            <tr><td>Candidate verifier</td><td>linear</td><td>3e-04</td><td>0.00</td><td>3</td><td>0.6296</td><td>0.8329</td><td>0.1442</td><td>0.0724</td><td>0.5334</td><td>93.02%</td></tr>
+            <tr><td>Candidate verifier</td><td>linear</td><td>3e-04</td><td>0.25</td><td>1</td><td>0.5980</td><td>0.8132</td><td>0.1444</td><td>0.0151</td><td>0.4964</td><td>91.98%</td></tr>
+            <tr><td>Candidate verifier</td><td>linear</td><td>3e-04</td><td>0.25</td><td>2</td><td>0.5965</td><td>0.8139</td><td>0.1444</td><td>0.0167</td><td>0.4973</td><td>92.08%</td></tr>
+            <tr><td>Candidate verifier</td><td>linear</td><td>3e-04</td><td>0.25</td><td>3</td><td>0.6021</td><td>0.8156</td><td>0.1519</td><td>0.0766</td><td>0.4996</td><td>92.08%</td></tr>
+            <tr><td>Candidate verifier</td><td>linear</td><td>1e-03</td><td>0.00</td><td>1</td><td>0.6414</td><td>0.8368</td><td>0.1354</td><td>0.0126</td><td>0.5419</td><td>92.92%</td></tr>
+            <tr><td>Candidate verifier</td><td>linear</td><td>1e-03</td><td>0.00</td><td>2</td><td>0.6423</td><td>0.8383</td><td>0.1350</td><td>0.0226</td><td>0.5449</td><td>92.92%</td></tr>
+            <tr><td>Candidate verifier</td><td>linear</td><td>1e-03</td><td>0.00</td><td>3</td><td>0.6467</td><td>0.8394</td><td>0.1359</td><td>0.0287</td><td>0.5457</td><td>92.92%</td></tr>
+            <tr><td>Candidate verifier</td><td>linear</td><td>1e-03</td><td>0.25</td><td>1</td><td>0.6025</td><td>0.8158</td><td>0.1459</td><td>0.0403</td><td>0.5023</td><td>91.98%</td></tr>
+            <tr><td>Candidate verifier</td><td>linear</td><td>1e-03</td><td>0.25</td><td>2</td><td>0.6051</td><td>0.8168</td><td>0.1437</td><td>0.0202</td><td>0.5035</td><td>92.29%</td></tr>
+            <tr><td>Candidate verifier</td><td>linear</td><td>1e-03</td><td>0.25</td><td>3</td><td>0.6056</td><td>0.8170</td><td>0.1434</td><td>0.0214</td><td>0.5040</td><td>92.29%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_256</td><td>3e-04</td><td>0.00</td><td>1</td><td>0.6437</td><td>0.8373</td><td>0.1352</td><td>0.0219</td><td>0.5424</td><td>92.81%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_256</td><td>3e-04</td><td>0.00</td><td>2</td><td>0.6500</td><td>0.8414</td><td>0.1356</td><td>0.0360</td><td>0.5489</td><td>93.12%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_256</td><td>3e-04</td><td>0.00</td><td>3</td><td>0.6502</td><td>0.8402</td><td>0.1341</td><td>0.0181</td><td>0.5483</td><td>93.12%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_256</td><td>3e-04</td><td>0.25</td><td>1</td><td>0.6090</td><td>0.8187</td><td>0.1430</td><td>0.0325</td><td>0.5072</td><td>92.40%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_256</td><td>3e-04</td><td>0.25</td><td>2</td><td>0.6168</td><td>0.8214</td><td>0.1415</td><td>0.0157</td><td>0.5117</td><td>92.19%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_256</td><td>3e-04</td><td>0.25</td><td>3</td><td>0.6191</td><td>0.8238</td><td>0.1404</td><td>0.0139</td><td>0.5172</td><td>92.92%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_256</td><td>1e-03</td><td>0.00</td><td>1</td><td>0.6520</td><td>0.8402</td><td>0.1341</td><td>0.0212</td><td>0.5478</td><td>92.81%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_256</td><td>1e-03</td><td>0.00</td><td>2</td><td>0.6501</td><td>0.8414</td><td>0.1342</td><td>0.0183</td><td>0.5483</td><td>93.02%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_256</td><td>1e-03</td><td>0.00</td><td>3</td><td>0.6527</td><td>0.8435</td><td>0.1345</td><td>0.0323</td><td>0.5512</td><td>93.02%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_256</td><td>1e-03</td><td>0.25</td><td>1</td><td>0.6152</td><td>0.8206</td><td>0.1433</td><td>0.0406</td><td>0.5115</td><td>92.50%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_256</td><td>1e-03</td><td>0.25</td><td>2</td><td>0.6280</td><td>0.8242</td><td>0.1400</td><td>0.0234</td><td>0.5217</td><td>92.71%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_256</td><td>1e-03</td><td>0.25</td><td>3</td><td>0.6252</td><td>0.8279</td><td>0.1410</td><td>0.0307</td><td>0.5222</td><td>93.12%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_512</td><td>3e-04</td><td>0.00</td><td>1</td><td>0.6466</td><td>0.8390</td><td>0.1349</td><td>0.0241</td><td>0.5449</td><td>92.71%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_512</td><td>3e-04</td><td>0.00</td><td>2</td><td>0.6527</td><td>0.8426</td><td>0.1339</td><td>0.0223</td><td>0.5493</td><td>93.12%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_512</td><td>3e-04</td><td>0.00</td><td>3</td><td>0.6532</td><td>0.8417</td><td>0.1338</td><td>0.0201</td><td>0.5496</td><td>92.92%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_512</td><td>3e-04</td><td>0.25</td><td>1</td><td>0.6133</td><td>0.8192</td><td>0.1425</td><td>0.0265</td><td>0.5101</td><td>92.40%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_512</td><td>3e-04</td><td>0.25</td><td>2</td><td>0.6084</td><td>0.8196</td><td>0.1424</td><td>0.0258</td><td>0.5068</td><td>92.50%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_512</td><td>3e-04</td><td>0.25</td><td>3</td><td>0.6232</td><td>0.8270</td><td>0.1399</td><td>0.0170</td><td>0.5207</td><td>93.23%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_512</td><td>1e-03</td><td>0.00</td><td>1</td><td>0.6542</td><td>0.8417</td><td>0.1336</td><td>0.0172</td><td>0.5501</td><td>93.23%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_512</td><td>1e-03</td><td>0.00</td><td>2</td><td>0.6522</td><td>0.8429</td><td>0.1335</td><td>0.0131</td><td>0.5510</td><td>93.12%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_512</td><td>1e-03</td><td>0.00</td><td>3</td><td>0.6530</td><td>0.8435</td><td>0.1340</td><td>0.0295</td><td>0.5508</td><td>93.23%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_512</td><td>1e-03</td><td>0.25</td><td>1</td><td>0.6134</td><td>0.8160</td><td>0.1424</td><td>0.0209</td><td>0.5075</td><td>91.87%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_512</td><td>1e-03</td><td>0.25</td><td>2</td><td>0.6216</td><td>0.8233</td><td>0.1415</td><td>0.0292</td><td>0.5176</td><td>92.81%</td></tr>
+            <tr><td>Candidate verifier</td><td>mlp_512</td><td>1e-03</td><td>0.25</td><td>3</td><td>0.6242</td><td>0.8255</td><td>0.1418</td><td>0.0317</td><td>0.5198</td><td>92.81%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </section>
+
+  <section>
+    <h2>Swept-model results</h2>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--geo)"></i>Geometric mean</span>
+      <span><i class="dot" style="background:var(--pre)"></i>Pre-generation MLP</span>
+      <span><i class="dot" style="background:var(--linear)"></i>Linear probe</span>
+      <span><i class="dot" style="background:var(--ver)"></i>Swept verifier</span>
+      <span><i class="dot" style="background:var(--early)"></i>Early-stop verifier (3-seed mean)</span>
+    </div>
+    <div class="charts">
+      <div class="card">
+        <h3>Error discrimination</h3>
+        <p class="muted">Higher is better</p>
+        <svg viewBox="0 0 450 250" role="img" aria-label="Bar chart comparing AUROC and error AUPRC">
+          <line class="axis" x1="58" y1="205" x2="430" y2="205"/><line class="grid" x1="58" y1="55" x2="430" y2="55"/><line class="grid" x1="58" y1="105" x2="430" y2="105"/><line class="grid" x1="58" y1="155" x2="430" y2="155"/>
+          <text class="label" x="25" y="209">0.0</text><text class="label" x="25" y="159">0.3</text><text class="label" x="25" y="109">0.6</text><text class="label" x="25" y="59">0.9</text>
+          <rect x="62" y="80" width="25" height="125" fill="var(--geo)"/><rect x="89" y="61" width="25" height="144" fill="var(--pre)"/><rect x="116" y="56" width="25" height="149" fill="var(--linear)"/><rect x="143" y="57" width="25" height="148" fill="var(--ver)"/><rect x="170" y="56" width="25" height="149" fill="var(--early)"/>
+          <text class="value" x="61" y="74">.750</text><text class="value" x="88" y="55">.863</text><text class="value" x="115" y="50">.895</text><text class="value" x="142" y="51">.887</text><text class="value" x="169" y="50">.891</text>
+          <rect x="250" y="108" width="25" height="97" fill="var(--geo)"/><rect x="277" y="94" width="25" height="111" fill="var(--pre)"/><rect x="304" y="83" width="25" height="122" fill="var(--linear)"/><rect x="331" y="85" width="25" height="120" fill="var(--ver)"/><rect x="358" y="82" width="25" height="123" fill="var(--early)"/>
+          <text class="value" x="249" y="102">.583</text><text class="value" x="276" y="88">.669</text><text class="value" x="303" y="77">.732</text><text class="value" x="330" y="79">.723</text><text class="value" x="357" y="76">.738</text>
+          <text class="label" x="111" y="228">AUROC</text><text class="label" x="286" y="228">Error AUPRC</text>
+        </svg>
+      </div>
+      <div class="card">
+        <h3>Probability quality</h3>
+        <p class="muted">Lower is better</p>
+        <svg viewBox="0 0 450 250" role="img" aria-label="Bar chart comparing Brier score and ECE">
+          <line class="axis" x1="58" y1="205" x2="430" y2="205"/><line class="grid" x1="58" y1="55" x2="430" y2="55"/><line class="grid" x1="58" y1="105" x2="430" y2="105"/><line class="grid" x1="58" y1="155" x2="430" y2="155"/>
+          <text class="label" x="25" y="209">0.0</text><text class="label" x="20" y="159">0.06</text><text class="label" x="20" y="109">0.12</text><text class="label" x="20" y="59">0.18</text>
+          <rect x="62" y="56" width="25" height="149" fill="var(--geo)"/><rect x="89" y="102" width="25" height="103" fill="var(--pre)"/><rect x="116" y="114" width="25" height="91" fill="var(--linear)"/><rect x="143" y="112" width="25" height="93" fill="var(--ver)"/><rect x="170" y="113" width="25" height="92" fill="var(--early)"/>
+          <text class="value" x="61" y="50">.178</text><text class="value" x="88" y="96">.123</text><text class="value" x="115" y="108">.109</text><text class="value" x="142" y="106">.112</text><text class="value" x="169" y="107">.111</text>
+          <rect x="250" y="62" width="25" height="143" fill="var(--geo)"/><rect x="277" y="159" width="25" height="46" fill="var(--pre)"/><rect x="304" y="175" width="25" height="30" fill="var(--linear)"/><rect x="331" y="180" width="25" height="25" fill="var(--ver)"/><rect x="358" y="173" width="25" height="32" fill="var(--early)"/>
+          <text class="value" x="249" y="56">.172</text><text class="value" x="276" y="153">.055</text><text class="value" x="303" y="169">.036</text><text class="value" x="330" y="174">.030</text><text class="value" x="357" y="167">.038</text>
+          <text class="label" x="113" y="228">Brier</text><text class="label" x="319" y="228">ECE</text>
+        </svg>
+      </div>
+      <div class="card wide">
+        <h3>Accuracy when retaining only the most confident answers</h3>
+        <p class="muted">Higher is better; 100% coverage equals the original 75.84% accuracy.</p>
+        <svg viewBox="0 0 900 285" role="img" aria-label="Line chart of selective accuracy by coverage">
+          <line class="axis" x1="70" y1="225" x2="855" y2="225"/><line class="axis" x1="70" y1="35" x2="70" y2="225"/>
+          <line class="grid" x1="70" y1="187" x2="855" y2="187"/><line class="grid" x1="70" y1="111" x2="855" y2="111"/><line class="grid" x1="70" y1="35" x2="855" y2="35"/>
+          <text class="label" x="24" y="229">75%</text><text class="label" x="24" y="191">80%</text><text class="label" x="24" y="115">90%</text><text class="label" x="19" y="39">100%</text>
+          <text class="label" x="53" y="250">100%</text><text class="label" x="308" y="250">90%</text><text class="label" x="565" y="250">80%</text><text class="label" x="831" y="250">50%</text>
+          <polyline points="70,219 330,182 590,142 850,93" fill="none" stroke="var(--geo)" stroke-width="4"/><polyline points="70,219 330,173 590,133 850,72" fill="none" stroke="var(--pre)" stroke-width="4"/><polyline points="70,219 330,169 590,128 850,58" fill="none" stroke="var(--linear)" stroke-width="4"/><polyline points="70,219 330,170 590,134 850,61" fill="none" stroke="var(--ver)" stroke-width="4"/><polyline points="70,219 330,170 590,131 850,58" fill="none" stroke="var(--early)" stroke-width="4" stroke-dasharray="9 5"/>
+          <g fill="var(--geo)"><circle cx="70" cy="219" r="5"/><circle cx="330" cy="182" r="5"/><circle cx="590" cy="142" r="5"/><circle cx="850" cy="93" r="5"/></g>
+          <g fill="var(--pre)"><circle cx="70" cy="219" r="5"/><circle cx="330" cy="173" r="5"/><circle cx="590" cy="133" r="5"/><circle cx="850" cy="72" r="5"/></g>
+          <g fill="var(--linear)"><circle cx="70" cy="219" r="5"/><circle cx="330" cy="169" r="5"/><circle cx="590" cy="128" r="5"/><circle cx="850" cy="58" r="5"/></g>
+          <g fill="var(--ver)"><circle cx="70" cy="219" r="5"/><circle cx="330" cy="170" r="5"/><circle cx="590" cy="134" r="5"/><circle cx="850" cy="61" r="5"/></g>
+          <g fill="var(--early)"><circle cx="70" cy="219" r="5"/><circle cx="330" cy="170" r="5"/><circle cx="590" cy="131" r="5"/><circle cx="850" cy="58" r="5"/></g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Metric guide</h2>
+    <dl>
+      <dt>AUROC</dt><dd>How often a correct answer is ranked above an incorrect one.</dd>
+      <dt>Error AUPRC</dt><dd>How well errors are concentrated at the top of the review or correction queue.</dd>
+      <dt>Brier score</dt><dd>Squared error between predicted correctness probability and the actual outcome.</dd>
+      <dt>ECE</dt><dd>Gap between stated confidence and observed accuracy; lower means better calibration.</dd>
+      <dt>Coverage accuracy</dt><dd>Accuracy after keeping only the most confident fraction of answers.</dd>
+    </dl>
+    <div class="callout warning"><strong>ECE correction:</strong> the original metric code excluded confidence values equal to 1.0 from its final bin. The chart uses the corrected geometric-confidence ECE of 0.172. The sweep also used the corrected implementation.</div>
+  </section>
+
+  <section>
+    <h2>Takeaway</h2>
+    <p>The sweeps substantially improved both learned baselines. The linear pre-generation probe has the highest AUROC, but it predicts expected difficulty rather than checking an answer. The early-stopped verifier with weak contrastive weight 0.01 has the highest error AUPRC and is the relevant model for self-correction decisions. Its advantage over BCE-only is small and should be validated out of distribution.</p>
+  </section>
+
+  <section>
+    <h2>Next steps</h2>
+    <div class="approaches">
+      <div class="card">
+        <h3>Improve verifier representations</h3>
+        <p>Compare features from several transformer layers and pooling choices. Explicitly test the answer-induced change:</p>
+        <p class="eq">h<sub>prompt</sub>, &nbsp; h<sub>candidate</sub>, &nbsp; h<sub>candidate</sub> − h<sub>prompt</sub></p>
+      </div>
+      <div class="card">
+        <h3>Use harder negatives</h3>
+        <p>Train with multiple plausible wrong answers per question: sampled generations, nearby chart values, numerically close answers, and formatting variants.</p>
+      </div>
+      <div class="card">
+        <h3>Measure seed stability</h3>
+        <p>Select hyperparameters using mean validation performance across seeds, then report the final mean and standard deviation over three independently trained models.</p>
+      </div>
+      <div class="card">
+        <h3>Test the correction policy</h3>
+        <p>Trigger correction for the riskiest 10–30% of candidates. Measure errors fixed, correct answers damaged, net accuracy gain, coverage, and added inference cost.</p>
+      </div>
+      <div class="card wide">
+        <h3>Evaluate distribution transfer</h3>
+        <p>Train on ChartQA and evaluate on another chart or visual-reasoning dataset to determine whether the heads learn general correctness signals or ChartQA-specific shortcuts.</p>
+      </div>
+      <div class="card wide">
+        <h3>Possible improvement: weak contrastive regularization</h3>
+        <p>A follow-up verifier sweep found that a small ranking weight of 0.01 narrowly beat BCE-only on mean validation error AUPRC and reduced variation across seeds. Larger weights degraded steadily.</p>
+        <p class="eq">L<sub>verifier</sub> = L<sub>BCE</sub> + 0.01L<sub>rank</sub> + 0.01L<sub>pair</sub></p>
+        <p>The weak paired constraint may improve generalization by encouraging the transferable relation <span style="font-family:Georgia,serif">s<sub>correct reference</sub> &gt; s<sub>incorrect candidate</sub></span> without overpowering the correctness objective. This remains a hypothesis: freeze the weight-0 and weight-0.01 models and compare them on an unseen dataset or shifted ChartQA subset.</p>
+      </div>
+    </div>
+    <div class="callout"><strong>Recommended first experiment:</strong> layer and pooling selection with <span style="font-family:Georgia,serif">h<sub>candidate</sub> − h<sub>prompt</sub></span>. It directly targets answer verification without fine-tuning the VLM.</div>
+  </section>
+  <footer>Standalone report · all styles and charts are embedded in this file.</footer>
+</main>
+</body>
+</html>

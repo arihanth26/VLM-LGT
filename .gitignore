@@ -16,11 +16,21 @@ env/
 !**/processed/.gitkeep
 **/failure_pool/*
 !**/failure_pool/.gitkeep
+**/results/*
+!**/results/.gitkeep
+**/q_features/*
+!**/q_features/.gitkeep
+**/q_models/*
+!**/q_models/.gitkeep
 
 # Model checkpoints and local weights
 *.pt
 *.bin
 *.safetensors
+
+# Slurm job output
+logs/*.out
+!logs/.gitkeep
 
 # OS / editor
 .DS_Store

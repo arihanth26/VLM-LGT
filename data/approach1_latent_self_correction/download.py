@@ -78,7 +78,7 @@ def check_manual_dataset(name: str, entry: DatasetEntry, out_dir: str) -> None:
         )
 
 
-def download_all(groups: list) -> None:
+def download_all(groups: list, dataset_names: list[str] | None = None) -> None:
     """Download every dataset in the requested groups from dataset_config.py.
 
     groups is a list of names among "training", "testbed", "ood", so a
@@ -87,12 +87,23 @@ def download_all(groups: list) -> None:
     """
     ensure_dir(RAW_DIR)
 
+    requested = set(dataset_names) if dataset_names else None
+
+    if requested:
+        available = set(TRAINING_DATASETS) | set(TESTBED_DATASETS) | set(OOD_DATASETS)
+        unknown = requested - available
+        if unknown:
+            raise ValueError(f"Unknown dataset names: {', '.join(sorted(unknown))}")
+
     if "training" in groups:
         for name, entry in TRAINING_DATASETS.items():
-            download_dataset(name, entry, RAW_DIR)
+            if requested is None or name in requested:
+                download_dataset(name, entry, RAW_DIR)
 
     if "testbed" in groups:
         for name, entry in TESTBED_DATASETS.items():
+            if requested is not None and name not in requested:
+                continue
             if entry.hf_repo_id is None:
                 check_manual_dataset(name, entry, RAW_DIR)
             else:
@@ -100,7 +111,8 @@ def download_all(groups: list) -> None:
 
     if "ood" in groups:
         for name, entry in OOD_DATASETS.items():
-            download_dataset(name, entry, RAW_DIR)
+            if requested is None or name in requested:
+                download_dataset(name, entry, RAW_DIR)
 
 
 def main() -> None:
@@ -113,8 +125,14 @@ def main() -> None:
         choices=["training", "testbed", "ood"],
         help="Which dataset groups to download.",
     )
+    parser.add_argument(
+        "--datasets",
+        nargs="+",
+        default=None,
+        help="Optional dataset keys to download instead of every dataset in the groups.",
+    )
     args = parser.parse_args()
-    download_all(args.groups)
+    download_all(args.groups, args.datasets)
 
 
 if __name__ == "__main__":

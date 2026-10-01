@@ -19,6 +19,15 @@ from data.common.dataset_entry import DatasetEntry
 # needed to score whether a latent correction moved toward or away from
 # the correct region.
 TRAINING_DATASETS = {
+    "chartqa_full": DatasetEntry(
+        hf_repo_id="HuggingFaceM4/ChartQA",
+        source_url="https://huggingface.co/datasets/HuggingFaceM4/ChartQA",
+        notes=(
+            "Full ChartQA release with train, validation, and test splits. "
+            "Used to train and calibrate correctness estimators; keep the test "
+            "split untouched until final evaluation."
+        ),
+    ),
     "gqa": DatasetEntry(
         hf_repo_id="lmms-lab/GQA",
         source_url="https://huggingface.co/datasets/lmms-lab/GQA",
