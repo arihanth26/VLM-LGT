@@ -124,6 +124,7 @@ VLM-LGT/
 │   │       └── analysis_<dataset>.json                 Curves and intervals behind the report
 │   │
 │   └── approach2_verifier_reranking/          Approach 2: datasets for the verifier reranking approach
+│       ├── README.md                          Start here if you are working on Approach 2
 │       ├── dataset_config.py
 │       ├── download.py
 │       ├── preprocess.py

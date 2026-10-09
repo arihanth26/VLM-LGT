@@ -1,5 +1,10 @@
 # Contributing
 
+Working on Approach 2 (verifier reranking)? Start at
+[data/approach2_verifier_reranking/README.md](data/approach2_verifier_reranking/README.md)
+instead, it covers where to put code, data, and results for that approach
+specifically. The rest of this file still applies to both approaches.
+
 ## Setup
 
 1. Create a virtual environment and install dependencies:
