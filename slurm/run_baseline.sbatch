@@ -3,15 +3,19 @@
 #SBATCH -N 1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
-#SBATCH --gres=gpu:H200:1
+#SBATCH --gres=gpu:1
+#SBATCH -C "H200|H100|L40S|A100-80GB|A100-40GB|A40"
 #SBATCH --mem=32G
-#SBATCH -t 16:00:00
+#SBATCH -t 08:00:00
 #SBATCH -o logs/baseline-%j.out
 
 set -euo pipefail
 
 cd "$SLURM_SUBMIT_DIR"
 module load anaconda3
+
+# Keep Hugging Face downloads in scratch, home is only 30 GB.
+export HF_HOME="${HF_HOME:-$SLURM_SUBMIT_DIR/.hf_cache}"
 
 if [[ -z "${DATASET:-}" ]]; then
     echo "Set DATASET to a key from the Approach 1 dataset config."

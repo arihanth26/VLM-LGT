@@ -140,3 +140,44 @@ OOD_DATASETS = {
         notes="Splits are named train/dev/test, not train/validation/test.",
     ),
 }
+
+# Datasets for repeating the ChartQA Q-head experiment on other kinds of
+# input. Each one has human-written answers, public train and held-out
+# labels, and a different visual domain from charts: scene text, scanned
+# documents, and science diagrams. build_qhead_splits.py downloads them and
+# writes train / val / test splits under raw/<name>. Ids were checked against
+# the Hub on 2026-10-07. The lmms-lab org now redirects to lmms-lab-encoder,
+# which load_dataset follows, but update the id here if that redirect goes away.
+QHEAD_DATASETS = {
+    "textvqa": DatasetEntry(
+        hf_repo_id="lmms-lab/textvqa",
+        source_url="https://huggingface.co/datasets/lmms-lab/textvqa",
+        notes=(
+            "Questions that need reading text in natural photos, 10 human "
+            "answers each, scored with VQA soft accuracy. Official test "
+            "answers are empty, so val and test are carved out of the "
+            "validation split by image. The facebook/textvqa repo is a "
+            "loading script and does not work with current datasets."
+        ),
+    ),
+    "docvqa": DatasetEntry(
+        hf_repo_id="HuggingFaceM4/DocumentVQA",
+        source_url="https://huggingface.co/datasets/HuggingFaceM4/DocumentVQA",
+        notes=(
+            "Questions over scanned UCSF industry documents, scored with "
+            "ANLS similarity. Official test answers are hidden, so val and "
+            "test are carved out of the validation split by document. "
+            "Page images are large, build_qhead_splits.py caps the longest "
+            "side."
+        ),
+    ),
+    "scienceqa_img": DatasetEntry(
+        hf_repo_id="derek-thomas/ScienceQA",
+        source_url="https://huggingface.co/datasets/derek-thomas/ScienceQA",
+        notes=(
+            "Multiple-choice science questions. Only rows that carry an "
+            "image are kept. Official train, validation, and test splits are "
+            "fully labeled and used as they are. License is CC BY-SA 4.0."
+        ),
+    ),
+}

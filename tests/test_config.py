@@ -52,6 +52,14 @@ def test_approach1_dataset_entries_are_well_formed():
     _check_dataset_group(approach1_config.TRAINING_DATASETS, "approach1.TRAINING_DATASETS")
     _check_dataset_group(approach1_config.TESTBED_DATASETS, "approach1.TESTBED_DATASETS")
     _check_dataset_group(approach1_config.OOD_DATASETS, "approach1.OOD_DATASETS")
+    _check_dataset_group(approach1_config.QHEAD_DATASETS, "approach1.QHEAD_DATASETS")
+
+
+def test_qhead_datasets_have_builders():
+    """Every Q-head dataset in the config must have a split builder, and the other way around."""
+    from data.approach1_latent_self_correction.build_qhead_splits import BUILDERS
+
+    assert set(BUILDERS) == set(approach1_config.QHEAD_DATASETS)
 
 
 def test_approach2_dataset_entries_are_well_formed():

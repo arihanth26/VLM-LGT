@@ -32,6 +32,14 @@ everywhere automatically.
 4. Add a row for it to [DATASETS.md](DATASETS.md) so the next person does
    not have to re-verify the id from scratch.
 
+For a dataset used by the correctness-head experiments, also add a metric to
+[scoring.py](data/approach1_latent_self_correction/scoring.py) if it needs one,
+a builder to
+[build_qhead_splits.py](data/approach1_latent_self_correction/build_qhead_splits.py)
+that writes train, val, and test splits in the shared schema, and an entry to
+`QHEAD_DATASETS`. Then `bash slurm/run_qhead_pipeline.sh <name>` runs it end to end.
+Group the held-out split by image or document so nothing is shared across splits.
+
 ## Before opening a PR
 
 Run the smoke tests. They do not touch the network or download anything,
@@ -39,6 +47,8 @@ and take a couple of seconds:
 
 ```
 python -m tests.test_config
+python -m tests.test_scoring_and_splits
+python -m tests.test_unified_q_head
 ```
 
 ## Code style

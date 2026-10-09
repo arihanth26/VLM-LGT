@@ -35,3 +35,7 @@ logs/*.out
 # OS / editor
 .DS_Store
 .vscode/
+
+# Local caches on the cluster
+.hf_cache/
+.pip_cache/

@@ -15,6 +15,7 @@ cd "$SLURM_SUBMIT_DIR"
 mkdir -p logs
 
 module load anaconda3
+export PIP_CACHE_DIR="$SLURM_SUBMIT_DIR/.pip_cache"
 
 python -m venv .venv
 source .venv/bin/activate

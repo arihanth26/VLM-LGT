@@ -13,10 +13,12 @@ from PIL import Image
 
 from data.approach1_latent_self_correction.dataset_config import (
     OOD_DATASETS,
+    QHEAD_DATASETS,
     TESTBED_DATASETS,
     TRAINING_DATASETS,
 )
 from data.approach1_latent_self_correction.report import write_markdown_report
+from data.approach1_latent_self_correction.scoring import score_with_metric
 from models.load_model import load_qwen3_vl
 from models.run_inference import generate_with_confidence
 
@@ -26,6 +28,7 @@ DATASET_GROUPS = {
     "training": TRAINING_DATASETS,
     "testbed": TESTBED_DATASETS,
     "ood": OOD_DATASETS,
+    "qhead": QHEAD_DATASETS,
 }
 
 
@@ -112,6 +115,14 @@ def relaxed_correctness(
     return prediction_text.rstrip(".") == reference_text.rstrip(".")
 
 
+def score_prediction(example: dict, reference_answer, prediction: str, question: str) -> tuple[bool, float]:
+    """Score with the dataset's own metric when it names one, else with relaxed ChartQA matching."""
+    if example.get("metric"):
+        return score_with_metric(example["metric"], list(example["answers"]), prediction)
+    correct = relaxed_correctness(reference_answer, prediction, question=question)
+    return correct, float(correct)
+
+
 def run_baseline(
     dataset_name: str,
     group: str,
@@ -166,6 +177,9 @@ def run_baseline(
                 prediction = generate_with_confidence(
                     model, processor, image, inference_question, max_new_tokens
                 )
+                correct, score = score_prediction(
+                    example, reference_answer, prediction.answer, question
+                )
                 record = {
                     "index": index,
                     "dataset": dataset_name,
@@ -174,9 +188,8 @@ def run_baseline(
                     "reference_answer": reference_answer,
                     "reference_bbox": reference_bbox,
                     "prediction": asdict(prediction),
-                    "correct": relaxed_correctness(
-                        reference_answer, prediction.answer, question=question
-                    ),
+                    "correct": correct,
+                    "score": score,
                 }
             except Exception as exc:
                 record = {

@@ -38,6 +38,22 @@ not). Both are corrected below.
 | HR-Bench | `DreamMr/HR-Bench` | Ships as TSV files (`hr_bench_4k.tsv`, `hr_bench_8k.tsv`) rather than the usual parquet layout. A plain `load_dataset` call may need an explicit config, check the dataset card if `download.py` errors on this one. |
 | VSR | `cambridgeltl/vsr_random` | Splits are `train`/`dev`/`test`, not `train`/`validation`/`test`. |
 
+## Q-head datasets (not ChartQA)
+
+Added 2026-10-07 for repeating the ChartQA Q-head experiment on other kinds of input. Ids,
+splits, and schemas were checked against the Hub on that date. These are built by
+`build_qhead_splits.py`, not `download.py`. See `docs/approach1_unified_q_head.md` for why
+these were chosen over GQA, VQAv2, OK-VQA, AI2D, and InfographicVQA.
+
+| Name | Hugging Face id | Splits on the Hub | Notes |
+|---|---|---|---|
+| TextVQA | `lmms-lab/textvqa` | train 34,602, validation 5,000, test 5,734 | Test answers are empty strings. Val and test here are carved from validation by image. `facebook/textvqa` is a loading script and fails on current `datasets`. |
+| DocVQA | `HuggingFaceM4/DocumentVQA` | train 39,463, validation 5,349, test 5,188 | Test answers are null. Val and test here are carved from validation by document (`ucsf_document_id`). |
+| ScienceQA | `derek-thomas/ScienceQA` | train 12,726, validation 4,241, test 4,241 | Fully labeled, CC BY-SA 4.0. Only rows with an image are kept. Answer is an index into `choices`. |
+
+The `lmms-lab` org currently redirects to `lmms-lab-encoder` on the Hub. `load_dataset` should
+follow the redirect, but if it stops working use the new org name.
+
 ## Models
 
 | Name | Hugging Face id |
