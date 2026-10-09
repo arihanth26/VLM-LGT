@@ -76,7 +76,6 @@ Short version of what the numbers say:
 | Correctness heads | Frozen feature extraction, pre-generation head, answer-conditioned verifier head, sweeps, original ChartQA study | Aryan Roy |
 | Dataset extension | TextVQA, DocVQA, and ScienceQA selection, grouped splits, per-dataset scoring | Arihanth Jayavijayan |
 | Unified head | Combined head and loss, seeded sweep, comparison against the separate heads | Arihanth Jayavijayan |
-| Pipeline and reporting | ICE job chain, analysis tooling, multi-dataset report, numbered results folder | Arihanth Jayavijayan |
 
 ## Repo layout
 
