@@ -56,6 +56,10 @@ def main() -> None:
 
     for source, name in NUMBERED_FILES:
         copy_if_present(source, args.output / name)
+    copy_if_present(
+        HERE / "results" / "chartqa_original_validation_runs.json",
+        args.output / "04_sweep_data" / "chartqa_original_validation_runs.json",
+    )
     for dataset in DATASETS:
         for source, name in sweep_files(dataset):
             copy_if_present(source, args.output / "04_sweep_data" / name)

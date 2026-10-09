@@ -5,11 +5,15 @@
 # pre-generation head, separate verifier, unified head in both modes), and
 # writes the curves the report plots: accuracy when the least trusted answers
 # are dropped, how many errors the lowest-scored answers contain, reliability
-# bins, score histograms, and accuracy by question category. Unified curves
+# bins, score histograms, accuracy by question category, and a few case
+# studies (errors caught, errors missed, false alarms) with one thumbnail
+# per group. Unified curves
 # are computed per seed and then averaged, so they match the sweep's
 # mean-over-seeds test numbers.
 
 import argparse
+import base64
+import io
 import json
 import math
 from pathlib import Path
@@ -146,25 +150,94 @@ def unified_probabilities(folder: Path, test: dict, device: torch.device) -> dic
     return outputs
 
 
-def token_confidence(baseline_path: Path, indices: list[int]) -> np.ndarray:
-    """Geometric-mean token confidence of each test answer, in feature order."""
+def load_records(baseline_path: Path) -> dict[int, dict]:
+    """Index the successful baseline records by dataset index."""
     records = {}
     for line in baseline_path.read_text(encoding="utf-8").splitlines():
         if line.strip():
             record = json.loads(line)
             if "prediction" in record:
-                records[record["index"]] = record["prediction"]["confidence"]
-    return np.array([records[index] for index in indices])
+                records[record["index"]] = record
+    return records
 
 
-def category_table(raw_dir: Path, dataset: str, indices: list[int], labels: np.ndarray, scores: np.ndarray) -> list[dict]:
-    """Accuracy and mean predicted correctness per question category, when the dataset has one."""
+def token_confidence(records: dict[int, dict], indices: list[int]) -> np.ndarray:
+    """Geometric-mean token confidence of each test answer, in feature order."""
+    return np.array([records[index]["prediction"]["confidence"] for index in indices])
+
+
+def thumbnail(raw_dir: Path, dataset: str, index: int, max_side: int) -> str | None:
+    """Return a small base64 JPEG of one test image, or None if it cannot be loaded."""
+    from datasets import load_from_disk
+
+    from data.approach1_latent_self_correction.baseline import extract_image
+
+    try:
+        folder = raw_dir / dataset
+        example = load_from_disk(str(folder))["test"][int(index)]
+        image = extract_image(example, folder)
+    except Exception:
+        return None
+    scale = max_side / max(image.size)
+    if scale < 1:
+        image = image.resize((max(1, round(image.width * scale)), max(1, round(image.height * scale))))
+    buffer = io.BytesIO()
+    image.convert("RGB").save(buffer, format="JPEG", quality=72)
+    return base64.b64encode(buffer.getvalue()).decode("ascii")
+
+
+def case_studies(
+    dataset: str, raw_dir: Path, records: dict, indices: list[int], labels: np.ndarray,
+    joint: np.ndarray, pre: np.ndarray, confidence: np.ndarray, categories: list[str],
+) -> dict:
+    """Pick a few examples per outcome group, with scores, and one thumbnail per group."""
+    wrong = np.where(labels == 0)[0]
+    right = np.where(labels == 1)[0]
+    groups = {
+        "caught_errors": wrong[np.argsort(joint[wrong])][:3],
+        "missed_errors": wrong[np.argsort(-joint[wrong])][:3],
+        "false_alarms": right[np.argsort(joint[right])][:3],
+        "confident_correct": right[np.argsort(-joint[right])][:3],
+    }
+    max_side = 640 if dataset == "docvqa" else 420
+    result = {}
+    for name, rows in groups.items():
+        items = []
+        for rank, row in enumerate(rows):
+            record = records[indices[row]]
+            items.append(
+                {
+                    "index": int(indices[row]),
+                    "question": str(record["question"])[:420],
+                    "reference": str(record["reference_answer"])[:120],
+                    "prediction": str(record["prediction"]["answer"])[:120],
+                    "category": categories[row] if categories else "",
+                    "joint_score": float(joint[row]),
+                    "pre_score": float(pre[row]),
+                    "token_confidence": float(confidence[row]),
+                    "image": thumbnail(raw_dir, dataset, indices[row], max_side) if rank == 0 else None,
+                }
+            )
+        result[name] = items
+    return result
+
+
+def category_labels(raw_dir: Path, dataset: str, indices: list[int]) -> list[str]:
+    """Category of each test example in feature order, or an empty list if the dataset has none."""
     from datasets import load_from_disk
 
     split = load_from_disk(str(raw_dir / dataset))["test"]
     if "category" not in split.column_names:
         return []
-    categories = np.array([split["category"][index] for index in indices])
+    column = split["category"]
+    return [column[index] for index in indices]
+
+
+def category_table(names: list[str], labels: np.ndarray, scores: np.ndarray) -> list[dict]:
+    """Accuracy and mean predicted correctness per question category, when the dataset has one."""
+    if not names:
+        return []
+    categories = np.array(names)
     rows = []
     for name in sorted(set(categories)):
         mask = categories == name
@@ -202,8 +275,8 @@ def main() -> None:
     labels = test["labels"].numpy()
     indices = test["indices"].tolist()
 
-    per_scorer = {"token_confidence": [token_confidence(
-        HERE / "results" / f"{args.dataset}_test_{args.size}_baseline.jsonl", indices)]}
+    records = load_records(HERE / "results" / f"{args.dataset}_test_{args.size}_baseline.jsonl")
+    per_scorer = {"token_confidence": [token_confidence(records, indices)]}
     folder = HERE / "q_models" / args.dataset
     for key, values in separate_probabilities(folder, test, device).items():
         per_scorer[key] = [values]
@@ -233,8 +306,20 @@ def main() -> None:
         "unified_pre_minus_separate_pre": paired_bootstrap(labels, mean_pre, per_scorer["separate_pre_generation"][0]),
     }
     analysis["token_confidence_metrics"] = metrics(labels, per_scorer["token_confidence"][0])
+    lengths = np.array([len(str(records[index]["prediction"]["answer"])) for index in indices], dtype=float)
+    analysis["answer_length_baseline"] = {
+        "auroc": float(roc_auc(labels, -lengths)),
+        "error_auprc": float(average_precision(1 - labels, lengths)),
+        "mean_length_correct": float(lengths[labels == 1].mean()),
+        "mean_length_wrong": float(lengths[labels == 0].mean()),
+    }
     analysis["token_confidence_exactly_one"] = float((per_scorer["token_confidence"][0] >= 0.9999).mean())
-    analysis["categories"] = category_table(HERE / "raw", args.dataset, indices, labels, mean_joint)
+    names = category_labels(HERE / "raw", args.dataset, indices)
+    analysis["categories"] = category_table(names, labels, mean_joint)
+    analysis["case_studies"] = case_studies(
+        args.dataset, HERE / "raw", records, indices, labels, mean_joint, mean_pre,
+        per_scorer["token_confidence"][0], names,
+    )
 
     output = HERE / "results" / f"analysis_{args.dataset}.json"
     output.write_text(json.dumps(analysis, indent=2) + "\n", encoding="utf-8")

@@ -39,8 +39,10 @@ missing is the second half: a correction step that uses this score to fix flagge
 
 Test correctness AUROC for Qwen3-VL-2B (0.5 is chance). Token confidence is the geometric
 mean of the answer token probabilities. The unified head is shown in its joint mode, where it
-sees the generated answer. The full write-up, with charts, calibration, selective-prediction
-curves, ablations, and limitations, is in
+sees the generated answer. The full write-up opens with a summary of the original ChartQA
+study and its numbers, then covers the datasets with example images, per-dataset results with
+case studies, calibration, selective-prediction curves, ablations, interpretation, and
+limitations. It is in
 [results/approach1/02_multidataset_qhead_report.html](results/approach1/02_multidataset_qhead_report.html).
 All published result files are indexed in [results/README.md](results/README.md), numbered in
 the order the work happened, starting from the original ChartQA study.
@@ -106,7 +108,7 @@ VLM-LGT/
 │   │   ├── sweep_verifier_early_stop.py       Early-stopping sweep over the verifier ranking weight
 │   │   ├── unified_q_head.py                  Unified head over both latents, with its combined loss
 │   │   ├── sweep_unified_q_head.py            Seeded sweep of the unified head, winner scored once on test
-│   │   ├── analyze_q_heads.py                 Curves, reliability, categories, and bootstrap intervals
+│   │   ├── analyze_q_heads.py                 Curves, reliability, categories, case studies, bootstrap intervals
 │   │   ├── compare_q_heads_report.py          Markdown table comparing all scorers per dataset
 │   │   ├── build_report.py                    Builds the multi-dataset HTML report from result files
 │   │   ├── publish_results.py                 Copies results into the numbered top-level results/ folder
@@ -150,6 +152,7 @@ VLM-LGT/
 │   ├── sweep_q_heads.sbatch                   Sweeps the separate heads
 │   ├── sweep_verifier_early_stop.sbatch       Early-stopping verifier sweep
 │   ├── sweep_unified_q_head.sbatch            Sweeps the unified head
+│   ├── analyze_q_heads.sbatch                 CPU job: curves, case studies, and bootstrap intervals
 │   └── run_qhead_pipeline.sh                  Submits the whole chain for one dataset with dependencies
 │
 ├── docs/

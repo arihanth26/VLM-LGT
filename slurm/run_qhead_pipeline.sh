@@ -42,5 +42,7 @@ SEPARATE=$(sbatch --parsable --dependency=afterok:"$DEPS" \
     --export=ALL,DATASET="$DATASET",MODEL_SIZE="$SIZE" slurm/sweep_q_heads.sbatch)
 UNIFIED=$(sbatch --parsable --dependency=afterok:"$DEPS" \
     --export=ALL,DATASET="$DATASET",MODEL_SIZE="$SIZE" slurm/sweep_unified_q_head.sbatch)
-echo "separate sweep: $SEPARATE, unified sweep: $UNIFIED"
-echo "When both finish: python -m data.approach1_latent_self_correction.compare_q_heads_report"
+ANALYSIS=$(sbatch --parsable --dependency=afterok:"$SEPARATE":"$UNIFIED"     --export=ALL,DATASET="$DATASET",MODEL_SIZE="$SIZE" slurm/analyze_q_heads.sbatch)
+echo "separate sweep: $SEPARATE, unified sweep: $UNIFIED, analysis: $ANALYSIS"
+echo "When all finish: python -m data.approach1_latent_self_correction.compare_q_heads_report"
+echo "then build_report and publish_results (see README)."
