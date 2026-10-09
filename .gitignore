@@ -18,6 +18,8 @@ env/
 !**/failure_pool/.gitkeep
 **/results/*
 !**/results/.gitkeep
+# The top-level results/ folder holds the published, numbered results and is tracked.
+!/results/**
 **/q_features/*
 !**/q_features/.gitkeep
 **/q_models/*

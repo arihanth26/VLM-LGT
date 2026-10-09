@@ -41,7 +41,9 @@ Test correctness AUROC for Qwen3-VL-2B (0.5 is chance). Token confidence is the 
 mean of the answer token probabilities. The unified head is shown in its joint mode, where it
 sees the generated answer. The full write-up, with charts, calibration, selective-prediction
 curves, ablations, and limitations, is in
-[data/approach1_latent_self_correction/results/q_head_multidataset_report.html](data/approach1_latent_self_correction/results/q_head_multidataset_report.html).
+[results/approach1/02_multidataset_qhead_report.html](results/approach1/02_multidataset_qhead_report.html).
+All published result files are indexed in [results/README.md](results/README.md), numbered in
+the order the work happened, starting from the original ChartQA study.
 
 | Dataset | Input type | Base accuracy | Token confidence | Best separate head | Unified head |
 |---|---|---:|---:|---:|---:|
@@ -106,6 +108,7 @@ VLM-LGT/
 │   │   ├── analyze_q_heads.py                 Curves, reliability, categories, and bootstrap intervals
 │   │   ├── compare_q_heads_report.py          Markdown table comparing all scorers per dataset
 │   │   ├── build_report.py                    Builds the multi-dataset HTML report from result files
+│   │   ├── publish_results.py                 Copies results into the numbered top-level results/ folder
 │   │   ├── raw/                               Downloaded or built datasets (not tracked in git)
 │   │   ├── processed/                         Preprocessed jsonl output (not tracked in git)
 │   │   ├── q_features/                        Cached hidden states (not tracked in git)
@@ -125,6 +128,15 @@ VLM-LGT/
 │       ├── raw/
 │       ├── processed/
 │       └── failure_pool/
+│
+├── results/                                   Published results, numbered in the order the work happened
+│   ├── README.md                              Index of every result file and what stage it comes from
+│   ├── approach1/                             Approach 1 results (working copies stay under data/)
+│   │   ├── 01_chartqa_original_study_report.html   First study: ChartQA only
+│   │   ├── 02_multidataset_qhead_report.html       Three more datasets and the unified head
+│   │   ├── 03_qhead_comparison_tables.md           Side-by-side metric tables
+│   │   └── 04_sweep_data/                          Sweep and analysis JSON files per dataset
+│   └── approach2/                             Approach 2 results (none yet)
 │
 ├── slurm/                                     Job scripts for the ICE cluster
 │   ├── setup_environment.sbatch               Creates the project virtual environment on a CPU node
@@ -240,6 +252,7 @@ When the sweeps finish, produce the analysis and reports:
 python -m data.approach1_latent_self_correction.analyze_q_heads --dataset textvqa
 python -m data.approach1_latent_self_correction.compare_q_heads_report
 python -m data.approach1_latent_self_correction.build_report
+python -m data.approach1_latent_self_correction.publish_results   # refresh the copies in results/approach1
 ```
 
 Dataset choice and the reasons other candidates were rejected, the unified head and its loss,
