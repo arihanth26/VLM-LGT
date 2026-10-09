@@ -65,15 +65,16 @@ Short version of what the numbers say:
 - These results are about detection. Whether a correction step can fix the flagged answers is
   the next experiment.
 
-### Who did what
+### Contributors
 
-- **Arihanth Jayavijayan.** Project scaffold, model loading and inference scripts, dataset
-  configs and Hub verification, the Approach 2 scaffold. Extension of the Q-head work to
-  TextVQA, DocVQA, and ScienceQA (dataset selection, split builder, scoring), the unified head
-  and its sweep, the ICE pipeline automation, the analysis tooling, and the multi-dataset report.
-- **Aryan Roy.** Full-image baseline with token-likelihood confidence, frozen feature
-  extraction, the pre-generation head and verifier head, the sweeps, and the original ChartQA
-  study and report.
+| Component | Scope | Contributor |
+|---|---|---|
+| Project foundation | Repository scaffold, Qwen3-VL loading and inference, dataset configs with Hub verification, Approach 2 scaffold | Arihanth Jayavijayan |
+| Baseline and confidence | Full-image baseline, token-likelihood confidence, baseline reports | Aryan Roy |
+| Correctness heads | Frozen feature extraction, pre-generation head, answer-conditioned verifier head, sweeps, original ChartQA study | Aryan Roy |
+| Dataset extension | TextVQA, DocVQA, and ScienceQA selection, grouped splits, per-dataset scoring | Arihanth Jayavijayan |
+| Unified head | Combined head and loss, seeded sweep, comparison against the separate heads | Arihanth Jayavijayan |
+| Pipeline and reporting | ICE job chain, analysis tooling, multi-dataset report, numbered results folder | Arihanth Jayavijayan |
 
 ## Repo layout
 
