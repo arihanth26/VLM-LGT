@@ -5,6 +5,29 @@ Working on Approach 2 (verifier reranking)? Start at
 instead, it covers where to put code, data, and results for that approach
 specifically. The rest of this file still applies to both approaches.
 
+## Where code goes
+
+Three folders, three different jobs. Put new code in the one that matches
+what it does, not the one that happens to be open:
+
+- **`models/`**, shared Qwen3-VL loading and inference. Both approaches use
+  this, nothing approach-specific belongs here.
+- **`data/<approach>/`**, dataset acquisition only: downloading, normalizing,
+  and building train/val/test splits. If a script's job ends once a jsonl
+  file or a split is written to disk, it goes here.
+- **`experiments/<approach>/`**, everything that trains a model, runs a
+  sweep, scores results, or builds a report. If a script loads a model,
+  touches a checkpoint, or produces something meant to be read as a result,
+  it goes here, not in `data/`.
+
+This split was not followed from the start. Approach 1's training and
+reporting scripts originally lived inside `data/approach1_latent_self_correction/`
+alongside its dataset scripts, which made that folder a mix of two different
+kinds of code. They have since been moved into
+`experiments/approach1_latent_self_correction/`. Keep new work on either
+approach out of that mistake, dataset code and modeling code stay in
+separate folders.
+
 ## Setup
 
 1. Create a virtual environment and install dependencies:
@@ -38,12 +61,13 @@ everywhere automatically.
    not have to re-verify the id from scratch.
 
 For a dataset used by the correctness-head experiments, also add a metric to
-[scoring.py](data/approach1_latent_self_correction/scoring.py) if it needs one,
-a builder to
+[scoring.py](experiments/approach1_latent_self_correction/scoring.py) (in
+`experiments/`, it scores model outputs) if it needs one, a builder to
 [build_qhead_splits.py](data/approach1_latent_self_correction/build_qhead_splits.py)
-that writes train, val, and test splits in the shared schema, and an entry to
-`QHEAD_DATASETS`. Then `bash slurm/run_qhead_pipeline.sh <name>` runs it end to end.
-Group the held-out split by image or document so nothing is shared across splits.
+(in `data/`, it only builds splits) that writes train, val, and test splits
+in the shared schema, and an entry to `QHEAD_DATASETS`. Then
+`bash slurm/run_qhead_pipeline.sh <name>` runs it end to end. Group the
+held-out split by image or document so nothing is shared across splits.
 
 ## Before opening a PR
 

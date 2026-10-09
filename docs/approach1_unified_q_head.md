@@ -142,7 +142,7 @@ Each call submits a dependency chain: build splits, then baseline and feature ex
 train, val, and test, then the separate-head sweep and the unified sweep. When they finish:
 
 ```
-python -m data.approach1_latent_self_correction.compare_q_heads_report
+python -m experiments.approach1_latent_self_correction.compare_q_heads_report
 ```
 
 This writes `results/q_head_comparison.md` with five scorers side by side per dataset: token

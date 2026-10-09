@@ -27,7 +27,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from data.approach1_latent_self_correction.train_q_heads import (
+from experiments.approach1_latent_self_correction.train_q_heads import (
     fit_temperature,
     metrics,
     ranking_loss,

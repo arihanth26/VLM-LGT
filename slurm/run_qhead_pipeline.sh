@@ -7,7 +7,7 @@
 set -euo pipefail
 DATASET="${1:?Usage: bash slurm/run_qhead_pipeline.sh <textvqa|docvqa|scienceqa_img|chartqa_full> [2b|4b]}"
 SIZE="${2:-2b}"
-BASE=data/approach1_latent_self_correction
+BASE=experiments/approach1_latent_self_correction
 mkdir -p logs
 
 # Q-head datasets are built from the Hub by the build job. chartqa_full is a plain
@@ -44,5 +44,5 @@ UNIFIED=$(sbatch --parsable --dependency=afterok:"$DEPS" \
     --export=ALL,DATASET="$DATASET",MODEL_SIZE="$SIZE" slurm/sweep_unified_q_head.sbatch)
 ANALYSIS=$(sbatch --parsable --dependency=afterok:"$SEPARATE":"$UNIFIED"     --export=ALL,DATASET="$DATASET",MODEL_SIZE="$SIZE" slurm/analyze_q_heads.sbatch)
 echo "separate sweep: $SEPARATE, unified sweep: $UNIFIED, analysis: $ANALYSIS"
-echo "When all finish: python -m data.approach1_latent_self_correction.compare_q_heads_report"
+echo "When all finish: python -m experiments.approach1_latent_self_correction.compare_q_heads_report"
 echo "then build_report and publish_results (see README)."

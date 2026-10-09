@@ -19,7 +19,10 @@ from data.approach2_verifier_reranking.dataset_config import FAILURE_POOL_DIR_NA
 from data.common.utils import read_jsonl, write_jsonl
 from models.load_model import load_qwen3_vl
 
-PROCESSED_DIR = os.path.join(os.path.dirname(__file__), "processed")
+# Preprocessed examples live under data/, not here, this script only reads
+# them. The pool it writes stays local to this experiments/ folder.
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROCESSED_DIR = os.path.join(REPO_ROOT, "data", "approach2_verifier_reranking", "processed")
 POOL_DIR = os.path.join(os.path.dirname(__file__), FAILURE_POOL_DIR_NAME)
 
 

@@ -80,27 +80,47 @@ Short version of what the numbers say:
 
 ## Repo layout
 
+Three top-level folders split the code by job, not by approach: `models/` only loads and
+runs Qwen3-VL, `data/` only acquires and preprocesses datasets, `experiments/` is
+everything that trains, sweeps, scores, or reports on top of that data. Each of `data/`
+and `experiments/` then splits again by approach. See
+[CONTRIBUTING.md](CONTRIBUTING.md#where-code-goes) for the reasoning and for where to put
+new code.
+
 ```
 VLM-LGT/
-├── models/                                    Loading and running Qwen3-VL (2B and 4B)
+├── models/                                    Loading and running Qwen3-VL (2B and 4B), shared by both approaches
 │   ├── model_config.py                        Registry of model sizes and their Hugging Face repo ids
 │   ├── load_model.py                          Loads a model and processor for a given size
 │   ├── run_inference.py                       Runs the model on an image and a question, with token confidence
 │   ├── inference_result.py                    Result record for one generation (answer plus confidence values)
 │   └── uncertainty.py                         Summarizes token log probabilities into confidence values
 │
-├── data/
+├── data/                                       Dataset acquisition and preprocessing, nothing else
 │   ├── common/
 │   │   ├── utils.py                           Shared helpers used by both approaches (jsonl read/write, etc)
 │   │   └── dataset_entry.py                   Shared DatasetEntry structure (repo id, config, source, notes)
 │   │
-│   ├── approach1_latent_self_correction/      Approach 1: datasets, baseline, correctness heads, analysis
+│   ├── approach1_latent_self_correction/      Approach 1 datasets
 │   │   ├── dataset_config.py                  Dataset groups: training, testbed, ood, and the Q-head datasets
 │   │   ├── download.py                        Downloads the raw datasets
 │   │   ├── preprocess.py                      Converts raw data into a shared training format
+│   │   ├── build_qhead_splits.py              Builds train/val/test splits for TextVQA, DocVQA, ScienceQA
+│   │   ├── raw/                               Downloaded or built datasets (not tracked in git)
+│   │   └── processed/                         Preprocessed jsonl output (not tracked in git)
+│   │
+│   └── approach2_verifier_reranking/          Approach 2 datasets
+│       ├── README.md                          Start here if you are working on Approach 2
+│       ├── dataset_config.py
+│       ├── download.py
+│       ├── preprocess.py
+│       ├── raw/
+│       └── processed/
+│
+├── experiments/                                Training, sweeps, analysis, and reports, no dataset acquisition
+│   ├── approach1_latent_self_correction/      Approach 1: baseline, correctness heads, analysis, reports
 │   │   ├── baseline.py                        Full-image generation over a split, with per-answer correctness
 │   │   ├── scoring.py                         Per-dataset answer metrics (VQA accuracy, ANLS, option letter)
-│   │   ├── build_qhead_splits.py              Builds train/val/test splits for TextVQA, DocVQA, ScienceQA
 │   │   ├── report.py                          Markdown accuracy report for a baseline run
 │   │   ├── extract_q_features.py              Caches frozen Qwen3-VL states for the correctness heads
 │   │   ├── train_q_heads.py                   Pre-generation head and verifier head, shared losses and metrics
@@ -112,8 +132,6 @@ VLM-LGT/
 │   │   ├── compare_q_heads_report.py          Markdown table comparing all scorers per dataset
 │   │   ├── build_report.py                    Builds the multi-dataset HTML report from result files
 │   │   ├── publish_results.py                 Copies results into the numbered top-level results/ folder
-│   │   ├── raw/                               Downloaded or built datasets (not tracked in git)
-│   │   ├── processed/                         Preprocessed jsonl output (not tracked in git)
 │   │   ├── q_features/                        Cached hidden states (not tracked in git)
 │   │   ├── q_models/                          Sweep outputs per dataset: sweep_results.json and
 │   │   │                                      unified_sweep_results.json (checkpoints not tracked)
@@ -123,19 +141,15 @@ VLM-LGT/
 │   │       ├── q_head_comparison.md                    Side-by-side metric tables
 │   │       └── analysis_<dataset>.json                 Curves and intervals behind the report
 │   │
-│   └── approach2_verifier_reranking/          Approach 2: datasets for the verifier reranking approach
-│       ├── README.md                          Start here if you are working on Approach 2
-│       ├── dataset_config.py
-│       ├── download.py
-│       ├── preprocess.py
-│       ├── build_failure_pool.py              Builds the failure-inclusive pool the verifier trains on
-│       ├── raw/
-│       ├── processed/
-│       └── failure_pool/
+│   └── approach2_verifier_reranking/          Approach 2: policy sampling, verifier, and evaluation code
+│       ├── build_failure_pool.py              Builds the verifier's failure-inclusive training pool
+│       └── failure_pool/                      Output of the above (not tracked in git)
+│                                               Everything else (verifier model, training, reranking,
+│                                               evaluation) is not written yet, add it here
 │
 ├── results/                                   Published results, numbered in the order the work happened
 │   ├── README.md                              Index of every result file and what stage it comes from
-│   ├── approach1/                             Approach 1 results (working copies stay under data/)
+│   ├── approach1/                             Approach 1 results (working copies stay under experiments/)
 │   │   ├── 01_chartqa_original_study_report.html   First study: ChartQA only
 │   │   ├── 02_multidataset_qhead_report.html       Three more datasets and the unified head
 │   │   ├── 03_qhead_comparison_tables.md           Side-by-side metric tables
@@ -254,10 +268,10 @@ bash slurm/run_qhead_pipeline.sh textvqa          # or docvqa, scienceqa_img, ch
 When the sweeps finish, produce the analysis and reports:
 
 ```
-python -m data.approach1_latent_self_correction.analyze_q_heads --dataset textvqa
-python -m data.approach1_latent_self_correction.compare_q_heads_report
-python -m data.approach1_latent_self_correction.build_report
-python -m data.approach1_latent_self_correction.publish_results   # refresh the copies in results/approach1
+python -m experiments.approach1_latent_self_correction.analyze_q_heads --dataset textvqa
+python -m experiments.approach1_latent_self_correction.compare_q_heads_report
+python -m experiments.approach1_latent_self_correction.build_report
+python -m experiments.approach1_latent_self_correction.publish_results   # refresh the copies in results/approach1
 ```
 
 Dataset choice and the reasons other candidates were rejected, the unified head and its loss,

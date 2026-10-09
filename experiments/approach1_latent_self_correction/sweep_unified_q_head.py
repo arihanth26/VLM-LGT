@@ -16,7 +16,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from data.approach1_latent_self_correction.unified_q_head import (
+from experiments.approach1_latent_self_correction.unified_q_head import (
     MODES,
     UnifiedConfig,
     UnifiedQHead,

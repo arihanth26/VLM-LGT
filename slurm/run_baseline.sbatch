@@ -42,4 +42,4 @@ if [[ -n "${OUTPUT:-}" ]]; then
     ARGS+=(--output "$OUTPUT")
 fi
 
-srun "$PYTHON_BIN" -m data.approach1_latent_self_correction.baseline "${ARGS[@]}"
+srun "$PYTHON_BIN" -m experiments.approach1_latent_self_correction.baseline "${ARGS[@]}"

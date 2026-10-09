@@ -30,4 +30,4 @@ if [[ "$SPLIT" != "test" ]]; then
     ARGS+=(--include-references)
 fi
 
-srun "$PYTHON_BIN" -m data.approach1_latent_self_correction.extract_q_features "${ARGS[@]}"
+srun "$PYTHON_BIN" -m experiments.approach1_latent_self_correction.extract_q_features "${ARGS[@]}"

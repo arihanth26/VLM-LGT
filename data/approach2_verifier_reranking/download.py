@@ -4,7 +4,8 @@
 # and caches them locally under data/approach2_verifier_reranking/raw.
 # Both the training and out-of-distribution groups are pulled directly
 # from the Hugging Face Hub; the verifier's failure-inclusive pool is not
-# downloaded here, see build_failure_pool.py for that. Each download is
+# downloaded here, see experiments/approach2_verifier_reranking/build_failure_pool.py
+# for that. Each download is
 # wrapped so one broken or renamed dataset does not stop the rest of the
 # run, since repo ids and schemas on the Hub can change after this file
 # was last verified (see DATASETS.md for that date).

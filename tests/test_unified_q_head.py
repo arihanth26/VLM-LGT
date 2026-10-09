@@ -9,8 +9,8 @@
 
 import torch
 
-from data.approach1_latent_self_correction.sweep_unified_q_head import build_grid, run_sweep
-from data.approach1_latent_self_correction.unified_q_head import (
+from experiments.approach1_latent_self_correction.sweep_unified_q_head import build_grid, run_sweep
+from experiments.approach1_latent_self_correction.unified_q_head import (
     UnifiedConfig,
     UnifiedQHead,
     evaluate_modes,

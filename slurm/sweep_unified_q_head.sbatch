@@ -21,9 +21,9 @@ export HF_HOME="${HF_HOME:-$SLURM_SUBMIT_DIR/.hf_cache}"
 PYTHON_BIN="$SLURM_SUBMIT_DIR/.venv/bin/python"
 DATASET="${DATASET:-chartqa_full}"
 SIZE="${MODEL_SIZE:-2b}"
-BASE=data/approach1_latent_self_correction
+BASE=experiments/approach1_latent_self_correction
 mkdir -p "$BASE/q_models/$DATASET"
-srun "$PYTHON_BIN" -m data.approach1_latent_self_correction.sweep_unified_q_head \
+srun "$PYTHON_BIN" -m experiments.approach1_latent_self_correction.sweep_unified_q_head \
     --train "$BASE/q_features/${DATASET}_train_${SIZE}.pt" \
     --validation "$BASE/q_features/${DATASET}_val_${SIZE}.pt" \
     --test "$BASE/q_features/${DATASET}_test_${SIZE}.pt" \

@@ -13,7 +13,7 @@ from pathlib import Path
 
 import numpy as np
 
-from data.approach1_latent_self_correction.train_q_heads import metrics
+from experiments.approach1_latent_self_correction.train_q_heads import metrics
 
 HERE = Path(__file__).parent
 METRIC_ROWS = (

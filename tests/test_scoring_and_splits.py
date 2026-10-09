@@ -11,7 +11,7 @@ from data.approach1_latent_self_correction.build_qhead_splits import (
     scienceqa_prompt,
     split_by_group,
 )
-from data.approach1_latent_self_correction.scoring import (
+from experiments.approach1_latent_self_correction.scoring import (
     anls_similarity,
     levenshtein,
     normalize_vqa_answer,

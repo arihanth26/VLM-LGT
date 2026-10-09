@@ -21,9 +21,9 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from data.approach1_latent_self_correction.sweep_q_heads import make_head
-from data.approach1_latent_self_correction.train_q_heads import average_precision, metrics, roc_auc
-from data.approach1_latent_self_correction.unified_q_head import (
+from experiments.approach1_latent_self_correction.sweep_q_heads import make_head
+from experiments.approach1_latent_self_correction.train_q_heads import average_precision, metrics, roc_auc
+from experiments.approach1_latent_self_correction.unified_q_head import (
     UnifiedQHead,
     mode_inputs,
     predict_logits,
@@ -31,6 +31,8 @@ from data.approach1_latent_self_correction.unified_q_head import (
 )
 
 HERE = Path(__file__).parent
+# Raw datasets live under data/, not here, this script only reads them.
+RAW_DIR = HERE.parents[1] / "data" / "approach1_latent_self_correction" / "raw"
 SCORERS = (
     "token_confidence",
     "separate_pre_generation",
@@ -170,7 +172,7 @@ def thumbnail(raw_dir: Path, dataset: str, index: int, max_side: int) -> str | N
     """Return a small base64 JPEG of one test image, or None if it cannot be loaded."""
     from datasets import load_from_disk
 
-    from data.approach1_latent_self_correction.baseline import extract_image
+    from experiments.approach1_latent_self_correction.baseline import extract_image
 
     try:
         folder = raw_dir / dataset
@@ -314,10 +316,10 @@ def main() -> None:
         "mean_length_wrong": float(lengths[labels == 0].mean()),
     }
     analysis["token_confidence_exactly_one"] = float((per_scorer["token_confidence"][0] >= 0.9999).mean())
-    names = category_labels(HERE / "raw", args.dataset, indices)
+    names = category_labels(RAW_DIR, args.dataset, indices)
     analysis["categories"] = category_table(names, labels, mean_joint)
     analysis["case_studies"] = case_studies(
-        args.dataset, HERE / "raw", records, indices, labels, mean_joint, mean_pre,
+        args.dataset, RAW_DIR, records, indices, labels, mean_joint, mean_pre,
         per_scorer["token_confidence"][0], names,
     )
 

@@ -1,11 +1,11 @@
 # Results
 
 Published results for the project, numbered in the order the work happened. Working copies
-stay where the code writes them (`data/approach1_latent_self_correction/results/` and
+stay where the code writes them (`experiments/approach1_latent_self_correction/results/` and
 `.../q_models/`). The files here are copies, refreshed with:
 
 ```
-python -m data.approach1_latent_self_correction.publish_results
+python -m experiments.approach1_latent_self_correction.publish_results
 ```
 
 ## Approach 1: latent self-correction

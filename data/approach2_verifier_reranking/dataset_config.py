@@ -70,5 +70,7 @@ OOD_DATASETS = {
 
 # The verifier needs a training pool that deliberately includes failed
 # and uncurated traces, not only successful rollouts. This pool is
-# generated locally rather than downloaded, see build_failure_pool.py.
+# generated locally rather than downloaded, see
+# experiments/approach2_verifier_reranking/build_failure_pool.py (it loads
+# and runs the policy model, so it lives in experiments/, not here).
 FAILURE_POOL_DIR_NAME = "failure_pool"

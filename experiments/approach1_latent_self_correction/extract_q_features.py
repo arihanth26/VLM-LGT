@@ -11,11 +11,13 @@ import torch
 from datasets import DatasetDict, load_from_disk
 from PIL import Image
 
-from data.approach1_latent_self_correction.baseline import extract_image, extract_question
+from experiments.approach1_latent_self_correction.baseline import extract_image, extract_question
 from models.load_model import load_qwen3_vl
 from models.run_inference import build_messages
 
-RAW_DIR = Path(__file__).parent / "raw"
+# Raw datasets live under data/, not here, this script only reads them.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+RAW_DIR = REPO_ROOT / "data" / "approach1_latent_self_correction" / "raw"
 FEATURE_DIR = Path(__file__).parent / "q_features"
 
 

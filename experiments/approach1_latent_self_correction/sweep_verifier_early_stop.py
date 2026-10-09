@@ -9,7 +9,7 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 
-from data.approach1_latent_self_correction.train_q_heads import (
+from experiments.approach1_latent_self_correction.train_q_heads import (
     QHead,
     evaluate_head,
     fit_temperature,

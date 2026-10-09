@@ -963,9 +963,9 @@ def build(present: dict) -> str:
     parts.append("<h2>Appendix: reproduction and compute</h2>")
     parts.append("<p>Run one dataset end to end from the repository root on ICE, then build the comparison and this report:</p>")
     parts.append("""<pre>bash slurm/run_qhead_pipeline.sh textvqa     # also docvqa, scienceqa_img, chartqa_full
-python -m data.approach1_latent_self_correction.compare_q_heads_report
-python -m data.approach1_latent_self_correction.build_report
-python -m data.approach1_latent_self_correction.publish_results</pre>""")
+python -m experiments.approach1_latent_self_correction.compare_q_heads_report
+python -m experiments.approach1_latent_self_correction.build_report
+python -m experiments.approach1_latent_self_correction.publish_results</pre>""")
     parts.append("<p>Wall-clock minutes per stage on one L40S (the train split dominates; val and test are shorter):</p>")
     parts.append(table(["Dataset", "Build or download", "Train baseline generation", "Train feature extraction"], compute_rows))
     parts.append('<p class="small">Each sweep (separate heads, then unified) took 2 to 5 minutes per dataset on cached features, and the analysis about 2 minutes on a CPU node. Result files: <code>q_models/&lt;dataset&gt;/sweep_results.json</code>, <code>unified_sweep_results.json</code>, <code>results/analysis_&lt;dataset&gt;.json</code>, and <code>results/chartqa_original_validation_runs.json</code> (parsed from the original report).</p>')

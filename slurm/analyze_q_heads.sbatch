@@ -20,5 +20,5 @@ export HF_HOME="${HF_HOME:-$SLURM_SUBMIT_DIR/.hf_cache}"
 
 : "${DATASET:?Set DATASET to textvqa, docvqa, scienceqa_img, or chartqa_full}"
 PYTHON_BIN="$SLURM_SUBMIT_DIR/.venv/bin/python"
-srun "$PYTHON_BIN" -m data.approach1_latent_self_correction.analyze_q_heads \
+srun "$PYTHON_BIN" -m experiments.approach1_latent_self_correction.analyze_q_heads \
     --dataset "$DATASET" --size "${MODEL_SIZE:-2b}"

@@ -17,12 +17,15 @@ from data.approach1_latent_self_correction.dataset_config import (
     TESTBED_DATASETS,
     TRAINING_DATASETS,
 )
-from data.approach1_latent_self_correction.report import write_markdown_report
-from data.approach1_latent_self_correction.scoring import score_with_metric
+from experiments.approach1_latent_self_correction.report import write_markdown_report
+from experiments.approach1_latent_self_correction.scoring import score_with_metric
 from models.load_model import load_qwen3_vl
 from models.run_inference import generate_with_confidence
 
-RAW_DIR = Path(__file__).parent / "raw"
+# Raw datasets are downloaded and preprocessed under data/, not here, this
+# script only trains and evaluates on them.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+RAW_DIR = REPO_ROOT / "data" / "approach1_latent_self_correction" / "raw"
 RESULTS_DIR = Path(__file__).parent / "results"
 DATASET_GROUPS = {
     "training": TRAINING_DATASETS,
