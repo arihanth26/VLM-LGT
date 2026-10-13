@@ -182,10 +182,86 @@ Taken together, the unified head replaces two models with one at little or no co
 
 Still open:
 
-- The ChartQA rerun under this protocol (in progress), so all comparisons use the same
-  features, labels, and sweep.
-- The correction step that acts on a flagged answer, and the counterfactual control that
-  checks the score moves when the visual evidence is corrupted.
+- The correction step that acts on a flagged answer. The counterfactual control (does the score
+  move when the visual evidence is corrupted) is now part of the mixture experiments below.
 - The Qwen3-VL 4B check.
 - A caveat on the data: TextVQA and DocVQA val and test are carved from the labeled
   validation split, grouped by image or document, because the official test answers are hidden.
+
+## 6. Dataset mixture and the new loss
+
+The per-dataset results above train and test a head on one dataset at a time. The next set of
+experiments asks what happens when one head has to serve all four datasets, and tests a new
+loss that is meant to make the score track visual grounding.
+
+### The mixture
+
+The mixture is the union of the four datasets' existing splits: its train split is the four
+train splits pooled, and the same for validation and test. Every row keeps a dataset id so
+results are reported pooled and per dataset. The calibration temperature is fitted once on the
+pooled validation split, which is how a single deployed head would be calibrated.
+
+### Three experiments
+
+1. **The model's own confidence and linear probes on the mixture.** Token confidence needs no
+   training. The linear probes are the linear-architecture heads of the sweeps below.
+2. **Separate and unified heads on the mixture, old loss.** The pre-generation head, the
+   verifier head, and the unified head, trained with the loss used so far.
+3. **The same heads with the new loss.**
+
+### The new loss
+
+```
+P_theta(S_confidence | h_answer, h_question)         the head itself
+L_contrastive(h_predicted, h_correct)                 reference answer scores above a wrong prediction
+L_contrastive(h_clean, h_corrupt) -> S_confidence     score drops when the image is corrupted
+```
+
+The first line is the existing correctness head trained with cross-entropy. The second term is
+the pairwise reference-answer term already in the old loss, kept here as one of the two
+contrastive terms. The third term is new. It needs the hidden state of the same question and
+the same answer under a corrupted image, which is cached by `extract_corrupt_features.py`.
+Corruption replaces the image with a different example's image from the same dataset and split,
+so the question and the answer text are unchanged but the evidence is gone. The term is a
+margin-free pairwise loss, `softplus(S_corrupt - S_clean)`, applied on examples the model
+answered correctly, because a wrong answer has no grounding to lose.
+
+Read as a loss family, **old** means the grounding weight is 0 and **new** means it is above 0.
+The sweeps cover the two contrastive terms separately, so the contribution of each can be read
+off:
+
+| Pair term (predicted vs correct) | Grounding term | Cell |
+|---|---|---|
+| off | off | plain |
+| on | off | contrast only |
+| off | on | grounding only |
+| on | on | the new loss as specified |
+
+For the unified head the grounding term is applied to both modes, joint and pre-generation.
+
+### What is measured
+
+On top of the usual metrics, pooled and per dataset, the experiments measure grounding
+directly: for each test answer the score on the clean input against the score on the corrupted
+input. Two numbers are reported, the share of correct answers whose score drops (order
+accuracy, 0.5 is no effect) and the mean drop in predicted probability. The model's own
+confidence is measured the same way, teacher-forced on the same answer text under the clean and
+the corrupted image, so the comparison is like for like.
+
+### Protocol
+
+Each configuration is trained on three seeds with early stopping on validation, the winner is
+the configuration with the best mean validation score, and test numbers are read for winners
+only: the best of each loss family, the best linear probe of each family, and the four cells of
+the table above. Grids: separate pre-generation head (architecture, learning rate, ranking
+weight, grounding weight), separate verifier (architecture, learning rate, pair weight,
+grounding weight), unified head (architecture, learning rate, pre-generation weight, pair
+weight, grounding weight), 36 to 72 configurations each, 432 trainings in total.
+
+### Interpretation of the loss
+
+The image of the loss was read as follows, and it is worth confirming: the second contrastive
+term is implemented at the score level, as a pairwise loss between the scores of the correct
+and the predicted answer, not as a contrast between embeddings. If an embedding-level contrast
+was intended, `head_loss` in `mixture_heads.py` is the one place to change.
+

@@ -13,10 +13,10 @@ mkdir -p logs
 # Q-head datasets are built from the Hub by the build job. chartqa_full is a plain
 # download of the official splits, so its first job is the download job.
 if [[ "$DATASET" == "chartqa_full" ]]; then
-    BUILD=$(sbatch --parsable --export=ALL,DATASET=chartqa_full,DATA_GROUP=training slurm/download_approach1.sbatch)
+    BUILD=$(sbatch --parsable --kill-on-invalid-dep=yes --export=ALL,DATASET=chartqa_full,DATA_GROUP=training slurm/download_approach1.sbatch)
     echo "download: $BUILD"
 else
-    BUILD=$(sbatch --parsable --export=ALL,DATASET="$DATASET" slurm/build_qhead_splits.sbatch)
+    BUILD=$(sbatch --parsable --kill-on-invalid-dep=yes --export=ALL,DATASET="$DATASET" slurm/build_qhead_splits.sbatch)
     echo "build splits: $BUILD"
 fi
 BUILD_DEP="--dependency=afterok:$BUILD"
@@ -27,10 +27,10 @@ GROUP=qhead
 FEATURE_JOBS=()
 for SPLIT in train val test; do
     BASELINE_FILE="$BASE/results/${DATASET}_${SPLIT}_${SIZE}_baseline.jsonl"
-    BASELINE=$(sbatch --parsable $BUILD_DEP \
+    BASELINE=$(sbatch --parsable --kill-on-invalid-dep=yes $BUILD_DEP \
         --export=ALL,DATASET="$DATASET",DATA_GROUP="$GROUP",SPLIT="$SPLIT",MODEL_SIZE="$SIZE",MAX_NEW_TOKENS=64 \
         slurm/run_baseline.sbatch)
-    FEATURES=$(sbatch --parsable --dependency=afterok:"$BASELINE" \
+    FEATURES=$(sbatch --parsable --kill-on-invalid-dep=yes --dependency=afterok:"$BASELINE" \
         --export=ALL,DATASET="$DATASET",SPLIT="$SPLIT",BASELINE="$BASELINE_FILE",MODEL_SIZE="$SIZE" \
         slurm/extract_q_features.sbatch)
     FEATURE_JOBS+=("$FEATURES")
@@ -38,11 +38,12 @@ for SPLIT in train val test; do
 done
 
 DEPS=$(IFS=:; echo "${FEATURE_JOBS[*]}")
-SEPARATE=$(sbatch --parsable --dependency=afterok:"$DEPS" \
+SEPARATE=$(sbatch --parsable --kill-on-invalid-dep=yes --dependency=afterok:"$DEPS" \
     --export=ALL,DATASET="$DATASET",MODEL_SIZE="$SIZE" slurm/sweep_q_heads.sbatch)
-UNIFIED=$(sbatch --parsable --dependency=afterok:"$DEPS" \
+UNIFIED=$(sbatch --parsable --kill-on-invalid-dep=yes --dependency=afterok:"$DEPS" \
     --export=ALL,DATASET="$DATASET",MODEL_SIZE="$SIZE" slurm/sweep_unified_q_head.sbatch)
-ANALYSIS=$(sbatch --parsable --dependency=afterok:"$SEPARATE":"$UNIFIED"     --export=ALL,DATASET="$DATASET",MODEL_SIZE="$SIZE" slurm/analyze_q_heads.sbatch)
+ANALYSIS=$(sbatch --parsable --kill-on-invalid-dep=yes --dependency=afterok:"$SEPARATE":"$UNIFIED" \
+    --export=ALL,DATASET="$DATASET",MODEL_SIZE="$SIZE" slurm/analyze_q_heads.sbatch)
 echo "separate sweep: $SEPARATE, unified sweep: $UNIFIED, analysis: $ANALYSIS"
 echo "When all finish: python -m experiments.approach1_latent_self_correction.compare_q_heads_report"
 echo "then build_report and publish_results (see README)."

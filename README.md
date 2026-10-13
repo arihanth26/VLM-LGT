@@ -26,8 +26,11 @@ each one lives in its own folder so they can be developed independently.
 | Approach 1: same experiment on TextVQA, DocVQA, and ScienceQA | Done, run on the ICE cluster |
 | Approach 1: unified head that reads both latents in one network | Done, compared against the separate heads on all four datasets |
 | Approach 1: ChartQA rerun under the same protocol as the new datasets | Done, reproduces the original study numbers |
+| Approach 1: all four datasets pooled into one mixture, with the model's own confidence and linear probes tested on it | Running on ICE |
+| Approach 1: separate and unified heads on the mixture, old loss | Running on ICE |
+| Approach 1: new loss with a visual-grounding term, separate and unified heads on the mixture | Running on ICE |
 | Approach 1: the latent correction step that acts on a flagged answer | Not started |
-| Approach 1: counterfactual control and Qwen3-VL 4B check | Not started |
+| Approach 1: Qwen3-VL 4B check | Not started |
 | Approach 2: verifier reranking | Scaffold only: dataset configs and a failure-pool builder with a placeholder sampler |
 
 The detection half of Approach 1 is in good shape. A small head trained on frozen Qwen3-VL
@@ -124,6 +127,13 @@ VLM-LGT/
 │   │   ├── scoring.py                         Per-dataset answer metrics (VQA accuracy, ANLS, option letter)
 │   │   ├── report.py                          Markdown accuracy report for a baseline run
 │   │   ├── extract_q_features.py              Caches frozen Qwen3-VL states for the correctness heads
+│   │   ├── corruption.py                      Image corruptions (swap, patch shuffle) for the grounding loss
+│   │   ├── extract_corrupt_features.py        Caches states and answer confidence under a corrupted image
+│   │   ├── build_mixture.py                   Pools the cached features of all datasets into one mixture
+│   │   ├── mixture_heads.py                   Old and new loss for separate and unified heads, pooled and
+│   │   │                                      per-dataset evaluation, grounding metrics
+│   │   ├── sweep_mixture.py                   Seeded sweeps of the three head kinds on the mixture
+│   │   ├── analyze_mixture.py                 Baselines, curves, and the clean-versus-corrupted gallery
 │   │   ├── train_q_heads.py                   Pre-generation head and verifier head, shared losses and metrics
 │   │   ├── sweep_q_heads.py                   Architecture and hyperparameter sweep for the separate heads
 │   │   ├── sweep_verifier_early_stop.py       Early-stopping sweep over the verifier ranking weight
@@ -169,7 +179,13 @@ VLM-LGT/
 │   ├── sweep_verifier_early_stop.sbatch       Early-stopping verifier sweep
 │   ├── sweep_unified_q_head.sbatch            Sweeps the unified head
 │   ├── analyze_q_heads.sbatch                 CPU job: curves, case studies, and bootstrap intervals
-│   └── run_qhead_pipeline.sh                  Submits the whole chain for one dataset with dependencies
+│   ├── extract_corrupt_features.sbatch        Caches states under a corrupted image on a GPU
+│   ├── build_mixture.sbatch                   CPU job: pools the datasets into the mixture
+│   ├── sweep_mixture.sbatch                   Sweeps one head kind on the mixture on a GPU
+│   ├── analyze_mixture.sbatch                 CPU job: baselines and curves for the mixture
+│   ├── run_qhead_pipeline.sh                  Submits the whole chain for one dataset with dependencies
+│   ├── run_mixture_pipeline.sh                Submits the mixture and new-loss chain for all datasets
+│   └── check_scripts.sh                       Validates every job script: syntax, module paths, sbatch --test-only
 │
 ├── docs/
 │   └── approach1_unified_q_head.md            Design note: datasets, unified head, loss, protocol, status
@@ -177,7 +193,8 @@ VLM-LGT/
 ├── tests/
 │   ├── test_config.py                         Smoke tests for the model and dataset configs, no network needed
 │   ├── test_scoring_and_splits.py             Offline tests for answer scoring and the grouped split
-│   └── test_unified_q_head.py                 Offline tests for the unified head and its sweep
+│   ├── test_unified_q_head.py                 Offline tests for the unified head and its sweep
+│   └── test_mixture.py                        Offline tests for corruptions, the old and new loss, and the mixture sweep
 │
 ├── requirements.txt
 ├── DATASETS.md                                Reference table of every dataset id, with source links and known quirks
@@ -219,6 +236,7 @@ VLM-LGT/
    python -m tests.test_config
    python -m tests.test_scoring_and_splits
    python -m tests.test_unified_q_head
+   python -m tests.test_mixture
    ```
 
 ## Approach 1 on the ICE cluster
@@ -278,6 +296,34 @@ python -m experiments.approach1_latent_self_correction.publish_results   # refre
 Dataset choice and the reasons other candidates were rejected, the unified head and its loss,
 the selection protocol, and the current status are written up in
 [docs/approach1_unified_q_head.md](docs/approach1_unified_q_head.md).
+
+### Dataset mixture and the new loss
+
+The second set of experiments pools all four datasets into one mixture (the union of their
+train, validation, and test splits) and trains and tests the heads on the pool. It needs the
+clean features and baselines from the per-dataset pipeline above. One command submits the whole
+chain:
+
+```
+bash slurm/run_mixture_pipeline.sh
+```
+
+It runs, in order: corrupted-image features for every dataset and split (GPU, in parallel),
+the mixture build (CPU), one sweep per head kind (pre-generation, verifier, unified) under the
+old and the new loss (GPU, in parallel), and the analysis (CPU). The new loss adds a
+visual-grounding term: the score of the clean input must exceed the score of the same question
+and answer with a corrupted image. The design is in
+[docs/approach1_unified_q_head.md](docs/approach1_unified_q_head.md).
+
+Check every job script before a long run. This validates shell syntax, that each `python -m`
+module resolves, and, on the cluster, that the scheduler accepts the resource request:
+
+```
+bash slurm/check_scripts.sh
+```
+
+Jobs request realistic time limits on purpose. The cluster caps the total GPU minutes a user
+can have requested at once, so asking for 8 hours on a 20 minute job leaves other jobs waiting.
 
 ## Working with both model sizes
 
