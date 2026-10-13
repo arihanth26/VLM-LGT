@@ -77,7 +77,7 @@ Training across datasets (report
 [results/approach1/05_mixture_new_loss_report.html](results/approach1/05_mixture_new_loss_report.html)):
 
 - One unified head trained on the pooled mixture reaches pooled AUROC 0.881, against 0.719 for
-  the model's own confidence. On each dataset it is within 0.015 AUROC of the head trained on
+  the untrained answer-token probability. On each dataset it is within 0.015 AUROC of the head trained on
   that dataset alone, and above it on three of the four.
 - Trained on one dataset after another, heads lose little of what they learned earlier:
   forgetting is 0.011 AUROC for the unified head and 0.013 for the pre-generation head. The
@@ -88,8 +88,9 @@ Training across datasets (report
   answers (unified head: 93% to 96%). The other contrastive term (predicted against correct
   answer) lowers AUROC by 0.01 to 0.02, so the loss as first specified, with both terms, is
   slightly worse than the old loss.
-- The model's own confidence already falls for 95% of correct answers under a corrupted
-  image. Its weakness is ranking right against wrong answers, not noticing missing evidence.
+- The answer-token probability (no training) already falls for 95% of correct answers under a
+  corrupted image. Its weakness is ranking right against wrong answers, not noticing missing
+  evidence.
 
 ### Contributors
 
