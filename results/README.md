@@ -24,14 +24,17 @@ Headline numbers (Qwen3-VL-2B, test correctness AUROC):
 
 | Dataset | Token confidence | Best separate head | Unified head, joint mode |
 |---|---:|---:|---:|
-| ChartQA (original study, report 01) | 0.750 | 0.895 | not run yet |
+| ChartQA (original study, report 01) | 0.750 | 0.895 | not run |
+| ChartQA (rerun, same protocol as the rows below) | 0.751 | 0.895 | 0.898 |
 | TextVQA | 0.726 | 0.868 | 0.867 |
 | DocVQA | 0.685 | 0.788 | 0.811 |
 | ScienceQA | 0.654 | 0.918 | 0.925 |
 
 The raw sweep outputs of the original study were not committed with report 01, so
-`04_sweep_data/` holds its validation runs as parsed from that report. A rerun of ChartQA under
-the same protocol as the other datasets will add full sweep and analysis files.
+`04_sweep_data/` holds its validation runs as parsed from that report. ChartQA was rerun under
+the same protocol as the other datasets, and that rerun reproduces the original numbers (token
+confidence 0.751 against 0.750, linear pre-generation probe 0.895 against 0.895). Its full sweep
+and analysis files are in `04_sweep_data/` with the others.
 
 ## Approach 2: verifier reranking
 
