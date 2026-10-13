@@ -128,6 +128,13 @@ def main() -> None:
         }
         baselines[label] = entry
     analysis["baselines"] = baselines
+    analysis["token_curves"] = {
+        label: {
+            "accuracy_at_coverage": accuracy_at_coverage(labels[mask], confidence[mask]),
+            "error_capture": error_capture(labels[mask], confidence[mask]),
+        }
+        for label, mask in rows.items()
+    }
 
     for kind in KINDS:
         path = MODELS_DIR / f"{args.tag}_{kind}_scores.pt"

@@ -265,3 +265,41 @@ term is implemented at the score level, as a pairwise loss between the scores of
 and the predicted answer, not as a contrast between embeddings. If an embedding-level contrast
 was intended, `head_loss` in `mixture_heads.py` is the one place to change.
 
+### Sequential training
+
+The mixture trains on all datasets at once. The harder question is whether a head that has
+been trained on dataset A still scores A well after it has been trained on B and then C. The
+sequential experiments (`continual.py`, `sweep_continual.py`) train a head on one dataset at a
+time, in three orders (forward, reverse, shuffled), with early stopping on the current
+dataset's validation split, and score every dataset's test split after every stage. For each
+head kind, the head configuration of each loss family is the winner of the mixture sweep, and
+each variant is run on three seeds, with and without a replay buffer of 10% of every earlier
+dataset's training rows.
+
+Metrics, from the stage-by-dataset matrix of AUROC: final average, forgetting (the best score a
+dataset had after its own stage minus its final score, averaged over the datasets trained
+before the last one), backward transfer (final minus score right after its own stage), and
+retention (final minus the score of a head trained on that dataset alone). The grounding check
+is tracked the same way.
+
+### Results
+
+The experiments above were run on the ICE cluster (Qwen3-VL-2B, one L40S per GPU job). The full
+write-up, with charts, intervals, ablations, and limits, is in
+`results/approach1/05_mixture_new_loss_report.html`. In short, on the pooled test split:
+
+- **Mixture.** The model's own confidence has AUROC 0.719. The unified head trained on the
+  mixture reaches 0.881 (old loss) and 0.882 (new loss). Per dataset it is within 0.015 AUROC of
+  the head trained on that dataset alone, and above it on ChartQA, TextVQA, and DocVQA.
+- **Sequential training.** Trained through all four datasets in sequence, heads forget little:
+  0.011 AUROC for the unified head, 0.013 for the pre-generation head, 0.032 for the verifier.
+  A replay buffer of 10% of earlier training rows cuts the verifier's forgetting to 0.005 and
+  changes nothing for the others. The new loss does not change forgetting.
+- **The new loss.** The grounding term alone costs no AUROC and raises the share of correct
+  answers whose score falls under a corrupted image (unified head: 93% to 96%). The pair term
+  alone lowers AUROC by 0.01 to 0.02, so the loss with both terms is slightly worse than the old
+  loss. Grounding persists through sequential training under both losses, and is higher with the
+  new loss at every stage.
+- **The model's own confidence** already falls for 95% of correct answers under a corrupted
+  image. Its weakness is ranking, not noticing that the evidence is gone.
+
