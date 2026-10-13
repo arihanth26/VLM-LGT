@@ -10,6 +10,7 @@
 set -euo pipefail
 
 cd "$SLURM_SUBMIT_DIR"
+[[ -d experiments && -d models ]] || { echo "Submit from the repository root."; exit 2; }
 module load anaconda3
 
 # Keep Hugging Face downloads in scratch, home is only 30 GB.
