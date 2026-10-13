@@ -10,6 +10,7 @@
 #   02  multi-dataset report with charts
 #   03  side-by-side metric tables
 #   04  machine-readable sweep and analysis files, per dataset
+#   05  dataset-mixture and new-loss report
 
 import argparse
 import shutil
@@ -24,6 +25,7 @@ NUMBERED_FILES = [
     (HERE / "results" / "confidence_comparison_report.html", "01_chartqa_original_study_report.html"),
     (HERE / "results" / "q_head_multidataset_report.html", "02_multidataset_qhead_report.html"),
     (HERE / "results" / "q_head_comparison.md", "03_qhead_comparison_tables.md"),
+    (HERE / "results" / "q_head_mixture_report.html", "05_mixture_new_loss_report.html"),
 ]
 
 
@@ -63,6 +65,16 @@ def main() -> None:
     for dataset in DATASETS:
         for source, name in sweep_files(dataset):
             copy_if_present(source, args.output / "04_sweep_data" / name)
+    for kind in ("pre", "verifier", "unified"):
+        copy_if_present(
+            HERE / "q_models" / "mixture" / f"mixture_{kind}_results.json",
+            args.output / "04_sweep_data" / f"mixture_{kind}_heads_sweep.json",
+        )
+        copy_if_present(
+            HERE / "q_models" / "mixture" / f"continual_{kind}_results.json",
+            args.output / "04_sweep_data" / f"mixture_{kind}_sequential.json",
+        )
+    copy_if_present(HERE / "results" / "analysis_mixture.json", args.output / "04_sweep_data" / "mixture_analysis.json")
 
 
 if __name__ == "__main__":

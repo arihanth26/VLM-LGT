@@ -26,9 +26,10 @@ each one lives in its own folder so they can be developed independently.
 | Approach 1: same experiment on TextVQA, DocVQA, and ScienceQA | Done, run on the ICE cluster |
 | Approach 1: unified head that reads both latents in one network | Done, compared against the separate heads on all four datasets |
 | Approach 1: ChartQA rerun under the same protocol as the new datasets | Done, reproduces the original study numbers |
-| Approach 1: all four datasets pooled into one mixture, with the model's own confidence and linear probes tested on it | Running on ICE |
-| Approach 1: separate and unified heads on the mixture, old loss | Running on ICE |
-| Approach 1: new loss with a visual-grounding term, separate and unified heads on the mixture | Running on ICE |
+| Approach 1: all four datasets pooled into one mixture, with the model's own confidence and linear probes tested on it | Done |
+| Approach 1: separate and unified heads on the mixture, old loss | Done |
+| Approach 1: new loss with a visual-grounding term, separate and unified heads on the mixture | Done |
+| Approach 1: sequential training (train on A, then B, then C) to test what an earlier dataset keeps, old and new loss, with and without replay | Done |
 | Approach 1: the latent correction step that acts on a flagged answer | Not started |
 | Approach 1: Qwen3-VL 4B check | Not started |
 | Approach 2: verifier reranking | Scaffold only: dataset configs and a failure-pool builder with a placeholder sampler |
@@ -71,6 +72,24 @@ Short version of what the numbers say:
   cost to the joint mode.
 - These results are about detection. Whether a correction step can fix the flagged answers is
   the next experiment.
+
+Training across datasets (report
+[results/approach1/05_mixture_new_loss_report.html](results/approach1/05_mixture_new_loss_report.html)):
+
+- One unified head trained on the pooled mixture reaches pooled AUROC 0.881, against 0.719 for
+  the model's own confidence. On each dataset it is within 0.015 AUROC of the head trained on
+  that dataset alone, and above it on three of the four.
+- Trained on one dataset after another, heads lose little of what they learned earlier:
+  forgetting is 0.011 AUROC for the unified head and 0.013 for the pre-generation head. The
+  answer-conditioned verifier forgets the most (0.032), and a replay buffer holding 10% of
+  earlier training rows cuts that to 0.005.
+- The new loss adds a term that makes the score fall when the image is replaced by a corrupted
+  one. That term alone costs no accuracy and raises how often the score falls for correct
+  answers (unified head: 93% to 96%). The other contrastive term (predicted against correct
+  answer) lowers AUROC by 0.01 to 0.02, so the loss as first specified, with both terms, is
+  slightly worse than the old loss.
+- The model's own confidence already falls for 95% of correct answers under a corrupted
+  image. Its weakness is ranking right against wrong answers, not noticing missing evidence.
 
 ### Contributors
 
@@ -134,6 +153,9 @@ VLM-LGT/
 │   │   │                                      per-dataset evaluation, grounding metrics
 │   │   ├── sweep_mixture.py                   Seeded sweeps of the three head kinds on the mixture
 │   │   ├── analyze_mixture.py                 Baselines, curves, and the clean-versus-corrupted gallery
+│   │   ├── continual.py                       Sequential training across datasets and the retention metrics
+│   │   ├── sweep_continual.py                 Dataset orders, old and new loss, replay, isolated references
+│   │   ├── build_mixture_report.py            Builds the mixture, sequential, and new-loss HTML report
 │   │   ├── train_q_heads.py                   Pre-generation head and verifier head, shared losses and metrics
 │   │   ├── sweep_q_heads.py                   Architecture and hyperparameter sweep for the separate heads
 │   │   ├── sweep_verifier_early_stop.py       Early-stopping sweep over the verifier ranking weight
@@ -164,7 +186,8 @@ VLM-LGT/
 │   │   ├── 01_chartqa_original_study_report.html   First study: ChartQA only
 │   │   ├── 02_multidataset_qhead_report.html       Three more datasets and the unified head
 │   │   ├── 03_qhead_comparison_tables.md           Side-by-side metric tables
-│   │   └── 04_sweep_data/                          Sweep and analysis JSON files per dataset
+│   │   ├── 04_sweep_data/                          Sweep and analysis JSON files per dataset and for the mixture
+│   │   └── 05_mixture_new_loss_report.html         Mixture, sequential training, and the new loss
 │   └── approach2/                             Approach 2 results (none yet)
 │
 ├── slurm/                                     Job scripts for the ICE cluster
@@ -184,7 +207,9 @@ VLM-LGT/
 │   ├── sweep_mixture.sbatch                   Sweeps one head kind on the mixture on a GPU
 │   ├── analyze_mixture.sbatch                 CPU job: baselines and curves for the mixture
 │   ├── run_qhead_pipeline.sh                  Submits the whole chain for one dataset with dependencies
+│   ├── sweep_continual.sbatch                 Sequential training for one head kind on a GPU
 │   ├── run_mixture_pipeline.sh                Submits the mixture and new-loss chain for all datasets
+│   ├── run_continual_pipeline.sh              Submits the sequential-training jobs, one per head kind
 │   └── check_scripts.sh                       Validates every job script: syntax, module paths, sbatch --test-only
 │
 ├── docs/
@@ -194,7 +219,9 @@ VLM-LGT/
 │   ├── test_config.py                         Smoke tests for the model and dataset configs, no network needed
 │   ├── test_scoring_and_splits.py             Offline tests for answer scoring and the grouped split
 │   ├── test_unified_q_head.py                 Offline tests for the unified head and its sweep
-│   └── test_mixture.py                        Offline tests for corruptions, the old and new loss, and the mixture sweep
+│   ├── test_mixture.py                        Offline tests for corruptions, the old and new loss, and the mixture sweep
+│   ├── test_continual.py                      Offline tests for sequential training and the retention metrics
+│   └── test_mixture_report.py                 Offline test that the mixture report builds from the real result schema
 │
 ├── requirements.txt
 ├── DATASETS.md                                Reference table of every dataset id, with source links and known quirks
@@ -237,6 +264,8 @@ VLM-LGT/
    python -m tests.test_scoring_and_splits
    python -m tests.test_unified_q_head
    python -m tests.test_mixture
+   python -m tests.test_continual
+   python -m tests.test_mixture_report
    ```
 
 ## Approach 1 on the ICE cluster
@@ -310,8 +339,23 @@ bash slurm/run_mixture_pipeline.sh
 
 It runs, in order: corrupted-image features for every dataset and split (GPU, in parallel),
 the mixture build (CPU), one sweep per head kind (pre-generation, verifier, unified) under the
-old and the new loss (GPU, in parallel), and the analysis (CPU). The new loss adds a
-visual-grounding term: the score of the clean input must exceed the score of the same question
+old and the new loss (GPU, in parallel), and the analysis (CPU). The sequential-training
+experiments (train on one dataset, then the next, and measure what is forgotten) run on the
+same cached features and use the winning configuration of each mixture sweep:
+
+```
+PRE_JOB=<id> VERIFIER_JOB=<id> UNIFIED_JOB=<id> bash slurm/run_continual_pipeline.sh
+```
+
+Pass the job ids of the mixture sweeps to start each sequential job when its sweep finishes,
+or run it with no ids once the sweeps are done. Then build the report and publish it:
+
+```
+python -m experiments.approach1_latent_self_correction.build_mixture_report
+python -m experiments.approach1_latent_self_correction.publish_results
+```
+
+The new loss adds a visual-grounding term: the score of the clean input must exceed the score of the same question
 and answer with a corrupted image. The design is in
 [docs/approach1_unified_q_head.md](docs/approach1_unified_q_head.md).
 
