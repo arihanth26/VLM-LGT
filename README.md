@@ -24,8 +24,8 @@ each one lives in its own folder so they can be developed independently.
 | Approach 1: full-image baseline with token-likelihood confidence | Done |
 | Approach 1: correctness heads on frozen features (pre-generation head and answer-conditioned verifier), sweeps, ChartQA study | Done |
 | Approach 1: same experiment on TextVQA, DocVQA, and ScienceQA | Done, run on the ICE cluster |
-| Approach 1: unified head that reads both latents in one network | Done, compared against the separate heads on all three new datasets |
-| Approach 1: ChartQA rerun under the same protocol as the new datasets | Running on ICE, the report regenerates when it finishes |
+| Approach 1: unified head that reads both latents in one network | Done, compared against the separate heads on all four datasets |
+| Approach 1: ChartQA rerun under the same protocol as the new datasets | Done, reproduces the original study numbers |
 | Approach 1: the latent correction step that acts on a flagged answer | Not started |
 | Approach 1: counterfactual control and Qwen3-VL 4B check | Not started |
 | Approach 2: verifier reranking | Scaffold only: dataset configs and a failure-pool builder with a placeholder sampler |
@@ -49,7 +49,7 @@ the order the work happened, starting from the original ChartQA study.
 
 | Dataset | Input type | Base accuracy | Token confidence | Best separate head | Unified head |
 |---|---|---:|---:|---:|---:|
-| ChartQA (original study) | Charts | 75.8% | 0.750 | 0.895 | not run yet |
+| ChartQA (rerun, same protocol) | Charts | 75.8% | 0.751 | 0.895 | 0.898 |
 | TextVQA | Scene text | 81.0% | 0.726 | 0.868 | 0.867 |
 | DocVQA | Scanned documents | 87.0% | 0.685 | 0.788 | 0.811 |
 | ScienceQA (image questions) | Science diagrams | 86.7% | 0.654 | 0.918 | 0.925 |
@@ -57,10 +57,12 @@ the order the work happened, starting from the original ChartQA study.
 Short version of what the numbers say:
 
 - The learned heads beat token confidence on every dataset, by roughly 0.1 to 0.26 AUROC.
-- The unified head ties the separate heads on TextVQA and beats them on DocVQA and ScienceQA,
-  using one model instead of two. Paired bootstrap intervals are in the report.
+- The unified head ties the separate heads on ChartQA and TextVQA and beats them on DocVQA and
+  ScienceQA, using one model instead of two. Paired bootstrap intervals are in the report.
 - Flagging the 20% lowest-scored answers captures 59% to 79% of all errors with the unified
   head, against 44% to 53% with token confidence.
+- The ChartQA rerun reproduces the original study: token confidence AUROC 0.751 against 0.750,
+  and the linear pre-generation probe 0.895 against 0.895.
 - The pairwise reference-answer loss hurt on every dataset and is off in every winning
   configuration. The extra pre-generation loss term helps the pre-generation mode at almost no
   cost to the joint mode.

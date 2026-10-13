@@ -645,13 +645,31 @@ def build(present: dict) -> str:
 
     # ------------------------------------------------------------ 2 summary
     mid_accuracy = [curve(k, "unified_joint", "accuracy_at_coverage", 0.5) for k in order]
+    winner_pre = {k: present[k]["unified"]["winner"]["config"]["pre_weight"] for k in order}
+    pair_change, pre_lift, joint_move = {}, {}, {}
+    for k in order:
+        ag = present[k]["unified"]["aggregates"]
+        off = [a["mean_val_auroc"]["joint"] for a in ag if a["config"]["pair_weight"] == 0.0]
+        on = [a["mean_val_auroc"]["joint"] for a in ag if a["config"]["pair_weight"] == 0.25]
+        pair_change[k] = sum(on) / len(on) - sum(off) / len(off)
+        pre_on = max(a["mean_val_auroc"]["pre_generation"] for a in ag if a["config"]["pre_weight"] == 1.0)
+        pre_off = max(a["mean_val_auroc"]["pre_generation"] for a in ag if a["config"]["pre_weight"] == 0.0)
+        pre_lift[k] = pre_on - pre_off
+        joint_on = max(a["mean_val_auroc"]["joint"] for a in ag if a["config"]["pre_weight"] == 1.0)
+        joint_off = max(a["mean_val_auroc"]["joint"] for a in ag if a["config"]["pre_weight"] == 0.0)
+        joint_move[k] = joint_on - joint_off
+    pair_all_hurt = all(v < 0 for v in pair_change.values())
+    pre_all_lift = all(v > 0 for v in pre_lift.values())
+    joint_max_move = max(abs(v) for v in joint_move.values())
+    near_pre = [k for k in order if gaps_early(metric, k) < 0.01]
+    weight_text = ", ".join(f"{names[k]} {winner_pre[k]:g}" for k in order)
     parts.append(f"""<h2 id="summary">2. This report in brief</h2>
 <div class="card summary"><ul>
 <li><b>The ChartQA result transfers.</b> Across {count_word} datasets with different input types ({input_list}), the unified head raises correctness AUROC over geometric-mean token confidence by {gain_low:.2f} to {gain_high:.2f}. Token confidence is saturated everywhere: it equals 1.0 on {pct(min(one_fraction.values()), 0)} to {pct(max(one_fraction.values()), 0)} of test answers.</li>
 <li><b>One head can do both jobs.</b> The unified head reads the prompt latent and the answer latent together, and with the answer half zeroed it scores a question before any answer exists. Its joint mode matches or beats the separate verifier head on every dataset: the paired bootstrap interval excludes zero in its favor on {join_names(wins) if wins else 'none of the datasets'}{', includes zero on ' + join_names(ties) if ties else ''}{', and favors the separate head on ' + join_names(losses) if losses else ''}.</li>
 <li><b>It works as a gate.</b> Flagging the 20% of answers with the lowest predicted correctness captures {pct(min(r[4] for r in gate_rows), 0)} to {pct(max(r[4] for r in gate_rows), 0)} of all errors, against {pct(min(r[2] for r in gate_rows), 0)} to {pct(max(r[2] for r in gate_rows), 0)} for token confidence. Keeping only the most trusted half of answers lifts accuracy to {pct(min(mid_accuracy), 0)} to {pct(max(mid_accuracy), 0)}.</li>
-<li><b>What the head learns differs by dataset.</b> On TextVQA it mostly catches broken or malformed answers, which only the answer-side state can see. On DocVQA it separates hard layouts and handwriting from easy forms. On ScienceQA it mostly learns which topics are hard, so the question alone is almost enough.</li>
-<li><b>The pre-generation loss term costs almost nothing, and the pairwise loss hurts.</b> The pre-generation term lifts that mode on every dataset and moves the joint mode by less than 0.006 AUROC (validation). The pairwise reference-answer loss lowered validation AUROC on every dataset and is off in every winner.</li>
+<li><b>What the head learns differs by dataset.</b> On TextVQA it mostly catches broken or malformed answers, which only the answer-side state can see. On DocVQA it separates hard layouts and handwriting from easy forms. On ScienceQA it mostly learns which topics are hard, so the question alone is almost enough. On ChartQA it flags multi-step arithmetic questions and misses confident misreads of a single bar.</li>
+<li><b>The pre-generation loss term costs almost nothing, and the pairwise loss hurts.</b> The pre-generation term lifts that mode {'on every dataset' if pre_all_lift else 'on most datasets'} and moves the joint mode by at most {joint_max_move:.3f} AUROC (validation). The pairwise reference-answer loss lowered validation AUROC {'on every dataset' if pair_all_hurt else 'on most datasets'} and is off in every winner.</li>
 <li><b>What this does not show yet.</b> These heads detect likely errors. They do not fix them. Whether a latent correction step helps on the flagged answers is the next experiment.</li></ul></div>
 {figure('fig-pipeline', 'Where the correctness head sits in the project', pipeline_diagram(), 'The language model is frozen throughout. Only the small head is trained. The dashed final box is the planned correction stage and is not part of the results here.')}""")
 
@@ -891,7 +909,7 @@ def build(present: dict) -> str:
         best_arch = {arch: max(a["mean_val_auroc"]["joint"] for a in aggregates if a["config"]["architecture"] == arch) for arch in ("linear", "mlp_256", "mlp_512")}
         arch_rows.append([names[key], f3(best_arch["linear"]), f3(best_arch["mlp_256"]), f3(best_arch["mlp_512"]),
                           present[key]["unified"]["winner"]["config"]["architecture"], f"{series[0.0]:.3f} to {series[1.0]:.3f}", f"{joint1 - joint0:+.3f}"])
-    parts.append("<h4>The pre-generation loss term</h4><p>The chart shows the best validation AUROC that the pre-generation mode reaches when the term is off (weight 0), half strength and full strength. The term helps on every dataset, and weight 1 was selected on every dataset.</p>")
+    parts.append(f"<h4>The pre-generation loss term</h4><p>The chart shows the best validation AUROC that the pre-generation mode reaches when the term is off (weight 0), half strength and full strength. The term {'helps on every dataset' if pre_all_lift else 'helps on most datasets'}. Weights selected for the winners: {weight_text}.</p>")
     parts.append(legend([("Weight 0", "c-w0"), ("Weight 0.5", "c-w1"), ("Weight 1.0", "c-w2")]))
     parts.append(figure("fig-ablation", "Effect of the pre-generation loss weight on the pre-generation mode (validation)", ablation_plot(ablation_rows, "fig-ablation"),
                         "The same weights serve the joint mode, whose best validation AUROC changes by at most a few thousandths between weight 0 and weight 1 (last column of the architecture table below)."))
@@ -919,13 +937,13 @@ def build(present: dict) -> str:
 <h3>2. What the answer latent adds depends on how much the answer says</h3>
 <p>The gap between the unified head's joint mode and its pre-generation mode is {', '.join(f"{names[k]} {gaps[k]:+.3f}" for k in order)} AUROC. Where the answer is free text, as in TextVQA and DocVQA, the answer-side state carries real extra evidence: it reflects degenerate output, run-on text, and misread strings that no question-only score can foresee. In ScienceQA the answer is a single letter among a few options, so the answer-side state has almost nothing to add and the question alone nearly saturates the signal. The benefit of an answer-conditioned verifier scales with how much information the answer itself carries.</p>
 <h3>3. A pre-generation score is already worth having</h3>
-<p>In pre-generation mode the head never sees the answer, yet it captures most of the benefit on two of the datasets. Because it runs before generation, it can decide whether to spend extra compute at all. The case studies show what that score is: mostly a model of question difficulty and topic, not a check on the answer.</p>
+<p>In pre-generation mode the head never sees the answer, yet it captures nearly all of the benefit on {join_names(near_pre) if near_pre else 'none of the datasets'} (joint mode adds less than 0.01 AUROC there). Because it runs before generation, it can decide whether to spend extra compute at all. The case studies show what that score is: mostly a model of question difficulty and topic, not a check on the answer.</p>
 <h3>4. The head learns the model's failure modes, including ones that are not visual</h3>
 <p>The caught errors on TextVQA are largely format failures (repetition loops, explanations where a short answer was asked for). The missed errors on DocVQA are largely near misses where the answer carries extra words. The ScienceQA head leans on topic. These are properties of the model plus the labeling rule, and a correction step built on this gate will inherit them. A gate that fires on a repetition loop needs a different fix than one that fires on a misread digit.</p>
 <h3>5. The unified head simplifies without losing accuracy</h3>
-<p>Matching or beating the separate heads with one model is a practical result: one set of weights, one cached input pair, and a choice of mode at inference. The pre-generation loss term lets the head keep a usable pre-answer score without hurting the answer-conditioned one. In pre-generation mode it is within 0.006 AUROC of the dedicated head on every dataset.</p>
+<p>Matching or beating the separate heads with one model is a practical result: one set of weights, one cached input pair, and a choice of mode at inference. The pre-generation loss term lets the head keep a usable pre-answer score without hurting the answer-conditioned one. In pre-generation mode it is within {max(abs(boot[k]['unified_pre_minus_separate_pre']['auroc']['difference']) for k in order):.3f} AUROC of the dedicated head on every dataset.</p>
 <h3>6. The pairwise reference loss does not help</h3>
-<p>Adding the paired loss reduced mean validation AUROC on every dataset (Section 7.6), by a large margin on DocVQA. A plausible reason, not tested here, is that the reference-answer state differs from a generated-answer state in ways unrelated to correctness, so the head can improve the pair loss by learning that difference instead. The same pattern held for the ranking loss in the original study. Plain cross-entropy is the right default.</p>
+<p>Adding the paired loss reduced mean validation AUROC {'on every dataset' if pair_all_hurt else 'on most datasets'} (Section 7.6), by a large margin on DocVQA. A plausible reason, not tested here, is that the reference-answer state differs from a generated-answer state in ways unrelated to correctness, so the head can improve the pair loss by learning that difference instead. The same pattern held for the ranking loss in the original study. Plain cross-entropy is the right default.</p>
 <h3>7. Calibration is good on average and uneven by category</h3>
 <p>After temperature scaling the expected calibration error is small on every dataset. The category breakdown shows where it is not: on DocVQA handwritten questions accuracy is well below the head's mean prediction, so the head is overconfident exactly where the model is weakest. A gate built on this score would under-trigger there.</p>
 <h3>8. Practical meaning for a correction gate</h3>
@@ -971,6 +989,11 @@ python -m experiments.approach1_latent_self_correction.publish_results</pre>""")
     parts.append('<p class="small">Each sweep (separate heads, then unified) took 2 to 5 minutes per dataset on cached features, and the analysis about 2 minutes on a CPU node. Result files: <code>q_models/&lt;dataset&gt;/sweep_results.json</code>, <code>unified_sweep_results.json</code>, <code>results/analysis_&lt;dataset&gt;.json</code>, and <code>results/chartqa_original_validation_runs.json</code> (parsed from the original report).</p>')
     parts.append("</main></body></html>")
     return "".join(parts)
+
+
+def gaps_early(metric: dict, key: str) -> float:
+    """AUROC gain of the unified joint mode over its pre-generation mode on one dataset."""
+    return metric[key]["unified_joint"]["correctness_auroc"][0] - metric[key]["unified_pre_generation"]["correctness_auroc"][0]
 
 
 def dataset_discussion(key, names, metric, analysis, boot, one_fraction) -> str:
@@ -1023,9 +1046,24 @@ def dataset_discussion(key, names, metric, analysis, boot, one_fraction) -> str:
                 "The confident-correct examples are map questions such as which continent or state is highlighted. So much of the gate is a topic detector.</p>"
                 "<p><b>What it misses.</b> The missed errors are confident factual mistakes: a state capital given for the wrong state, a mislabelled animal class, a misread passage. Token confidence is 1.00 on every one of them. Factual recall errors leave no trace in the model's state that this head can find.</p>"
                 "<p><b>Why this needs care.</b> A topic-level gate can look excellent because topics are easy to separate, and it would simply route every genetics question to correction. Whether that is useful depends on whether correction can fix genetics questions, which is the open experiment.</p>")
+    elif key == "chartqa_full":
+        rerun_pre, rerun_ver = metric[key]["separate_pre_generation"], metric[key]["separate_verifier"]
+        table_rows = [
+            ["Token confidence", "0.750", f3(tok), "0.583", f3(at("token_confidence", "error_auprc"))],
+            ["Pre-generation linear probe", "0.895", f3(sp), "0.732", f3(rerun_pre["error_auprc"][0])],
+            ["Verifier MLP", "0.887", f3(sv), "0.723", f3(rerun_ver["error_auprc"][0])],
+        ]
+        body = (
+            "<p><b>Reproduction of the original study.</b> This dataset was rerun end to end under the same protocol as the others, as a check on the whole pipeline. Base accuracy on test is the same 75.84%, and the numbers land on top of the original ones:</p>"
+            + table(["Scorer", "AUROC, original", "AUROC, rerun", "Error AUPRC, original", "Error AUPRC, rerun"], table_rows)
+            + "<p class='small'>The rerun uses a 64-token answer cap and single selected heads from a fresh sweep, the original allowed 512 tokens. The linear pre-generation probe is again the best separate pre-generation head, with identical AUROC.</p>"
+            "<p><b>What the head is doing.</b> The pre-generation mode is as good as the joint mode, so the signal is mostly about the question. The caught errors are multi-step arithmetic questions (add the three largest values and multiply by the smallest, average the tops of two bar groups), where the model starts reasoning instead of giving a number or computes a slightly wrong value. "
+            "The false alarms are the same kind of question answered correctly, so the head has learned that computation questions are risky, not that a particular answer is wrong.</p>"
+            "<p><b>What it misses.</b> The missed errors are direct lookups with a wrong read: a revenue figure taken from the wrong bar or year, a total that does not match, a value with an extra unit suffix. They are confident (0.97) and look like every correct lookup, which is also why token confidence is 1.00 on them. Reading the wrong bar leaves no trace in the state this head sees.</p>"
+            "<p><b>Unified versus separate.</b> This is the dataset where the two designs are closest: the single head ties the separate heads in both modes, and the winning unified architecture is a linear probe. What the unified head adds here is one model for both jobs, not accuracy.</p>"
+        )
     else:
-        body = ("<p>This dataset was rerun under the same protocol as the others, so its numbers are directly comparable with them and with the original study table in Section 1. "
-                "Differences from that table come from generation length (64 new tokens here), single selected heads instead of the full sweeps, and the unified head being new.</p>")
+        body = "<p>This dataset was rerun under the same protocol as the others, so its numbers are directly comparable with them.</p>"
     return opening + body
 
 
