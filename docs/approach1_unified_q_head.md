@@ -288,7 +288,7 @@ The experiments above were run on the ICE cluster (Qwen3-VL-2B, one L40S per GPU
 write-up, with charts, intervals, ablations, and limits, is in
 `results/approach1/05_mixture_new_loss_report.html`. In short, on the pooled test split:
 
-- **Mixture.** The model's own confidence has AUROC 0.719. The unified head trained on the
+- **Mixture.** The untrained answer-token probability has AUROC 0.719. The unified head trained on the
   mixture reaches 0.881 (old loss) and 0.882 (new loss). Per dataset it is within 0.015 AUROC of
   the head trained on that dataset alone, and above it on ChartQA, TextVQA, and DocVQA.
 - **Sequential training.** Trained through all four datasets in sequence, heads forget little:
@@ -300,6 +300,6 @@ write-up, with charts, intervals, ablations, and limits, is in
   alone lowers AUROC by 0.01 to 0.02, so the loss with both terms is slightly worse than the old
   loss. Grounding persists through sequential training under both losses, and is higher with the
   new loss at every stage.
-- **The model's own confidence** already falls for 95% of correct answers under a corrupted
+- **The answer-token probability** already falls for 95% of correct answers under a corrupted
   image. Its weakness is ranking, not noticing that the evidence is gone.
 
