@@ -93,6 +93,10 @@ Training across datasets (report
   corrupted image. Its weakness is ranking right against wrong answers, not noticing missing
   evidence.
 
+Trained heads: the nine pooled-mixture heads (old loss, new loss with swap, new loss with noise, for each head kind)
+are in [trained_heads/approach1/](trained_heads/approach1/), with a guide to loading them in
+[trained_heads/README.md](trained_heads/README.md).
+
 Corrupted image instead of a swapped one (report
 [results/approach1/06_corruption_new_loss_report.html](results/approach1/06_corruption_new_loss_report.html)):
 
@@ -173,6 +177,7 @@ VLM-LGT/
 │   │   ├── continual.py                       Sequential training across datasets and the retention metrics
 │   │   ├── sweep_continual.py                 Dataset orders, old and new loss, replay, isolated references
 │   │   ├── build_mixture_report.py            Builds the mixture, sequential, and new-loss HTML report
+│   │   ├── export_heads.py                    Saves the winning heads of the pooled sweeps and loads them back
 │   │   ├── build_corruption_report.py         Builds the report on the noise version of the new loss
 │   │   ├── train_q_heads.py                   Pre-generation head and verifier head, shared losses and metrics
 │   │   ├── sweep_q_heads.py                   Architecture and hyperparameter sweep for the separate heads
@@ -229,9 +234,13 @@ VLM-LGT/
 │   ├── sweep_continual.sbatch                 Sequential training for one head kind on a GPU
 │   ├── run_mixture_pipeline.sh                Submits the mixture and new-loss chain for all datasets
 │   ├── run_continual_pipeline.sh              Submits the sequential-training jobs, one per head kind
+│   ├── export_heads.sbatch                    Retrains the winning heads and saves their weights to trained_heads/
 │   ├── run_corruption_pipeline.sh             Submits the noise-corruption chain: features, builds, sweeps, sequential runs
 │   └── check_scripts.sh                       Validates every job script: syntax, module paths, sbatch --test-only
 │
+├── trained_heads/
+│   └── approach1/                             Nine trained correctness heads (old, new swap, new noise) and a loading guide
+
 ├── docs/
 │   └── approach1_unified_q_head.md            Design note: datasets, unified head, loss, protocol, status
 │

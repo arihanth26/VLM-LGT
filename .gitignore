@@ -41,3 +41,6 @@ logs/*.out
 # Local caches on the cluster
 .hf_cache/
 .pip_cache/
+
+# Trained correctness heads are small and are tracked on purpose.
+!trained_heads/**/*.pt
