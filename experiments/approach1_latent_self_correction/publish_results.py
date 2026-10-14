@@ -11,6 +11,7 @@
 #   03  side-by-side metric tables
 #   04  machine-readable sweep and analysis files, per dataset
 #   05  dataset-mixture and new-loss report
+#   06  corrupted-image (noise) version of the new loss
 
 import argparse
 import shutil
@@ -26,6 +27,7 @@ NUMBERED_FILES = [
     (HERE / "results" / "q_head_multidataset_report.html", "02_multidataset_qhead_report.html"),
     (HERE / "results" / "q_head_comparison.md", "03_qhead_comparison_tables.md"),
     (HERE / "results" / "q_head_mixture_report.html", "05_mixture_new_loss_report.html"),
+    (HERE / "results" / "q_head_corruption_report.html", "06_corruption_new_loss_report.html"),
 ]
 
 
@@ -75,6 +77,19 @@ def main() -> None:
             args.output / "04_sweep_data" / f"mixture_{kind}_sequential.json",
         )
     copy_if_present(HERE / "results" / "analysis_mixture.json", args.output / "04_sweep_data" / "mixture_analysis.json")
+    publish_corruption_data(args.output)
+
+
+def publish_corruption_data(output: Path) -> None:
+    """Copy the sweep, sequential, and analysis files of the corrupted-image experiments."""
+    folder = HERE / "q_models" / "mixture"
+    data = output / "04_sweep_data"
+    names = ["mixture_noise", "mixture_xeval"] + [f"{d}_{c}" for d in ("chartqa", "textvqa", "docvqa", "scienceqa") for c in ("swap", "noise")]
+    for kind in ("pre", "verifier", "unified"):
+        for name in names:
+            copy_if_present(folder / f"{name}_{kind}_results.json", data / f"corruption_{name}_{kind}_sweep.json")
+        copy_if_present(folder / f"mixture_noise_continual_{kind}_results.json", data / f"corruption_mixture_noise_{kind}_sequential.json")
+    copy_if_present(HERE / "results" / "analysis_mixture_noise.json", data / "corruption_mixture_noise_analysis.json")
 
 
 if __name__ == "__main__":

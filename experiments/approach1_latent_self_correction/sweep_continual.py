@@ -112,7 +112,9 @@ def main() -> None:
     parser.add_argument("--patience", type=int, default=4)
     parser.add_argument("--batch-size", type=int, default=1024)
     parser.add_argument("--output-dir", type=Path, default=MODELS_DIR)
+    parser.add_argument("--out-tag", default=None, help="Name for the output file, default the input tag.")
     args = parser.parse_args()
+    out_tag = args.out_tag or args.tag
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     train_all, names = load_split(FEATURE_DIR / f"{args.tag}_train_{args.size}.pt", device)
@@ -134,7 +136,8 @@ def main() -> None:
             mode = modes_for(args.kind)[0]
             print(f"[{args.kind}] {key}: final {summary[mode]['final_avg']['mean']:.3f} forgetting {summary[mode]['forgetting']['mean']:.3f}", flush=True)
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    (args.output_dir / f"continual_{args.kind}_results.json").write_text(json.dumps(output, indent=2) + "\n", encoding="utf-8")
+    name = f"continual_{args.kind}_results.json" if out_tag == "mixture" else f"{out_tag}_continual_{args.kind}_results.json"
+    (args.output_dir / name).write_text(json.dumps(output, indent=2) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

@@ -78,6 +78,23 @@ def test_shuffle_patches_keeps_pixels_but_changes_layout():
     assert corrupt_image(image, "swap", 0, partner).size == (10, 10)
 
 
+def test_noise_and_mask_corruptions():
+    """Noise keeps the size and destroys detail, mask blanks the requested share, both are deterministic."""
+    from experiments.approach1_latent_self_correction.corruption import add_noise, mask_patches
+
+    rng = np.random.default_rng(0)
+    image = Image.fromarray(rng.integers(0, 255, (96, 128, 3), dtype=np.uint8))
+    noisy = add_noise(image, seed=1, alpha=0.15)
+    assert noisy.size == image.size and noisy.tobytes() == add_noise(image, seed=1, alpha=0.15).tobytes()
+    clean_corr = np.corrcoef(np.array(image).ravel(), np.array(noisy).ravel())[0, 1]
+    mild_corr = np.corrcoef(np.array(image).ravel(), np.array(add_noise(image, 1, 0.9)).ravel())[0, 1]
+    assert clean_corr < mild_corr, "a smaller alpha should keep less of the image"
+    masked = np.array(mask_patches(image, seed=2, fraction=0.5, grid=8))
+    gray = (masked == 128).all(axis=2).mean()
+    assert 0.45 < gray < 0.55, gray
+    assert corrupt_image(image, "noise", 3).size == image.size and corrupt_image(image, "mask", 3, strength=0.25).size == image.size
+
+
 def test_old_loss_is_reproduced_exactly():
     """With ground off, the mixture loss must equal the existing unified loss term for term."""
     data = make_split(64, 1)
@@ -180,6 +197,40 @@ def test_quick_sweep_runs_for_every_head_kind():
         assert scores["new"][mode]["clean"].shape == (3, 150)
         if kind != "pre":
             assert {"cell_plain", "cell_contrast", "cell_ground", "cell_full", "new_full"} <= set(result["winners"])
+
+
+def test_extra_corruption_grounding_is_reported():
+    """A sweep given extra corruption features reports grounding against each of them, pooled and per dataset."""
+    train, validation, test = (tensors_of(make_split(n, s)) for n, s in ((400, 6), (150, 7), (150, 8)))
+    other = make_split(150, 9)
+    extra = {"mask": {"prompt_corrupt": other["prompt_features_corrupt"], "generated_corrupt": other["generated_features_corrupt"]}}
+    result, _ = sweep_mixture.run_sweep(
+        "unified", train, validation, test, ["a", "b"], DEVICE, quick=True, max_epochs=2, patience=2, batch_size=128,
+        extra_tests=extra,
+    )
+    entry = result["winners"]["new"]["grounding_extra"]["mask"]["joint"]
+    assert "pooled" in entry and "a" in entry and "order_accuracy" in entry["pooled"]["correct"]
+
+
+def test_build_extra_test_and_corruption_paths():
+    """Pooled extra test files keep the row order of the clean split and name files by corruption."""
+    with tempfile.TemporaryDirectory() as folder:
+        root = Path(folder)
+        for name, count in {"alpha": 12, "beta": 8}.items():
+            torch.save({"indices": torch.arange(count)}, root / f"{name}_test_2b.pt")
+            torch.save({"indices": torch.arange(count), "prompt_features_corrupt": torch.randn(count, SIZE),
+                        "generated_features_corrupt": torch.randn(count, SIZE), "confidence_corrupt": torch.rand(count)},
+                       root / f"{name}_test_2b_corrupt_mask.pt")
+        old = build_mixture.FEATURE_DIR
+        build_mixture.FEATURE_DIR = root
+        try:
+            extra = build_mixture.build_extra_test(["alpha", "beta"], "2b", "mask")
+            swap_name = build_mixture.corrupt_path("alpha", "test", "2b", "swap").name
+            mask_name = build_mixture.corrupt_path("alpha", "test", "2b", "mask").name
+        finally:
+            build_mixture.FEATURE_DIR = old
+        assert extra["prompt_features_corrupt"].shape == (20, SIZE) and len(extra["confidence_corrupt"]) == 20
+        assert swap_name == "alpha_test_2b_corrupt.pt" and mask_name == "alpha_test_2b_corrupt_mask.pt"
 
 
 def _run_all() -> None:

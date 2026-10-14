@@ -176,9 +176,13 @@ def grounding_metrics(clean: np.ndarray, corrupt: np.ndarray, labels: np.ndarray
 
 def evaluate_split(
     head, spec: HeadSpec, tensors: dict, labels: np.ndarray, dataset_id: np.ndarray, names: list[str],
-    temperatures: dict, device: torch.device,
+    temperatures: dict, device: torch.device, extra: dict | None = None,
 ) -> dict:
-    """Pooled, per-dataset, and grounding metrics for a trained head on one split."""
+    """Pooled, per-dataset, and grounding metrics for a trained head on one split.
+
+    extra maps a corruption name to its corrupted test features, so grounding learned under one
+    corruption can also be measured against others.
+    """
     clean_logits = predict_logits(head, spec.kind, tensors, False, device)
     corrupt_logits = predict_logits(head, spec.kind, tensors, True, device)
     pooled, per_dataset, grounding, probabilities = {}, {}, {}, {}
@@ -193,7 +197,28 @@ def evaluate_split(
             if rows.sum() >= MIN_DATASET_ROWS and 0 < labels[rows].mean() < 1:
                 per_dataset.setdefault(name, {})[mode] = key_metrics(labels[rows], clean[rows])
                 grounding[mode][name] = grounding_metrics(clean[rows], corrupt[rows], labels[rows])
-    return {"pooled": pooled, "per_dataset": per_dataset, "grounding": grounding, "probabilities": probabilities}
+    result = {"pooled": pooled, "per_dataset": per_dataset, "grounding": grounding, "probabilities": probabilities}
+    if extra:
+        result["grounding_extra"] = extra_grounding(head, spec, tensors, labels, dataset_id, names, temperatures, device, extra, probabilities)
+    return result
+
+
+def extra_grounding(head, spec, tensors, labels, dataset_id, names, temperatures, device, extra, probabilities) -> dict:
+    """Grounding metrics of the same clean scores against each extra corruption of the test split."""
+    result = {}
+    for corruption, features in extra.items():
+        swapped = {**tensors, "prompt_corrupt": features["prompt_corrupt"], "generated_corrupt": features["generated_corrupt"]}
+        logits = predict_logits(head, spec.kind, swapped, True, device)
+        for mode in modes_for(spec.kind):
+            clean = probabilities[mode]["clean"]
+            other = to_probabilities(logits[mode], temperatures[mode])
+            entry = {"pooled": grounding_metrics(clean, other, labels)}
+            for index, name in enumerate(names):
+                rows = dataset_id == index
+                if rows.sum() >= MIN_DATASET_ROWS and 0 < labels[rows].mean() < 1:
+                    entry[name] = grounding_metrics(clean[rows], other[rows], labels[rows])
+            result.setdefault(corruption, {})[mode] = entry
+    return result
 
 
 def selection_key(pooled: dict, kind: str) -> tuple[float, float]:
@@ -207,7 +232,7 @@ def selection_key(pooled: dict, kind: str) -> tuple[float, float]:
 
 def train_head(
     spec: HeadSpec, train: dict, validation: dict, test: dict, names: list[str], device: torch.device,
-    max_epochs: int = 40, patience: int = 4, batch_size: int = 1024,
+    max_epochs: int = 40, patience: int = 4, batch_size: int = 1024, extra_tests: dict | None = None,
 ) -> dict:
     """Train one head with early stopping on validation and evaluate the best state on validation and test."""
     torch.manual_seed(spec.seed)
@@ -245,7 +270,8 @@ def train_head(
     assert best is not None
     head.load_state_dict(best["state"])
     test_eval = evaluate_split(
-        head, spec, test, test["labels"].cpu().numpy(), test["dataset_id"].cpu().numpy(), names, best["temperatures"], device
+        head, spec, test, test["labels"].cpu().numpy(), test["dataset_id"].cpu().numpy(), names, best["temperatures"], device,
+        extra_tests,
     )
     return {
         "spec": asdict(spec),
