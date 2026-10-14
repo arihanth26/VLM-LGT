@@ -233,6 +233,7 @@ def selection_key(pooled: dict, kind: str) -> tuple[float, float]:
 def train_head(
     spec: HeadSpec, train: dict, validation: dict, test: dict, names: list[str], device: torch.device,
     max_epochs: int = 40, patience: int = 4, batch_size: int = 1024, extra_tests: dict | None = None,
+    keep_state: bool = False,
 ) -> dict:
     """Train one head with early stopping on validation and evaluate the best state on validation and test."""
     torch.manual_seed(spec.seed)
@@ -273,10 +274,13 @@ def train_head(
         head, spec, test, test["labels"].cpu().numpy(), test["dataset_id"].cpu().numpy(), names, best["temperatures"], device,
         extra_tests,
     )
-    return {
+    result = {
         "spec": asdict(spec),
         "epoch": best["epoch"],
         "val_pooled": best["val_pooled"],
         "temperatures": best["temperatures"],
         "test": test_eval,
     }
+    if keep_state:
+        result["state"] = {k: v.detach().cpu() for k, v in best["state"].items()}
+    return result

@@ -1,0 +1,164 @@
+[
+  {
+    "file": "pre_old.pt",
+    "kind": "pre",
+    "label": "old",
+    "config": {
+      "architecture": "mlp_256",
+      "ground_margin": 0.0,
+      "ground_on": "correct",
+      "ground_weight": 0.0,
+      "kind": "pre",
+      "learning_rate": 0.0003,
+      "pair_weight": 0.0,
+      "pre_weight": 0.0,
+      "rank_weight": 0.0
+    },
+    "test_auroc": 0.8645336171327986,
+    "sweep_mean_auroc": 0.8642582815142013
+  },
+  {
+    "file": "verifier_old.pt",
+    "kind": "verifier",
+    "label": "old",
+    "config": {
+      "architecture": "mlp_512",
+      "ground_margin": 0.0,
+      "ground_on": "correct",
+      "ground_weight": 0.0,
+      "kind": "verifier",
+      "learning_rate": 0.0003,
+      "pair_weight": 0.0,
+      "pre_weight": 0.0,
+      "rank_weight": 0.0
+    },
+    "test_auroc": 0.8732450738963223,
+    "sweep_mean_auroc": 0.8726936653459608
+  },
+  {
+    "file": "unified_old.pt",
+    "kind": "unified",
+    "label": "old",
+    "config": {
+      "architecture": "mlp_512",
+      "ground_margin": 0.0,
+      "ground_on": "correct",
+      "ground_weight": 0.0,
+      "kind": "unified",
+      "learning_rate": 0.0003,
+      "pair_weight": 0.0,
+      "pre_weight": 1.0,
+      "rank_weight": 0.0
+    },
+    "test_auroc": 0.87892731765114,
+    "sweep_mean_auroc": 0.8813241574963978
+  },
+  {
+    "file": "pre_new_swap.pt",
+    "kind": "pre",
+    "label": "new_swap",
+    "config": {
+      "architecture": "mlp_512",
+      "ground_margin": 0.0,
+      "ground_on": "correct",
+      "ground_weight": 0.1,
+      "kind": "pre",
+      "learning_rate": 0.001,
+      "pair_weight": 0.0,
+      "pre_weight": 0.0,
+      "rank_weight": 0.25
+    },
+    "test_auroc": 0.8623169486584434,
+    "sweep_mean_auroc": 0.862507747508784
+  },
+  {
+    "file": "verifier_new_swap.pt",
+    "kind": "verifier",
+    "label": "new_swap",
+    "config": {
+      "architecture": "mlp_512",
+      "ground_margin": 0.0,
+      "ground_on": "correct",
+      "ground_weight": 0.1,
+      "kind": "verifier",
+      "learning_rate": 0.0003,
+      "pair_weight": 0.0,
+      "pre_weight": 0.0,
+      "rank_weight": 0.0
+    },
+    "test_auroc": 0.8711073869168813,
+    "sweep_mean_auroc": 0.8713599929502691
+  },
+  {
+    "file": "unified_new_swap.pt",
+    "kind": "unified",
+    "label": "new_swap",
+    "config": {
+      "architecture": "mlp_512",
+      "ground_margin": 0.0,
+      "ground_on": "correct",
+      "ground_weight": 0.1,
+      "kind": "unified",
+      "learning_rate": 0.0003,
+      "pair_weight": 0.0,
+      "pre_weight": 1.0,
+      "rank_weight": 0.0
+    },
+    "test_auroc": 0.882085738436171,
+    "sweep_mean_auroc": 0.882247947332856
+  },
+  {
+    "file": "pre_new_noise.pt",
+    "kind": "pre",
+    "label": "new_noise",
+    "config": {
+      "architecture": "mlp_512",
+      "ground_margin": 0.0,
+      "ground_on": "correct",
+      "ground_weight": 0.1,
+      "kind": "pre",
+      "learning_rate": 0.001,
+      "pair_weight": 0.0,
+      "pre_weight": 0.0,
+      "rank_weight": 0.0
+    },
+    "test_auroc": 0.8615054719569548,
+    "sweep_mean_auroc": 0.8625352060680975
+  },
+  {
+    "file": "verifier_new_noise.pt",
+    "kind": "verifier",
+    "label": "new_noise",
+    "config": {
+      "architecture": "mlp_256",
+      "ground_margin": 0.0,
+      "ground_on": "correct",
+      "ground_weight": 0.1,
+      "kind": "verifier",
+      "learning_rate": 0.001,
+      "pair_weight": 0.0,
+      "pre_weight": 0.0,
+      "rank_weight": 0.0
+    },
+    "test_auroc": 0.8705940262683833,
+    "sweep_mean_auroc": 0.8731202010129259
+  },
+  {
+    "file": "unified_new_noise.pt",
+    "kind": "unified",
+    "label": "new_noise",
+    "config": {
+      "architecture": "mlp_512",
+      "ground_margin": 0.0,
+      "ground_on": "correct",
+      "ground_weight": 0.1,
+      "kind": "unified",
+      "learning_rate": 0.0003,
+      "pair_weight": 0.0,
+      "pre_weight": 1.0,
+      "rank_weight": 0.0
+    },
+    "test_auroc": 0.8859912989927438,
+    "sweep_mean_auroc": 0.8836766314286907
+  }
+]
