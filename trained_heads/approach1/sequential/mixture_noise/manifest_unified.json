@@ -1,0 +1,206 @@
+[
+  {
+    "file": "unified_old_replay0_forward_seed1.pt",
+    "kind": "unified",
+    "variant": "old_replay0",
+    "order": [
+      "chartqa_full",
+      "textvqa",
+      "docvqa",
+      "scienceqa_img"
+    ],
+    "final_test_auroc": {
+      "chartqa_full": 0.8800363085757398,
+      "textvqa": 0.8609802524981153,
+      "docvqa": 0.812824756852343,
+      "scienceqa_img": 0.9098269373543945
+    }
+  },
+  {
+    "file": "unified_old_replay0_reverse_seed1.pt",
+    "kind": "unified",
+    "variant": "old_replay0",
+    "order": [
+      "scienceqa_img",
+      "docvqa",
+      "textvqa",
+      "chartqa_full"
+    ],
+    "final_test_auroc": {
+      "chartqa_full": 0.900562704333976,
+      "textvqa": 0.8453219954931878,
+      "docvqa": 0.8067154730327144,
+      "scienceqa_img": 0.8812690407311641
+    }
+  },
+  {
+    "file": "unified_old_replay0_shuffled_seed1.pt",
+    "kind": "unified",
+    "variant": "old_replay0",
+    "order": [
+      "docvqa",
+      "scienceqa_img",
+      "chartqa_full",
+      "textvqa"
+    ],
+    "final_test_auroc": {
+      "chartqa_full": 0.8889462304747534,
+      "textvqa": 0.8744189461056893,
+      "docvqa": 0.8066454465075155,
+      "scienceqa_img": 0.9047792768575647
+    }
+  },
+  {
+    "file": "unified_old_replay0.1_forward_seed1.pt",
+    "kind": "unified",
+    "variant": "old_replay0.1",
+    "order": [
+      "chartqa_full",
+      "textvqa",
+      "docvqa",
+      "scienceqa_img"
+    ],
+    "final_test_auroc": {
+      "chartqa_full": 0.8850202238242937,
+      "textvqa": 0.8554081747410249,
+      "docvqa": 0.7954942528735632,
+      "scienceqa_img": 0.9108147086181443
+    }
+  },
+  {
+    "file": "unified_old_replay0.1_reverse_seed1.pt",
+    "kind": "unified",
+    "variant": "old_replay0.1",
+    "order": [
+      "scienceqa_img",
+      "docvqa",
+      "textvqa",
+      "chartqa_full"
+    ],
+    "final_test_auroc": {
+      "chartqa_full": 0.9007050395394975,
+      "textvqa": 0.8650694973779682,
+      "docvqa": 0.8110323607427056,
+      "scienceqa_img": 0.9010351330824437
+    }
+  },
+  {
+    "file": "unified_old_replay0.1_shuffled_seed1.pt",
+    "kind": "unified",
+    "variant": "old_replay0.1",
+    "order": [
+      "docvqa",
+      "scienceqa_img",
+      "chartqa_full",
+      "textvqa"
+    ],
+    "final_test_auroc": {
+      "chartqa_full": 0.8907599128175036,
+      "textvqa": 0.8734375065082202,
+      "docvqa": 0.793783908045977,
+      "scienceqa_img": 0.9113309951102122
+    }
+  },
+  {
+    "file": "unified_new_replay0_forward_seed1.pt",
+    "kind": "unified",
+    "variant": "new_replay0",
+    "order": [
+      "chartqa_full",
+      "textvqa",
+      "docvqa",
+      "scienceqa_img"
+    ],
+    "final_test_auroc": {
+      "chartqa_full": 0.8791657061223349,
+      "textvqa": 0.8564796881052644,
+      "docvqa": 0.8068166224580017,
+      "scienceqa_img": 0.9075249822926533
+    }
+  },
+  {
+    "file": "unified_new_replay0_reverse_seed1.pt",
+    "kind": "unified",
+    "variant": "new_replay0",
+    "order": [
+      "scienceqa_img",
+      "docvqa",
+      "textvqa",
+      "chartqa_full"
+    ],
+    "final_test_auroc": {
+      "chartqa_full": 0.9003208218068014,
+      "textvqa": 0.8437225353109992,
+      "docvqa": 0.8010171529619805,
+      "scienceqa_img": 0.8788806823515356
+    }
+  },
+  {
+    "file": "unified_new_replay0_shuffled_seed1.pt",
+    "kind": "unified",
+    "variant": "new_replay0",
+    "order": [
+      "docvqa",
+      "scienceqa_img",
+      "chartqa_full",
+      "textvqa"
+    ],
+    "final_test_auroc": {
+      "chartqa_full": 0.8875578073043284,
+      "textvqa": 0.8746808368842183,
+      "docvqa": 0.8056445623342176,
+      "scienceqa_img": 0.9021658431683777
+    }
+  },
+  {
+    "file": "unified_new_replay0.1_forward_seed1.pt",
+    "kind": "unified",
+    "variant": "new_replay0.1",
+    "order": [
+      "chartqa_full",
+      "textvqa",
+      "docvqa",
+      "scienceqa_img"
+    ],
+    "final_test_auroc": {
+      "chartqa_full": 0.8838570919607679,
+      "textvqa": 0.8551186891090924,
+      "docvqa": 0.79869566755084,
+      "scienceqa_img": 0.9087090277599993
+    }
+  },
+  {
+    "file": "unified_new_replay0.1_reverse_seed1.pt",
+    "kind": "unified",
+    "variant": "new_replay0.1",
+    "order": [
+      "scienceqa_img",
+      "docvqa",
+      "textvqa",
+      "chartqa_full"
+    ],
+    "final_test_auroc": {
+      "chartqa_full": 0.9000125743985246,
+      "textvqa": 0.8655334033097163,
+      "docvqa": 0.8108413793103448,
+      "scienceqa_img": 0.899420137733289
+    }
+  },
+  {
+    "file": "unified_new_replay0.1_shuffled_seed1.pt",
+    "kind": "unified",
+    "variant": "new_replay0.1",
+    "order": [
+      "docvqa",
+      "scienceqa_img",
+      "chartqa_full",
+      "textvqa"
+    ],
+    "final_test_auroc": {
+      "chartqa_full": 0.8895819361779417,
+      "textvqa": 0.8747547702650356,
+      "docvqa": 0.7885149425287356,
+      "scienceqa_img": 0.9100573462020941
+    }
+  }
+]
