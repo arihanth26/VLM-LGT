@@ -31,7 +31,8 @@ each one lives in its own folder so they can be developed independently.
 | Approach 1: new loss with a visual-grounding term, separate and unified heads on the mixture | Done |
 | Approach 1: sequential training (train on A, then B, then C) to test what an earlier dataset keeps, old and new loss, with and without replay | Done |
 | Approach 1: new loss with a noised image instead of a swapped one as the corrupted input, on the mixture, each dataset alone, and sequential training | Done |
-| Approach 1: the latent correction step that acts on a flagged answer | Not started |
+| Approach 1: prompted retry on answers flagged by the unified head | Implemented, experiment not yet run |
+| Approach 1: a learned latent correction step that acts on a flagged answer | Not started |
 | Approach 1: Qwen3-VL 4B check | Not started |
 | Approach 2: verifier reranking | Scaffold only: dataset configs and a failure-pool builder with a placeholder sampler |
 
@@ -401,6 +402,35 @@ python -m experiments.approach1_latent_self_correction.build_corruption_report
 The new loss adds a visual-grounding term: the score of the clean input must exceed the score of the same question
 and answer with a corrupted image. The design is in
 [docs/approach1_unified_q_head.md](docs/approach1_unified_q_head.md).
+
+### Prompted retry on the mixture test set
+
+The prompted-retry benchmark generates baseline answers, extracts and scores their states online,
+then generates one visually grounded retry for every test example. Dataset downloads and Arrow
+caches use the compute node's temporary disk; no baseline or feature tensors are kept in the repo.
+The same retry outputs
+are used to compare six policies without generation noise between conditions: no retry, retry all,
+head confidence below 0.5, the lowest 20% by head confidence, the lowest 20% by token confidence,
+and a seeded random 20% control. The output is resumable and the summary reports coverage, fixed
+errors, broken answers, and final accuracy for every policy. It also scores the retry with the same
+unified head and compares direct candidate reranking, confidence-gated replacement at margins of
+0, 0.05, 0.10, and 0.20, and the oracle upper bound where either candidate can be selected.
+
+```
+sbatch slurm/run_prompted_retry.sbatch
+```
+
+Set `REVIEW_FRACTION`, `THRESHOLD`, or `RANDOM_SEED` to change the comparison policies. Set
+`LIMIT=100` for a small end-to-end check before submitting the full test mixture.
+
+The best-of-five experiment samples five independent candidates at temperature 0.9 and top-p
+0.95, scores each with the unified head, and compares head selection with the first sample,
+majority vote, token-confidence selection, the greedy baseline, and an oracle upper bound. It
+writes JSONL, summary JSON, and a self-contained HTML report:
+
+```
+LIMIT=100 sbatch slurm/run_candidate_reranking.sbatch
+```
 
 Check every job script before a long run. This validates shell syntax, that each `python -m`
 module resolves, and, on the cluster, that the scheduler accepts the resource request:
