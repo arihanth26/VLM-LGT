@@ -123,6 +123,7 @@ def evaluate_dataset(head, spec: HeadSpec, test: dict, temperatures: dict, devic
 def run_sequence(
     spec: HeadSpec, order: list[int], train: list[dict], validation: list[dict], test: list[dict],
     device: torch.device, replay: float = 0.0, max_epochs: int = 40, patience: int = 4, batch_size: int = 1024,
+    keep_head: bool = False,
 ) -> dict:
     """Train one head through the datasets in the given order and score every dataset after each stage."""
     torch.manual_seed(spec.seed)
@@ -137,7 +138,10 @@ def run_sequence(
         info = fit_stage(head, spec, stage_train, validation[dataset], device, max_epochs, patience, batch_size, spec.seed * 100 + position)
         scores = {index: evaluate_dataset(head, spec, test[index], info["temperatures"], device) for index in range(len(test))}
         stages.append({"trained_on": dataset, "epoch": info["epoch"], "scores": scores})
-    return {"order": order, "stages": stages}
+    result = {"order": order, "stages": stages}
+    if keep_head:
+        result["head"] = {"state": {k: v.detach().cpu() for k, v in head.state_dict().items()}, "temperatures": info["temperatures"], "epoch": info["epoch"]}
+    return result
 
 
 def train_isolated(spec: HeadSpec, train: dict, validation: dict, test: list[dict], device: torch.device,
