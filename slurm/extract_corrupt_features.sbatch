@@ -13,7 +13,8 @@
 # image, plus the model's own answer confidence on the clean and corrupted image.
 # Needs the clean features and baseline for the same dataset split.
 # Usage: sbatch --export=ALL,DATASET=textvqa,SPLIT=train slurm/extract_corrupt_features.sbatch
-# Optional: MODEL_SIZE (2b), CORRUPTION (swap or shuffle), LIMIT (smoke test), BASELINE, OUTPUT
+# Optional: MODEL_SIZE (2b), CORRUPTION (swap, shuffle, noise, or mask), STRENGTH (noise alpha or masked share),
+#           LIMIT (smoke test), BASELINE, OUTPUT
 
 set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"
@@ -38,6 +39,7 @@ ARGS=(
     --mode "${CORRUPTION:-swap}"
 )
 [[ -n "${LIMIT:-}" ]] && ARGS+=(--limit "$LIMIT")
+[[ -n "${STRENGTH:-}" ]] && ARGS+=(--strength "$STRENGTH")
 [[ -n "${OUTPUT:-}" ]] && ARGS+=(--output "$OUTPUT")
 
 srun "$PYTHON_BIN" -m experiments.approach1_latent_self_correction.extract_corrupt_features "${ARGS[@]}"

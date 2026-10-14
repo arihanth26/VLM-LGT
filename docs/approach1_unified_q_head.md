@@ -303,3 +303,28 @@ write-up, with charts, intervals, ablations, and limits, is in
 - **The answer-token probability** already falls for 95% of correct answers under a corrupted
   image. Its weakness is ranking, not noticing that the evidence is gone.
 
+### Corrupted image instead of a swapped one
+
+The grounding term of the new loss needs a corrupted state h_corrupt for the same question and
+answer. The first version took it from another example's image (swap). A head can meet that term
+by noticing that the question and image no longer match, which says little about whether the
+image supports the answer. The second version keeps the right image and mixes Gaussian noise into
+it, x' = sqrt(a) x + sqrt(1 - a) eps with a = 0.15. The loss is the same,
+
+L = L_cls + w_pre L_pre + w_pair L_pair + lambda L_ground,
+
+L_ground = mean over correct answers of softplus(margin - (s(x_clean) - s(x_corrupt))),
+
+and only the source of x_corrupt changes. Mask (60% of a 16 by 16 grid blanked) and shuffle (4 by
+4 patches permuted) are extracted for the test splits only and are used to grade heads on
+corruptions they never trained on. The noise strength was picked from a 30-example smoke test.
+
+Experiments, all with three seeds and the same selection protocol as the swap version:
+the pooled mixture (`mixture_noise`), the swap-trained heads graded again on noise, mask and
+shuffle (`mixture_xeval`), each dataset alone with swap and with noise, and sequential training
+on the noise mixture. Results are in
+`results/approach1/06_corruption_new_loss_report.html`. In short, pooled AUROC is unchanged
+(within 0.0024), the share of correct answers whose score falls under noise rises from 0.92 to
+0.94 (old loss) to 0.97 to 1.00 (noise loss), and heads trained with one corruption also improve
+on the others. High order accuracy is partly easy, since a noised image moves the hidden state a
+lot, so a corruption that removes only the evidence for the answer would be a stronger test.

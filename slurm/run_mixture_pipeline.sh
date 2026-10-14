@@ -63,5 +63,5 @@ done
 SWEEPS=$(IFS=:; echo "${SWEEP_JOBS[*]}")
 ANALYSIS=$("${SUBMIT[@]}" --dependency=afterok:"$SWEEPS" --export=ALL,MODEL_SIZE="$SIZE" slurm/analyze_mixture.sbatch)
 echo "analysis: $ANALYSIS"
-echo "When all finish: python -m experiments.approach1_latent_self_correction.build_mixture_report"
+echo "When all finish: build_mixture_report on a machine with matplotlib (see README)"
 echo "then publish_results (see README)."

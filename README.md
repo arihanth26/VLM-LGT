@@ -30,6 +30,7 @@ each one lives in its own folder so they can be developed independently.
 | Approach 1: separate and unified heads on the mixture, old loss | Done |
 | Approach 1: new loss with a visual-grounding term, separate and unified heads on the mixture | Done |
 | Approach 1: sequential training (train on A, then B, then C) to test what an earlier dataset keeps, old and new loss, with and without replay | Done |
+| Approach 1: new loss with a noised image instead of a swapped one as the corrupted input, on the mixture, each dataset alone, and sequential training | Done |
 | Approach 1: the latent correction step that acts on a flagged answer | Not started |
 | Approach 1: Qwen3-VL 4B check | Not started |
 | Approach 2: verifier reranking | Scaffold only: dataset configs and a failure-pool builder with a placeholder sampler |
@@ -92,6 +93,21 @@ Training across datasets (report
   corrupted image. Its weakness is ranking right against wrong answers, not noticing missing
   evidence.
 
+Corrupted image instead of a swapped one (report
+[results/approach1/06_corruption_new_loss_report.html](results/approach1/06_corruption_new_loss_report.html)):
+
+- The corrupted input of the grounding term is the same image with Gaussian noise mixed in,
+  which removes the shortcut of detecting a mismatched question and image. The loss is otherwise
+  unchanged.
+- Pooled AUROC does not move (within 0.0024 of the old loss for every head). The share of
+  correct answers whose score falls under noise rises from 0.92 to 0.94 with the old loss to
+  0.97 to 1.00 with the noise loss.
+- Grounding carries over to corruptions never trained on: heads trained with noise reach 0.91 to
+  0.97 on swapped images, and both versions improve on mask and shuffle over the old loss.
+- Each dataset alone and sequential training match the pooled picture. The gain is clearest on
+  ScienceQA, where the old loss lowers the score on only 0.69 to 0.78 of correct answers under
+  noise. Forgetting is similar to the swap version, and replay removes it in the same way.
+
 ### Contributors
 
 | Component | Scope | Contributor |
@@ -147,7 +163,7 @@ VLM-LGT/
 │   │   ├── scoring.py                         Per-dataset answer metrics (VQA accuracy, ANLS, option letter)
 │   │   ├── report.py                          Markdown accuracy report for a baseline run
 │   │   ├── extract_q_features.py              Caches frozen Qwen3-VL states for the correctness heads
-│   │   ├── corruption.py                      Image corruptions (swap, patch shuffle) for the grounding loss
+│   │   ├── corruption.py                      Image corruptions (swap, patch shuffle, noise, mask) for the grounding loss
 │   │   ├── extract_corrupt_features.py        Caches states and answer confidence under a corrupted image
 │   │   ├── build_mixture.py                   Pools the cached features of all datasets into one mixture
 │   │   ├── mixture_heads.py                   Old and new loss for separate and unified heads, pooled and
@@ -157,6 +173,7 @@ VLM-LGT/
 │   │   ├── continual.py                       Sequential training across datasets and the retention metrics
 │   │   ├── sweep_continual.py                 Dataset orders, old and new loss, replay, isolated references
 │   │   ├── build_mixture_report.py            Builds the mixture, sequential, and new-loss HTML report
+│   │   ├── build_corruption_report.py         Builds the report on the noise version of the new loss
 │   │   ├── train_q_heads.py                   Pre-generation head and verifier head, shared losses and metrics
 │   │   ├── sweep_q_heads.py                   Architecture and hyperparameter sweep for the separate heads
 │   │   ├── sweep_verifier_early_stop.py       Early-stopping sweep over the verifier ranking weight
@@ -188,7 +205,8 @@ VLM-LGT/
 │   │   ├── 02_multidataset_qhead_report.html       Three more datasets and the unified head
 │   │   ├── 03_qhead_comparison_tables.md           Side-by-side metric tables
 │   │   ├── 04_sweep_data/                          Sweep and analysis JSON files per dataset and for the mixture
-│   │   └── 05_mixture_new_loss_report.html         Mixture, sequential training, and the new loss
+│   │   ├── 05_mixture_new_loss_report.html         Mixture, sequential training, and the new loss
+│   │   └── 06_corruption_new_loss_report.html      The new loss with a noised image instead of a swapped one
 │   └── approach2/                             Approach 2 results (none yet)
 │
 ├── slurm/                                     Job scripts for the ICE cluster
@@ -211,6 +229,7 @@ VLM-LGT/
 │   ├── sweep_continual.sbatch                 Sequential training for one head kind on a GPU
 │   ├── run_mixture_pipeline.sh                Submits the mixture and new-loss chain for all datasets
 │   ├── run_continual_pipeline.sh              Submits the sequential-training jobs, one per head kind
+│   ├── run_corruption_pipeline.sh             Submits the noise-corruption chain: features, builds, sweeps, sequential runs
 │   └── check_scripts.sh                       Validates every job script: syntax, module paths, sbatch --test-only
 │
 ├── docs/
@@ -222,7 +241,8 @@ VLM-LGT/
 │   ├── test_unified_q_head.py                 Offline tests for the unified head and its sweep
 │   ├── test_mixture.py                        Offline tests for corruptions, the old and new loss, and the mixture sweep
 │   ├── test_continual.py                      Offline tests for sequential training and the retention metrics
-│   └── test_mixture_report.py                 Offline test that the mixture report builds from the real result schema
+│   ├── test_mixture_report.py                 Offline test that the mixture report builds from the real result schema
+│   └── test_corruption_report.py              Offline test that the corruption report builds from the sweep schema
 │
 ├── requirements.txt
 ├── DATASETS.md                                Reference table of every dataset id, with source links and known quirks
@@ -267,6 +287,7 @@ VLM-LGT/
    python -m tests.test_mixture
    python -m tests.test_continual
    python -m tests.test_mixture_report
+   python -m tests.test_corruption_report
    ```
 
 ## Approach 1 on the ICE cluster
@@ -354,6 +375,16 @@ or run it with no ids once the sweeps are done. Then build the report and publis
 ```
 python -m experiments.approach1_latent_self_correction.build_mixture_report
 python -m experiments.approach1_latent_self_correction.publish_results
+```
+
+The corrupted-image version of the new loss (noise mixed into the same image instead of a swapped
+image) runs the same chain for the noise features, the pooled and per-dataset builds, all sweeps,
+and the sequential runs. The cluster allows 50 submitted jobs per user, so the script can be run a
+second time with `SKIP_POOLED=1 SINGLES="scienceqa"` for whatever did not fit:
+
+```
+bash slurm/run_corruption_pipeline.sh
+python -m experiments.approach1_latent_self_correction.build_corruption_report
 ```
 
 The new loss adds a visual-grounding term: the score of the clean input must exceed the score of the same question

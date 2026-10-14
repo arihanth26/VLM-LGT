@@ -18,4 +18,4 @@ for KIND in pre verifier unified; do
         --export=ALL,KIND="$KIND",MODEL_SIZE="$SIZE" slurm/sweep_continual.sbatch)
     echo "continual $KIND: $JOB"
 done
-echo "When all finish: python -m experiments.approach1_latent_self_correction.build_mixture_report"
+echo "When all finish: build_mixture_report on a machine with matplotlib (see README)"

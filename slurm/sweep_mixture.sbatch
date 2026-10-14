@@ -12,7 +12,8 @@
 # GPU job: sweeps one head kind on the dataset mixture under the old loss (ground
 # weight 0) and the new loss (ground weight above 0), three seeds per configuration.
 # Usage: sbatch --export=ALL,KIND=unified slurm/sweep_mixture.sbatch
-# KIND is pre, verifier, or unified. Optional: MODEL_SIZE (2b), TAG, QUICK=1 (smoke test)
+# KIND is pre, verifier, or unified. Optional: MODEL_SIZE (2b), TAG, OUT_TAG,
+# TRAIN_CORRUPTION (swap), EXTRA (space separated corruptions to also measure grounding against), QUICK=1 (smoke test)
 
 set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"
@@ -24,6 +25,12 @@ PYTHON_BIN="$SLURM_SUBMIT_DIR/.venv/bin/python"
 [[ -x "$PYTHON_BIN" ]] || { echo "Run: sbatch slurm/setup_environment.sbatch"; exit 2; }
 
 ARGS=(--kind "$KIND" --size "${MODEL_SIZE:-2b}" --tag "${TAG:-mixture}")
+[[ -n "${OUT_TAG:-}" ]] && ARGS+=(--out-tag "$OUT_TAG")
+[[ -n "${TRAIN_CORRUPTION:-}" ]] && ARGS+=(--train-corruption "$TRAIN_CORRUPTION")
+if [[ -n "${EXTRA:-}" ]]; then
+    read -r -a EXTRA_MODES <<< "$EXTRA"
+    ARGS+=(--extra-corruptions "${EXTRA_MODES[@]}")
+fi
 [[ -n "${QUICK:-}" ]] && ARGS+=(--quick)
 
 srun "$PYTHON_BIN" -m experiments.approach1_latent_self_correction.sweep_mixture "${ARGS[@]}"

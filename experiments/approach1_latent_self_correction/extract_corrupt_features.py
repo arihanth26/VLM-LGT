@@ -66,7 +66,7 @@ def encode_with_confidence(model, processor, messages: list, answer: str) -> tup
 
 def extract_corrupt(
     dataset_name: str, split: str, baseline_path: Path, output_path: Path, size: str,
-    mode: str, seed: int, limit: int | None,
+    mode: str, seed: int, limit: int | None, strength: float | None = None,
 ) -> None:
     """Run the corrupted-image passes for every example of one split and save the states."""
     dataset_dir = RAW_DIR / dataset_name
@@ -89,7 +89,7 @@ def extract_corrupt(
         prompted = f"{extract_question(example)}{ANSWER_SUFFIX}"
         image = extract_image(example, dataset_dir)
         partner = extract_image(split_data[partners[index]], dataset_dir) if mode == "swap" else None
-        bad = corrupt_image(image, mode, seed + index, partner)
+        bad = corrupt_image(image, mode, seed + index, partner, strength)
 
         _, clean_conf = encode_with_confidence(model, processor, answer_messages(image, prompted, answer), answer)
         prompt_corrupt.append(
@@ -108,6 +108,7 @@ def extract_corrupt(
         "dataset": dataset_name,
         "split": split,
         "mode": mode,
+        "strength": -1.0 if strength is None else float(strength),
         "indices": torch.tensor(indices, dtype=torch.long),
         "prompt_features_corrupt": torch.stack(prompt_corrupt).to(torch.float16),
         "generated_features_corrupt": torch.stack(generated_corrupt).to(torch.float16),
@@ -136,12 +137,14 @@ def main() -> None:
     parser.add_argument("--baseline", type=Path, required=True)
     parser.add_argument("--output", type=Path, default=None)
     parser.add_argument("--size", choices=["2b", "4b"], default="2b")
-    parser.add_argument("--mode", choices=["swap", "shuffle"], default="swap")
+    parser.add_argument("--mode", choices=["swap", "shuffle", "noise", "mask"], default="swap")
+    parser.add_argument("--strength", type=float, default=None, help="Noise alpha or masked share, default per mode.")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--limit", type=int, default=None, help="Only the first N examples, for a smoke test.")
     args = parser.parse_args()
-    output = args.output or FEATURE_DIR / f"{args.dataset}_{args.split}_{args.size}_corrupt.pt"
-    extract_corrupt(args.dataset, args.split, args.baseline, output, args.size, args.mode, args.seed, args.limit)
+    suffix = "" if args.mode == "swap" else f"_{args.mode}"
+    output = args.output or FEATURE_DIR / f"{args.dataset}_{args.split}_{args.size}_corrupt{suffix}.pt"
+    extract_corrupt(args.dataset, args.split, args.baseline, output, args.size, args.mode, args.seed, args.limit, args.strength)
 
 
 if __name__ == "__main__":

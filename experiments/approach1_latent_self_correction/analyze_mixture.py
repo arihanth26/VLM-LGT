@@ -58,7 +58,7 @@ def thumbnail(image, max_side: int = 360) -> str:
     return base64.b64encode(buffer.getvalue()).decode("ascii")
 
 
-def gallery(names: list[str], test: dict, size: str) -> list[dict]:
+def gallery(names: list[str], test: dict, size: str, corruption: str = "swap") -> list[dict]:
     """One clean and one corrupted image per dataset, rebuilt with the same partner rule as extraction."""
     from datasets import load_from_disk
 
@@ -78,7 +78,7 @@ def gallery(names: list[str], test: dict, size: str) -> list[dict]:
                 {
                     "dataset": name,
                     "clean": thumbnail(clean),
-                    "corrupt": thumbnail(corrupt_image(clean, "swap", 0, partner)),
+                    "corrupt": thumbnail(corrupt_image(clean, corruption, dataset_index, partner)),
                     "question": str(split[dataset_index].get("question", ""))[:200],
                 }
             )
@@ -92,6 +92,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Analyze the dataset-mixture experiments.")
     parser.add_argument("--size", default="2b")
     parser.add_argument("--tag", default="mixture")
+    parser.add_argument("--corruption", default="swap", help="The corruption of this mixture, for the gallery.")
     args = parser.parse_args()
 
     splits = {s: torch.load(FEATURE_DIR / f"{args.tag}_{s}_{args.size}.pt", map_location="cpu", weights_only=True) for s in ("train", "val", "test")}
@@ -157,9 +158,9 @@ def main() -> None:
                         "error_capture": np.mean([error_capture(labels[mask], run[mask]) for run in clean], axis=0).tolist(),
                     }
                 analysis["curves"][kind][winner][mode] = per_group
-    analysis["gallery"] = gallery(names, test, args.size)
+    analysis["gallery"] = gallery(names, test, args.size, args.corruption)
 
-    output = HERE / "results" / "analysis_mixture.json"
+    output = HERE / "results" / f"analysis_{args.tag}.json"
     output.write_text(json.dumps(analysis, indent=2) + "\n", encoding="utf-8")
     print(f"[done] wrote {output}")
 

@@ -9,7 +9,8 @@
 
 # CPU job: pools the cached features of several datasets into one mixture, per split.
 # Usage: sbatch slurm/build_mixture.sbatch
-# Optional: DATASETS (space separated), MODEL_SIZE (2b), CAP_TRAIN (max train rows per dataset), TAG
+# Optional: DATASETS (space separated), MODEL_SIZE (2b), CAP_TRAIN (max train rows per dataset), TAG,
+# CORRUPTION (swap), EXTRA_TEST (space separated corruptions to pool as test-only files), EXTRA_ONLY=1
 
 set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"
@@ -25,5 +26,11 @@ if [[ -n "${DATASETS:-}" ]]; then
     ARGS+=(--datasets "${NAMES[@]}")
 fi
 [[ -n "${CAP_TRAIN:-}" ]] && ARGS+=(--cap-train "$CAP_TRAIN")
+[[ -n "${CORRUPTION:-}" ]] && ARGS+=(--corruption "$CORRUPTION")
+if [[ -n "${EXTRA_TEST:-}" ]]; then
+    read -r -a EXTRA_MODES <<< "$EXTRA_TEST"
+    ARGS+=(--extra-test "${EXTRA_MODES[@]}")
+fi
+[[ -n "${EXTRA_ONLY:-}" ]] && ARGS+=(--extra-only)
 
 srun "$PYTHON_BIN" -m experiments.approach1_latent_self_correction.build_mixture "${ARGS[@]}"

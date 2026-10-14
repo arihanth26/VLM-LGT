@@ -115,6 +115,8 @@ def pack_winner(group: dict, names: list[str]) -> tuple[dict, dict]:
         "test_per_dataset": aggregate([run["test"]["per_dataset"] for run in runs]),
         "grounding": aggregate([run["test"]["grounding"] for run in runs]),
     }
+    if runs[0]["test"].get("grounding_extra"):
+        entry["grounding_extra"] = aggregate([run["test"]["grounding_extra"] for run in runs])
     scores = {}
     for mode in modes_for(kind):
         scores[mode] = {
@@ -125,14 +127,14 @@ def pack_winner(group: dict, names: list[str]) -> tuple[dict, dict]:
 
 
 def run_sweep(kind: str, train: dict, validation: dict, test: dict, names: list[str], device: torch.device, quick: bool,
-              max_epochs: int, patience: int, batch_size: int) -> tuple[dict, dict]:
+              max_epochs: int, patience: int, batch_size: int, extra_tests: dict | None = None) -> tuple[dict, dict]:
     """Train the whole grid for one head kind and pick the winner groups."""
     specs = build_grid(kind, quick)
     runs = []
     for number, base in enumerate(specs, start=1):
         for seed in SEEDS:
             spec = HeadSpec(**{**base.__dict__, "seed": seed})
-            run = train_head(spec, train, validation, test, names, device, max_epochs, patience, batch_size)
+            run = train_head(spec, train, validation, test, names, device, max_epochs, patience, batch_size, extra_tests)
             runs.append(run)
             modes = modes_for(kind)
             print(
@@ -163,6 +165,18 @@ def load_split(path: Path, device: torch.device) -> tuple[dict, list[str]]:
     return tensors, list(data["dataset_names"])
 
 
+def load_extra(tag: str, size: str, modes: list[str], device: torch.device) -> dict:
+    """Load pooled corrupted test features of other corruptions, for the cross-corruption grounding check."""
+    extra = {}
+    for mode in modes:
+        data = torch.load(FEATURE_DIR / f"{tag}_test_{size}_corrupt_{mode}.pt", map_location="cpu", weights_only=True)
+        extra[mode] = {
+            "prompt_corrupt": data["prompt_features_corrupt"].to(device),
+            "generated_corrupt": data["generated_features_corrupt"].to(device),
+        }
+    return extra
+
+
 def main() -> None:
     """Parse arguments, run the sweep for one head kind, and write results and test scores."""
     parser = argparse.ArgumentParser(description="Sweep one head kind on the dataset mixture.")
@@ -174,23 +188,31 @@ def main() -> None:
     parser.add_argument("--patience", type=int, default=4)
     parser.add_argument("--batch-size", type=int, default=1024)
     parser.add_argument("--quick", action="store_true", help="Run a small grid for a smoke test.")
+    parser.add_argument("--out-tag", default=None, help="Name for the output files, default the input tag.")
+    parser.add_argument("--train-corruption", default="swap", help="The corruption the grounding term trains on.")
+    parser.add_argument("--extra-corruptions", nargs="*", default=[], help="Other corruptions to measure grounding against.")
     args = parser.parse_args()
+    out_tag = args.out_tag or args.tag
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     train, names = load_split(FEATURE_DIR / f"{args.tag}_train_{args.size}.pt", device)
     validation, _ = load_split(FEATURE_DIR / f"{args.tag}_val_{args.size}.pt", device)
     test, _ = load_split(FEATURE_DIR / f"{args.tag}_test_{args.size}.pt", device)
+    extra_modes = [m for m in args.extra_corruptions if m != args.train_corruption]
+    extra_tests = load_extra(args.tag, args.size, extra_modes, device) if extra_modes else None
     result, scores = run_sweep(
-        args.kind, train, validation, test, names, device, args.quick, args.max_epochs, args.patience, args.batch_size
+        args.kind, train, validation, test, names, device, args.quick, args.max_epochs, args.patience, args.batch_size, extra_tests
     )
     result["datasets"] = names
+    result["train_corruption"] = args.train_corruption
+    result["extra_corruptions"] = extra_modes
     result["rows"] = {"train": int(len(train["labels"])), "val": int(len(validation["labels"])), "test": int(len(test["labels"]))}
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    (args.output_dir / f"{args.tag}_{args.kind}_results.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    (args.output_dir / f"{out_tag}_{args.kind}_results.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     torch.save(
         {"scores": {name: {mode: dict(sides) for mode, sides in modes.items()} for name, modes in scores.items()},
          "labels": test["labels"].cpu(), "dataset_id": test["dataset_id"].cpu(), "dataset_names": names},
-        args.output_dir / f"{args.tag}_{args.kind}_scores.pt",
+        args.output_dir / f"{out_tag}_{args.kind}_scores.pt",
     )
     print(json.dumps({name: w["config"] for name, w in result["winners"].items()}, indent=2))
 
