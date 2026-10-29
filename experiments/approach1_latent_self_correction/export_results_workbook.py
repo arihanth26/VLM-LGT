@@ -317,6 +317,47 @@ def add_correction(book: Book) -> None:
     book.add("Best-of-five candidates", "All 500 sampled candidates with head score, answer-token probability and correctness", ["Dataset", "Index", "Reference", "Candidate", "Answer", "Head score", "Answer-token probability", "Correct", "Selected by head", "Greedy answer correct"], rows)
 
 
+def add_full_correction(book: Book) -> None:
+    """The correction experiments on the full test split with paired statistics against each baseline."""
+    from experiments.approach1_latent_self_correction import correction_stats as st
+    full = rep.full_correction_data()
+    if not full:
+        return
+    def stat_row(name, base, final, extra=()):
+        row = st.policy_row(base, final)
+        return [name, *extra, row["examples"], row["accuracy"], row["accuracy_low"], row["accuracy_high"], row["difference"], row["ci_low"], row["ci_high"], row["fixed"], row["broken"], row["p_value"]]
+    headers = ["Policy", "Questions", "Accuracy", "Accuracy 95% low", "Accuracy 95% high", "Difference from baseline", "Difference 95% low", "Difference 95% high", "Fixed", "Broken", "Sign-test p"]
+    rows = []
+    greedy = st.best5_outcomes(full["best5"], "greedy")
+    for policy in st.BEST5_POLICIES:
+        rows.append(stat_row(policy, greedy, st.best5_outcomes(full["best5"], policy)))
+    book.add("Full best-of-five", "Best-of-five selection on the full test split (9,517 questions) against greedy, paired statistics", headers, rows)
+    rows = [stat_row(name, *st.retry_outcomes(full["retry"], key)) for name, key in st.RETRY_POLICIES.items()]
+    book.add("Full retry", "Prompted retry, reranking and gated policies on the full test split against no retry", headers, rows)
+    rows = [stat_row(name, *st.deep_outcomes(full["deep"], key)) for name, key in st.DEEP_POLICIES.items()]
+    book.add("Full deeper pass", "Deeper pass after best-of-five on the full test split against the selected candidate", headers, rows)
+    rows = []
+    for dataset, label in rep.DATASETS:
+        for experiment, data, outcomes in (("best-of-five", full["best5"], None), ("retry", full["retry"], None), ("deeper pass", full["deep"], None)):
+            sub = [r for r in data if r["dataset"] == dataset]
+            if experiment == "best-of-five":
+                base = st.best5_outcomes(sub, "greedy")
+                for policy in st.BEST5_POLICIES[1:]:
+                    rows.append(stat_row(policy, base, st.best5_outcomes(sub, policy), (label, experiment)))
+            elif experiment == "retry":
+                for policy, key in st.RETRY_POLICIES.items():
+                    if policy != "baseline_no_retry":
+                        rows.append(stat_row(policy, *st.retry_outcomes(sub, key), (label, experiment)))
+            else:
+                for policy, key in st.DEEP_POLICIES.items():
+                    if policy != "keep_best_of_five":
+                        rows.append(stat_row(policy, *st.deep_outcomes(sub, key), (label, experiment)))
+    book.add("Full per dataset", "Every full-split correction policy by dataset, against its baseline", ["Policy", "Dataset", "Experiment"] + headers[1:], [[r[0], r[1], r[2]] + r[3:] for r in rows])
+    failures = st.format_failures(full["deep"])
+    book.add("Full deeper pass formats", "Deeper-pass answers that hit the 64-token limit or repeated the prompt, and the correct answers they broke", ["Questions", "Hit the token limit", "Repeated the prompt (not capped)", "Broken, capped", "Broken, repeated prompt"],
+             [[failures["examples"], failures["capped"], failures["echoed"], failures["broken_capped"], failures["broken_echoed"]]])
+
+
 def add_timings(book: Book) -> None:
     """Measured wall-clock times from Slurm accounting."""
     rows = [
@@ -362,6 +403,7 @@ def build_workbook(path: Path = OUTPUT) -> Path:
     add_sequential(book, r)
     add_trained_heads(book)
     add_correction(book)
+    add_full_correction(book)
     add_timings(book)
     book.save(path)
     return path

@@ -20,6 +20,7 @@ import subprocess
 from pathlib import Path
 
 from experiments.approach1_latent_self_correction import build_corruption_report as corr
+from experiments.approach1_latent_self_correction.scoring import normalize_vqa_answer as norm
 from experiments.approach1_latent_self_correction.build_mixture_report import (
     NAMES,
     Results,
@@ -245,7 +246,7 @@ def section_overview(r: Results) -> str:
         ["7", "New loss, noised image", "Same loss, but corrupt the image by adding noise instead of swapping it", "Grounding rises from 92% to 99% and carries over to other corruptions", "06"],
         ["8", "Sequential training", "Train on A, then B, then C, and check A is still remembered", "Forgetting 0.011 to 0.046 AUROC depending on head and loss; replay removes most of it for the verifier", "05, 06"],
         ["9", "Trained heads exported", "Save every trained head so teammates can build on it", "540 heads, one to eight megabytes each", "this report"],
-        ["10", "Correction experiments", "Use the head to pick or revise answers (retry, best-of-five, deeper pass)", "Best-of-five selection by the head: 81% against 78% greedy on 100 examples", "07"],
+        ["10", "Correction experiments", "Use the head to pick or revise answers (retry, best-of-five, deeper pass)", "Head selection among five samples: +0.4 points over greedy on the full test split (not significant); the head ranks candidates well (AUROC 0.883 against 0.815)", "07"],
     ]
     return f"""<h2 id="overview" class="first">1. The goal and the road map</h2>
 <p class="lead">Approach 1 asks a vision-language model to notice when its own visual evidence is weak and to act on that before answering. It has two halves.</p>
@@ -812,7 +813,7 @@ def section_correction(data: dict) -> str:
                  + table(["Example", "Question", "Reference", "Greedy answer", "Head-selected candidate"], rows, left_cols=(0, 1, 2, 3, 4)))
     text = r"""
 <h2 id="correction">12. Stage 8: using the head to correct answers</h2>
-<p>The previous sections built the gate. These experiments test whether acting on it helps. All of them use the frozen Qwen3-VL-2B and the exported pooled-mixture unified head (<code>trained_heads/approach1/winners/mixture/unified_new_seed1.pt</code>), on a balanced study set of 100 examples, 25 from each dataset, of the pooled test split. These experiments were pushed to the <code>feature/latent-self-correction</code> branch (commit <code>e6aaa80</code>) and are not on <code>main</code> yet. The code is in <code>prompted_retry.py</code>, <code>online_prompted_retry.py</code>, <code>candidate_reranking.py</code> and <code>deepen_selected_candidate.py</code>, run by <code>run_prompted_retry.sbatch</code>, <code>run_candidate_reranking.sbatch</code> and <code>run_deepen_selected.sbatch</code>, with sampling options added to <code>models/run_inference.py</code> and tests in <code>tests/test_prompted_retry.py</code>. The full report is <a href="@@l07@@">07</a>. Accuracy is the dataset's own metric converted to the binary correctness definition used to train the head.</p>
+<p>The previous sections built the gate. These experiments test whether acting on it helps. Sections 12.1 to 12.5 are the pilot, run on 100 examples; Section 12.6 repeats everything on the full test split and supersedes the pilot numbers. All of them use the frozen Qwen3-VL-2B and the exported pooled-mixture unified head (<code>trained_heads/approach1/winners/mixture/unified_new_seed1.pt</code>), on a balanced study set of 100 examples, 25 from each dataset, of the pooled test split. These experiments were pushed to the <code>feature/latent-self-correction</code> branch (commit <code>e6aaa80</code>) and are not on <code>main</code> yet. The code is in <code>prompted_retry.py</code>, <code>online_prompted_retry.py</code>, <code>candidate_reranking.py</code> and <code>deepen_selected_candidate.py</code>, run by <code>run_prompted_retry.sbatch</code>, <code>run_candidate_reranking.sbatch</code> and <code>run_deepen_selected.sbatch</code>, with sampling options added to <code>models/run_inference.py</code> and tests in <code>tests/test_prompted_retry.py</code>. The full report is <a href="@@l07@@">07</a>. Accuracy is the dataset's own metric converted to the binary correctness definition used to train the head.</p>
 <div class="callout warn"><b class="t">About "chain of thought"</b>The deeper pass (Section 12.4) is the experiment described as chain of thought: after a candidate is chosen, the model is told to <em>think more deeply</em>, re-examine the visual evidence and correct the candidate. It ran on the same 100 examples with a limit of 64 new tokens. The prompt still ends with <em>respond with only the final answer, without explanation</em>, and most of the time the model complied with a short answer. It did not always. In @@capn@@ cases (all ChartQA) it wrote out reasoning anyway, such as a list of the chart values or a subtraction, and ran into the 64-token limit before reaching a final answer. In @@echon@@ further cases (@@where@@) it repeated the prompt text instead of answering. So the run mixes direct answers, a few cut-off chains of thought and a few format failures. It is not a controlled chain-of-thought experiment: reasoning was not requested, was not given enough tokens, and no final answer was extracted from it. A proper run (ask for reasoning, allow enough tokens, extract the final answer) has not been done.</div>
 <h3>12.1 Prompted retry</h3>
 <p><b>Idea.</b> The model answers once. A second prompt shows it the previous answer and asks it to inspect the visual evidence again. The head decides <em>when</em> to retry, so the retry's cost and its risk of overturning correct answers are spent only where the gate thinks the first answer is weak. Each policy is evaluated on the same retry outputs, so there is no generation noise between rows. A random 20% control has the same compute as the head-targeted policies.</p>
@@ -837,8 +838,8 @@ Respond with only the final answer, without explanation.</pre>
 @@deep@@
 <p>Replacing every selected candidate with the deeper answer lowered accuracy from 81% to 73% (2 fixed, 10 broken). Every head-based replacement rule left the answers unchanged: the head never scored the deeper answer high enough to replace the selected candidate. The oracle for this step is 83%, so there is only a small upper bound to gain even with a perfect rule.</p>
 <p>Is the drop only a format problem? Partly. Of the 10 answers the deeper pass broke, @@fmtb@@ are format failures: @@capb@@ was cut off at the 64-token limit and @@echob@@ repeated the prompt instead of answering. The other @@genuine@@ are real changes of a correct answer to a wrong one, against 2 real fixes. So fixing the format would shrink the loss but would not turn it into a gain on this sample, and a controlled run with a larger token budget and answer extraction is needed before concluding anything about chain of thought.</p>
-<h3>12.5 What the correction experiments show</h3>
-<div class="callout"><b class="t">Findings</b>(1) The trained head works as a component: loaded from the repository and used to score freshly generated answers, it gives a candidate-level AUROC of @@cand@@ against @@tok@@ for the answer-token probability. (2) Asking the same model to retry or think more deeply is unreliable. It fixes some errors and breaks others. With this head as the gate the net effect ranged from -3 to +1 points between runs and policies, and the deeper pass was clearly harmful when applied to everything (-8 points). (3) Generating several candidates and letting the head choose is the most promising direction: 81% against 78% greedy, with an 85% oracle. (4) All of this is on 100 examples, so none of the differences is statistically established. The next step is to rerun best-of-five on the full pooled test split (9,517 questions) and to add a latent correction step that acts on the hidden state directly, which is the part of Approach 1 that has not been started.</div>
+<h3>12.5 What the pilot showed</h3>
+<div class="callout"><b class="t">Findings</b>(1) The trained head works as a component: loaded from the repository and used to score freshly generated answers, it gives a candidate-level AUROC of @@cand@@ against @@tok@@ for the answer-token probability. (2) Asking the same model to retry or think more deeply is unreliable. It fixes some errors and breaks others. With this head as the gate the net effect ranged from -3 to +1 points between runs and policies, and the deeper pass was clearly harmful when applied to everything (-8 points). (3) Generating several candidates and letting the head choose looked promising in the pilot (81% against 78% greedy, 85% oracle). (4) All of this was on 100 examples, so none of the differences was statistically established, and the full-split rerun in Section 12.6 shows the best-of-five gain was mostly noise.</div>
 """
     unique = data["best"]["candidate_diversity"]["mean_unique_answers"] if "best" in data else float("nan")
     unanimous = data["best"]["candidate_diversity"]["unanimous_fraction"] if "best" in data else float("nan")
@@ -847,6 +848,148 @@ Respond with only the final answer, without explanation.</pre>
                 bestchart=figure("fig-best", "Best-of-five selection on 100 examples", bar_chart(chart_rows, 0.7, 0.9, "Pooled accuracy (axis starts at 0.7)", "fig-best", lambda v: f"{100 * v:.0f}%"), "Blue is the head selector. With 100 examples, differences of a few points are within noise."),
                 stats=stats, cases=cases, unique=unique, unanimous=pct(unanimous, 0), deep=table(["Policy", "Accuracy", "Fixed", "Broken"] + [n for _, n in DATASETS], deep_rows, left_cols=(0,)) if deep_rows else "",
                 cand=f"{cand_auc:.3f}" if cand_auc else "n/a", tok=f"{tok_auc:.3f}" if tok_auc else "n/a")
+
+
+
+def full_correction_data() -> dict:
+    """Load the merged full-test-split correction records, if the runs have finished."""
+    names = {"retry": "mixture_test_2b_prompted_retry_reranked_full.jsonl", "best5": "mixture_test_2b_best_of_five_full.jsonl", "deep": "mixture_test_2b_best_of_five_deep_full.jsonl"}
+    keys = {"retry": "baseline_correct", "best5": "candidates", "deep": "deep_answer"}
+    data = {}
+    for key, name in names.items():
+        path = RESULTS / name
+        if not path.exists():
+            return {}
+        rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        data[key] = [r for r in rows if keys[key] in r]
+    return data
+
+
+def signed(value: float, digits: int = 1) -> str:
+    """A difference in accuracy as signed percentage points."""
+    return f"{100 * value:+.{digits}f}"
+
+
+def p_text(p: float) -> str:
+    """A p-value for a table."""
+    return "&lt;0.001" if p < 0.001 else f"{p:.3f}"
+
+
+def section_correction_full(full: dict) -> str:
+    """Section 12.6: every correction experiment on the full test split, with intervals and paired tests."""
+    if not full:
+        return ""
+    from experiments.approach1_latent_self_correction import correction_stats as st
+    retry, best5, deep = full["retry"], full["best5"], full["deep"]
+    n = len(best5)
+    order = [k for k, _ in DATASETS]
+
+    def policy_table(headers, rows):
+        return table(headers, rows, left_cols=(0,))
+
+    greedy = st.best5_outcomes(best5, "greedy")
+    labels = {"greedy": "Greedy answer", "first_sample": "First of five samples", "majority_vote": "Majority vote of five", "token_best": "Highest answer-token probability", "head_best": "Highest head score", "oracle": "Oracle: any correct candidate"}
+    rows5, stats5 = [], {}
+    for policy, label in labels.items():
+        outcome = st.best5_outcomes(best5, policy)
+        row = st.policy_row(greedy, outcome)
+        stats5[policy] = row
+        rows5.append([label, pct(row["accuracy"], 2), f"{pct(row['accuracy_low'], 1)} to {pct(row['accuracy_high'], 1)}", "" if policy == "greedy" else f"{signed(row['difference'], 2)} ({signed(row['ci_low'], 2)} to {signed(row['ci_high'], 2)})",
+                      "" if policy == "greedy" else f"+{row['fixed']} / -{row['broken']}", "" if policy == "greedy" else p_text(row["p_value"])])
+    per5 = []
+    for dataset in order:
+        sub = [r for r in best5 if r["dataset"] == dataset]
+        g, h = st.best5_outcomes(sub, "greedy"), st.best5_outcomes(sub, "head_best")
+        d = st.paired_difference(g, h)
+        per5.append([dict(DATASETS)[dataset], f"{len(sub):,}", pct(sum(g) / len(g), 1), pct(sum(h) / len(h), 1), pct(sum(st.best5_outcomes(sub, "oracle")) / len(sub), 1), f"{signed(d['difference'], 2)}", f"+{d['fixed']} / -{d['broken']}", p_text(d["p_value"])])
+    labels_c = [int(c["correct"]) for r in best5 for c in r["candidates"]]
+    cand_head = st.auroc(labels_c, [c["head_confidence"] for r in best5 for c in r["candidates"]])
+    cand_tok = st.auroc(labels_c, [c["token_confidence"] for r in best5 for c in r["candidates"]])
+    head_vs_first = st.paired_difference(st.best5_outcomes(best5, "first_sample"), st.best5_outcomes(best5, "head_best"))
+    head_vs_major = st.paired_difference(st.best5_outcomes(best5, "majority_vote"), st.best5_outcomes(best5, "head_best"))
+    diversity = sum(len({norm(c["answer"]) for c in r["candidates"]}) for r in best5) / n
+
+    retry_labels = {"baseline_no_retry": "No retry (greedy answer kept)", "retry_all": "Retry every answer", "head_threshold": "Retry if head score below 0.5", "head_lowest_fraction": "Retry the 20% with the lowest head score",
+                    "token_lowest_fraction": "Retry the 20% with the lowest answer-token probability", "random_matched_fraction": "Retry a random 20% (control)", "head_rerank": "Head reranking: keep the higher-scored of original and retry",
+                    "head_gated_margin_0.00": "Gated: retry only if original below 0.5 and retry scores higher", "head_gated_margin_0.05": "Gated, margin 0.05", "head_gated_margin_0.10": "Gated, margin 0.10", "head_gated_margin_0.20": "Gated, margin 0.20",
+                    "oracle_upper_bound": "Oracle: use the retry exactly when it fixes an error"}
+    rows_r, stats_r = [], {}
+    for policy, label in retry_labels.items():
+        base, fin = st.retry_outcomes(retry, st.RETRY_POLICIES[policy])
+        row = st.policy_row(base, fin)
+        stats_r[policy] = row
+        retried = sum(1 for r in retry if r.get(st.RETRY_POLICIES[policy])) if policy != "baseline_no_retry" else 0
+        rows_r.append([label, f"{retried:,}", pct(row["accuracy"], 2), "" if policy == "baseline_no_retry" else f"{signed(row['difference'], 2)} ({signed(row['ci_low'], 2)} to {signed(row['ci_high'], 2)})",
+                       "" if policy == "baseline_no_retry" else f"+{row['fixed']} / -{row['broken']}", "" if policy == "baseline_no_retry" else p_text(row["p_value"])])
+    per_r = []
+    for dataset in order:
+        sub = [r for r in retry if r["dataset"] == dataset]
+        cells = [dict(DATASETS)[dataset], pct(sum(r["baseline_correct"] for r in sub) / len(sub), 1)]
+        for policy in ("retry_all", "head_lowest_fraction", "random_matched_fraction", "head_gated_margin_0.00"):
+            base, fin = st.retry_outcomes(sub, st.RETRY_POLICIES[policy])
+            cells.append(f"{signed(sum(fin) / len(fin) - sum(base) / len(base), 2)}")
+        per_r.append(cells)
+
+    deep_labels = {"keep_best_of_five": "Keep the head-selected candidate", "deep_replace_all": "Replace with the deeper answer, always", "deep_head_rerank": "Keep the higher head score of the two", "deep_margin_0.00": "Deeper answer if its head score is higher",
+                   "deep_margin_0.05": "Deeper answer if at least 0.05 higher", "deep_margin_0.10": "Deeper answer if at least 0.10 higher", "deep_margin_0.20": "Deeper answer if at least 0.20 higher", "deep_oracle": "Oracle: deeper answer exactly when it fixes the candidate"}
+    rows_d, stats_d = [], {}
+    for policy, label in deep_labels.items():
+        base, fin = st.deep_outcomes(deep, st.DEEP_POLICIES[policy])
+        row = st.policy_row(base, fin)
+        stats_d[policy] = row
+        rows_d.append([label, pct(row["accuracy"], 2), "" if policy == "keep_best_of_five" else f"{signed(row['difference'], 2)} ({signed(row['ci_low'], 2)} to {signed(row['ci_high'], 2)})",
+                       "" if policy == "keep_best_of_five" else f"+{row['fixed']} / -{row['broken']}", "" if policy == "keep_best_of_five" else p_text(row["p_value"])])
+    fail = st.format_failures(deep)
+    all_broken = stats_d["deep_replace_all"]["broken"]
+    format_broken = fail["broken_capped"] + fail["broken_echoed"]
+
+    pilot = correction_tables()
+    pilot_rows = []
+    if pilot:
+        pilot_rows = [
+            ["Best-of-five: head selection minus greedy", signed(pilot["best"]["policies"]["head_best"]["pooled"]["accuracy"] - pilot["best"]["policies"]["greedy"]["pooled"]["accuracy"], 1) + " points (n=100)", f"{signed(stats5['head_best']['difference'], 2)} points (n={n:,})"],
+            ["Best-of-five: oracle minus greedy", signed(pilot["best"]["policies"]["oracle"]["pooled"]["accuracy"] - pilot["best"]["policies"]["greedy"]["pooled"]["accuracy"], 1) + " points", f"{signed(stats5['oracle']['difference'], 2)} points"],
+            ["Prompted retry of everything", signed(pilot["retry"]["policies"]["retry_all"]["pooled"]["final_accuracy"] - pilot["retry"]["policies"]["baseline_no_retry"]["pooled"]["final_accuracy"], 1) + " points", f"{signed(stats_r['retry_all']['difference'], 2)} points"],
+            ["Retry the 20% with the lowest head score", signed(pilot["retry"]["policies"]["head_lowest_fraction"]["pooled"]["final_accuracy"] - pilot["retry"]["policies"]["baseline_no_retry"]["pooled"]["final_accuracy"], 1) + " points", f"{signed(stats_r['head_lowest_fraction']['difference'], 2)} points"],
+            ["Retry a random 20% (control)", signed(pilot["retry"]["policies"]["random_matched_fraction"]["pooled"]["final_accuracy"] - pilot["retry"]["policies"]["baseline_no_retry"]["pooled"]["final_accuracy"], 1) + " points", f"{signed(stats_r['random_matched_fraction']['difference'], 2)} points"],
+            ["Gated reranking (margin 0)", signed(pilot["rerank"]["policies"]["head_gated_margin_0.00"]["pooled"]["final_accuracy"] - pilot["rerank"]["policies"]["baseline_no_retry"]["pooled"]["final_accuracy"], 1) + " points", f"{signed(stats_r['head_gated_margin_0.00']['difference'], 2)} points"],
+            ["Deeper pass applied to everything", signed(pilot["deep"]["policies"]["deep_replace_all"]["pooled"].get("final_accuracy", 0) - pilot["deep"]["policies"]["keep_best_of_five"]["pooled"].get("final_accuracy", 0), 1) + " points", f"{signed(stats_d['deep_replace_all']['difference'], 2)} points"],
+        ]
+    head = stats5["head_best"]
+    gate = stats_r["head_gated_margin_0.00"]
+    text = r"""
+<h3>12.6 The full test split</h3>
+<p>The 100-example runs were a pilot. Every experiment above was rerun on the <b>full test splits of all four datasets: @@n@@ questions</b> (ChartQA 2,500, TextVQA 2,500, DocVQA 2,500, ScienceQA 2,017), with the same prompts, sampling settings (temperature 0.9, top-p 0.95, five candidates), the same exported unified head, and the same 64-token limit. Each experiment ran as eight shards on separate GPUs and the shards were merged afterwards, so the policies that rank the whole set (the lowest 20% by head score, the random control) are computed once over all questions. There were no failed examples. Differences from a baseline are paired (the same questions under both policies) and come with a bootstrap 95% interval and an exact sign test (McNemar) on the questions where the two policies disagree. Accuracy differences are in percentage points.</p>
+<div class="callout"><b class="t">Result in one paragraph</b>On the full test split the 100-example optimism does not hold. Choosing among five samples with the head improves on greedy generation by only @@headdiff@@ points (95% interval @@headlo@@ to @@headhi@@, p = @@headp@@), which is not distinguishable from zero, against +3 points in the pilot. Prompted retry lowers accuracy unless it is tightly gated, where it gains at most +0.2 points. The deeper pass lowers accuracy by @@deepdiff@@ points when applied to everything. The oracles show real headroom (+@@oracle5@@ points for best-of-five, +@@oracleretry@@ for retry), so the head's scores rank candidates well (AUROC @@candhead@@ against @@candtok@@ for the answer-token probability over @@ncand@@ sampled answers) but that ranking is not yet turned into accuracy.</div>
+<h4>Best-of-five candidate selection</h4>
+@@t5@@
+<p>Differences are against the greedy answer; "fixed / broken" counts questions the policy got right where greedy was wrong and the reverse. Candidate sets contained @@diversity@@ distinct answers on average. Head selection is @@vsfirst@@ points better than taking the first sample (p &lt; 0.001), so sampling alone does not help (the first sample is worse than greedy) and selection recovers that loss, but it does not beat greedy. The head is @@vsmajor@@ points above majority vote, which is also not significant.</p>
+@@t5d@@
+<p>Only TextVQA shows a gain larger than noise (+1.0 points, p = 0.04, one of four datasets, so not corrected for multiple comparisons). On ChartQA, where greedy is weakest, head selection is slightly worse than greedy.</p>
+<h4>Prompted retry and reranking</h4>
+@@tr@@
+<p>Differences are against keeping the greedy answer. Retrying everything loses @@retryall@@ points: the retry fixes @@rfix@@ questions and breaks @@rbrk@@. Sending only the lowest 20% by head score to the retry loses less (@@headfrac@@ points) than the random control (@@randfrac@@) and the answer-token probability (@@tokfrac@@), so the head does point the retry at the right questions more often than chance, but the retry itself overturns too many correct answers for that to pay off. The gated policies (retry only if the original scores below 0.5 and the retry scores higher, optionally by a margin) are the only ones that help, by @@gate@@ points for margin 0 and about the same for 0.05, with intervals that touch zero.</p>
+@@tr2@@
+<p>Change in accuracy by dataset, in points. ScienceQA is where retrying everything hurts most (-7.0), and where gating helps most (+1.2).</p>
+<h4>Deeper pass after best-of-five</h4>
+@@td@@
+<p>Applied to every selected answer, the deeper pass lowers accuracy from @@keep@@ to @@deepacc@@: it fixes @@dfix@@ questions and breaks @@dbrk@@. A large share of that is format failure and not wrong reasoning: @@capped@@ of the @@n@@ deeper answers hit the 64-token limit while writing out reasoning, and @@echoed@@ repeated the prompt text. Those two kinds account for @@fmtbroken@@ of the @@dbrk@@ breaks (@@fmtshare@@); the other @@genuine@@ are real changes of a correct answer to a wrong one. So the pass is clearly harmful as designed, and part of the harm could be removed by a larger token budget and answer extraction, but the genuine breaks alone (@@genuine@@) still outnumber the fixes (@@dfix@@). Letting the head decide gives at most +0.1 points.</p>
+@@pilot@@
+<div class="callout warn"><b class="t">What this changes in the conclusions</b>(1) Do not quote the pilot's "81% against 78%": on 9,517 questions head-selected best-of-five is +@@headdiff1@@ points over greedy and not statistically significant. (2) The detection work stands: the head ranks sampled answers far better than the answer-token probability (AUROC @@candhead@@ against @@candtok@@). (3) Turning that ranking into accuracy needs a stronger lever than choosing among five samples or asking the model to look again; the oracle gaps (+@@oracle5@@ points for best-of-five, +@@oracleretry@@ for retry) say the room exists. (4) The retry and deeper pass should be rerun with a controlled format (enough tokens, final-answer extraction) before drawing conclusions about chain of thought.</div>
+"""
+    return fill(text, n=f"{n:,}", headdiff=signed(head["difference"], 2), headdiff1=signed(head["difference"], 1).lstrip("+"), headlo=signed(head["ci_low"], 2), headhi=signed(head["ci_high"], 2), headp=p_text(head["p_value"]),
+                deepdiff=signed(stats_d["deep_replace_all"]["difference"], 1).lstrip("-"), oracle5=signed(stats5["oracle"]["difference"], 1).lstrip("+"), oracleretry=signed(stats_r["oracle_upper_bound"]["difference"], 1).lstrip("+"),
+                candhead=f"{cand_head:.3f}", candtok=f"{cand_tok:.3f}", ncand=f"{len(labels_c):,}", diversity=f"{diversity:.2f}", vsfirst=signed(head_vs_first["difference"], 1).lstrip("+"), vsmajor=signed(head_vs_major["difference"], 1).lstrip("+"),
+                retryall=signed(-stats_r["retry_all"]["difference"], 1).lstrip("+"), rfix=stats_r["retry_all"]["fixed"], rbrk=stats_r["retry_all"]["broken"], headfrac=signed(-stats_r["head_lowest_fraction"]["difference"], 2).lstrip("+"),
+                randfrac=signed(-stats_r["random_matched_fraction"]["difference"], 2).lstrip("+"), tokfrac=signed(-stats_r["token_lowest_fraction"]["difference"], 2).lstrip("+"), gate=signed(gate["difference"], 2),
+                keep=pct(stats_d["keep_best_of_five"]["accuracy"], 1), deepacc=pct(stats_d["deep_replace_all"]["accuracy"], 1), dfix=stats_d["deep_replace_all"]["fixed"], dbrk=all_broken, capped=f"{fail['capped']:,}", echoed=f"{fail['echoed']:,}",
+                fmtbroken=format_broken, fmtshare=pct(format_broken / all_broken, 0), genuine=all_broken - format_broken,
+                t5=policy_table(["Selection method", "Accuracy", "95% interval", "Difference from greedy (95% interval)", "Fixed / broken", "p"], rows5),
+                t5d=policy_table(["Dataset", "Questions", "Greedy", "Head-selected", "Oracle", "Difference", "Fixed / broken", "p"], per5),
+                tr=policy_table(["Policy", "Questions retried", "Accuracy", "Difference from no retry (95% interval)", "Fixed / broken", "p"], rows_r),
+                tr2=policy_table(["Dataset", "Greedy accuracy", "Retry all", "Lowest 20% by head", "Random 20%", "Gated, margin 0"], per_r),
+                td=policy_table(["Policy", "Accuracy", "Difference from the selected candidate (95% interval)", "Fixed / broken", "p"], rows_d),
+                pilot=("<h4>Pilot against full split</h4>" + table(["Comparison", "Pilot, 100 examples", f"Full split, {n:,} questions"], pilot_rows, left_cols=(0,)) + "<p>The pilot overstated every effect that looked like a gain. With 100 examples, one question is one point, so differences of two to four points are a handful of questions; the full split shows they were noise.</p>") if pilot_rows else "")
 
 
 def section_engineering() -> str:
@@ -882,14 +1025,14 @@ def section_meaning(r: Results, swap: dict, noise: dict) -> str:
 </ul>
 <h3>14.2 What is not established</h3>
 <ul>
-<li><b>Correction.</b> Nothing yet shows that acting on a flagged answer improves accuracy. The prompted retry and the deeper pass did not help, and best-of-five selection by the head is promising on 100 examples but not statistically established.</li>
+<li><b>Correction.</b> Nothing yet shows that acting on a flagged answer improves accuracy. On the full test split (9,517 questions) head-selected best-of-five is +0.4 points over greedy (95% interval -0.04 to +0.84, not significant), prompted retry loses accuracy unless gated (gated gain at most +0.2 points), and the deeper pass loses 12.8 points. The head ranks candidates well, but the ranking is not yet converted into accuracy.</li>
 <li><b>Grounding is a proxy.</b> "The score falls when the image is corrupted" shows the head reacts to the image, not that it tracks the specific evidence for the answer. Noise is an easy corruption.</li>
 <li><b>One model size.</b> Everything is on Qwen3-VL-2B. The 4B check was not run. The exported sequential heads are single seeds.</li>
 <li><b>Calibration across datasets.</b> One temperature is fitted on the pooled validation split. Per-dataset calibration was not studied.</li>
 </ul>
 <h3>14.3 Next steps</h3>
 <ol>
-<li>Run best-of-five and the retry policies on the full pooled test split with intervals.</li>
+<li>Find a stronger lever than choosing among five samples or retrying: the oracles leave +4.8 points (best-of-five) and +2.9 points (retry) on the table, which a better candidate generator or a latent correction could reach.</li>
 <li>Run a controlled chain-of-thought condition: ask for reasoning, allow enough tokens (the deeper pass used 64), extract the final answer, score it with the head, and compare it with the deeper pass.</li>
 <li>Build the latent correction step: test-time steering of the hidden state toward a higher head score, evaluated against the prompted baselines above.</li>
 <li>A harder grounding test: mask only the region the answer comes from; and a softer correctness label for span answers.</li>
@@ -903,7 +1046,7 @@ def section_meaning(r: Results, swap: dict, noise: dict) -> str:
 <tr><td class="l">Result 2</td><td class="l">One unified head, one pooled training</td><td class="l">AUROC @@uni@@ pooled</td></tr>
 <tr><td class="l">Result 3</td><td class="l">New loss makes the score depend on the image</td><td class="l">@@gold@@ to @@gnew@@, no AUROC cost</td></tr>
 <tr><td class="l">Result 4</td><td class="l">Heads can be extended without forgetting</td><td class="l">forgetting 0.011 AUROC</td></tr>
-<tr><td class="l">Correction</td><td class="l">Head-guided best-of-five is the promising lead</td><td class="l">81% against 78% (n=100)</td></tr>
+<tr><td class="l">Correction</td><td class="l">The head ranks candidates well, but selection and retry gain little so far</td><td class="l">best-of-five +0.4 points over greedy, not significant (n=9,517); oracle +4.8</td></tr>
 <tr><td class="l">Next</td><td class="l">Latent correction on the hidden state</td><td class="l">not started</td></tr></tbody></table>
 """
     return fill(text, uni=fmt(uni), tok=fmt(tok), gold=fmt(g_old, 2), gnew=fmt(g_new, 2))
@@ -1265,7 +1408,7 @@ def build() -> str:
     body = "".join([
         cover(r, pd, kpis).replace("<div class=\"kpi\">", download + "<div class=\"kpi\">", 1), toc(items), section_overview(r), section_foundations(r, pd), section_baseline(r, pd), section_original(r), section_sizes(r, pd),
         section_datasets(r, pd), extras_datasets(pd), section_unified(r, pd), section_mixture(r), extras_mixture(r), section_losses(r, swap_main, noise, xeval), extras_losses(swap_main, noise), section_sequential(r), extras_sequential(r),
-        section_heads(), section_correction(data), section_engineering(), extras_engineering(), section_meaning(r, swap_main, noise), section_appendix(), workbook_section(workbook_path),
+        section_heads(), section_correction(data), section_correction_full(full_correction_data()), section_engineering(), extras_engineering(), section_meaning(r, swap_main, noise), section_appendix(), workbook_section(workbook_path),
     ])
     return (f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Approach 1 Complete Report</title>'
             f"<style>{CSS}{EXTRA_CSS}{BAR_CSS}</style>{katex_inline()}</head><body><main>{body}</main>{KATEX_START}</body></html>")

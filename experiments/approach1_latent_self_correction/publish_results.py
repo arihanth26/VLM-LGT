@@ -87,12 +87,27 @@ def main() -> None:
     copy_if_present(HERE / "results" / "analysis_mixture.json", args.output / "04_sweep_data" / "mixture_analysis.json")
     publish_corruption_data(args.output)
     publish_correction_data(args.output)
+    publish_full_correction_data(args.output)
 
 
 def publish_correction_data(output: Path) -> None:
     """Copy the summaries and per-example records of the correction experiments."""
     for path in sorted((HERE / "results").glob("mixture_test_2b_*_limit100.*")):
         copy_if_present(path, output / "04_sweep_data" / f"correction_{path.name}")
+
+
+def publish_full_correction_data(output: Path) -> None:
+    """Copy the merged full-test-split correction summaries and the report, and compress the per-example records."""
+    import gzip
+    results = HERE / "results"
+    for path in sorted(results.glob("mixture_test_2b_*_full.summary.json")) + sorted(results.glob("mixture_test_2b_*_full.html")):
+        copy_if_present(path, output / "04_sweep_data" / f"correction_full_{path.name}")
+    for path in sorted(results.glob("mixture_test_2b_*_full.jsonl")):
+        target = output / "04_sweep_data" / f"correction_full_{path.name}.gz"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("rb") as source, gzip.open(target, "wb") as destination:
+            shutil.copyfileobj(source, destination)
+        print(f"[gzip] {target.relative_to(REPO)}")
 
 
 def publish_corruption_data(output: Path) -> None:

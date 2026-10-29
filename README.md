@@ -99,6 +99,16 @@ mixture and each dataset alone, plus the final heads of the sequential runs) are
 [trained_heads/approach1/](trained_heads/approach1/), with a guide to loading them and how they were checked in
 [trained_heads/README.md](trained_heads/README.md).
 
+Correction experiments on the full test split (9,517 questions; report
+[results/approach1/08_approach1_complete_report.html](results/approach1/08_approach1_complete_report.html), Section 12.6):
+
+- The 100-example pilot suggested that choosing among five samples with the head beats greedy generation by 3 points.
+  On the full test split the gain is +0.4 points (95% interval -0.04 to +0.84, not significant). The head does rank
+  sampled answers far better than the answer-token probability (AUROC 0.883 against 0.815).
+- Prompted retry of every answer lowers accuracy by 2.7 points; only a gated retry gains, by at most 0.2 points. The deeper
+  pass lowers accuracy by 12.8 points when applied to everything, partly from format failures (answers cut off at the
+  token limit or repeating the prompt). The oracles leave room: +4.8 points for best-of-five, +2.9 for retry.
+
 Corrupted image instead of a swapped one (report
 [results/approach1/06_corruption_new_loss_report.html](results/approach1/06_corruption_new_loss_report.html)):
 
