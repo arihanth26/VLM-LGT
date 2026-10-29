@@ -22,6 +22,7 @@ from data.approach1_latent_self_correction.build_qhead_splits import (
     take,
 )
 from data.approach1_latent_self_correction.dataset_config import QHEAD_DATASETS, TRAINING_DATASETS
+from experiments.approach1_latent_self_correction.correction_scale import cached_test_split, dataset_dir, shard_range
 from experiments.approach1_latent_self_correction.baseline import (
     extract_image,
     extract_question,
@@ -159,8 +160,14 @@ def run_online(
     random_seed: int,
     max_new_tokens: int,
     limit: int | None,
+    datasets: tuple | None = None,
+    shard: int = 0,
+    num_shards: int = 1,
+    cached: bool = False,
+    summarize: bool = True,
+    max_examples: int | None = None,
 ) -> None:
-    """Generate, score, and retry the mixture test examples in one model pass."""
+    """Generate, score, and retry the mixture test examples in one model pass, on the whole test split or one shard."""
     existing = []
     if output_path.exists():
         existing = [json.loads(line) for line in output_path.read_text(encoding="utf-8").splitlines() if line.strip()]
@@ -175,15 +182,18 @@ def run_online(
 
     records = list(existing)
     for dataset_name in DATASET_NAMES:
+        if datasets is not None and dataset_name not in datasets:
+            continue
         quota = None if quotas is None else quotas[dataset_name]
-        split = load_test_split(dataset_name, materialize_limit=quota)
+        split = cached_test_split(dataset_name) if cached else load_test_split(dataset_name, materialize_limit=quota)
         count = len(split) if quota is None else min(len(split), quota)
-        for index in range(count):
+        indices = shard_range(count, shard, num_shards, max_examples)
+        for index in indices:
             if (dataset_name, index) in completed:
                 continue
             example = split[index]
             try:
-                image = extract_image(example, Path("."))
+                image = extract_image(example, dataset_dir(dataset_name) if cached else Path("."))
                 question = extract_question(example)
                 reference_answer, _ = extract_reference(example)
                 baseline_prompt = f"{question}\nRespond with only the final answer, without explanation."
@@ -241,8 +251,11 @@ def run_online(
             output_path.parent.mkdir(parents=True, exist_ok=True)
             with output_path.open("a", encoding="utf-8") as destination:
                 destination.write(json.dumps(record, default=str) + "\n")
-            print(f"[{dataset_name} {index + 1}/{count}] wrote index {index}", flush=True)
+            print(f"[{dataset_name} {index + 1 - indices.start}/{len(indices)}] wrote index {index}", flush=True)
 
+    if not summarize:
+        print(f"[done] wrote {output_path}")
+        return
     successful = [record for record in records if "baseline_correct" in record]
     add_policy_selections(successful, threshold, review_fraction, random_seed)
     errors = [record for record in records if "baseline_correct" not in record]
@@ -269,6 +282,12 @@ def main() -> None:
     parser.add_argument("--random-seed", type=int, default=0)
     parser.add_argument("--max-new-tokens", type=int, default=64)
     parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--datasets", nargs="+", default=None, help="Only these datasets.")
+    parser.add_argument("--shard", type=int, default=0, help="Which block of each test split to run.")
+    parser.add_argument("--num-shards", type=int, default=1)
+    parser.add_argument("--cached-splits", action="store_true", help="Read the test splits cached by the Q-head pipeline instead of downloading them.")
+    parser.add_argument("--no-summary", action="store_true", help="Write only the records, for sharded runs merged later.")
+    parser.add_argument("--max-examples", type=int, default=None, help="Cap the examples per dataset and shard, for a smoke test.")
     args = parser.parse_args()
     run_online(
         args.head,
@@ -278,6 +297,12 @@ def main() -> None:
         args.random_seed,
         args.max_new_tokens,
         args.limit,
+        None if args.datasets is None else tuple(args.datasets),
+        args.shard,
+        args.num_shards,
+        args.cached_splits,
+        not args.no_summary,
+        args.max_examples,
     )
 
 

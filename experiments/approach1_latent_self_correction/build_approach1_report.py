@@ -1073,8 +1073,45 @@ def extras_mixture(r: Results) -> str:
 <p>Standard deviation of the pooled test AUROC across the three seeds of each winner. Differences smaller than about twice these values should not be read as real.</p>
 @@seeds@@
 """
-    return fill(text, gate=table(["Scorer", "Errors found in the lowest 20%", "Accuracy of the most trusted 50%"], rows), hyper=hyper, seeds=table(["Head", "Loss", "Pooled AUROC", "Std over seeds"], seed_rows, left_cols=(0, 1)))
+    return fill(text, gate=table(["Scorer", "Errors found in the lowest 20%", "Accuracy of the most trusted 50%"], rows), hyper=hyper, seeds=table(["Head", "Loss", "Pooled AUROC", "Std over seeds"], seed_rows, left_cols=(0, 1))) + heads_vs_probes_section()
 
+
+
+def heads_vs_probes_section() -> str:
+    """Section 8.7: trained heads against linear probes, per dataset, in both training settings."""
+    from experiments.approach1_latent_self_correction import heads_vs_probes as hp
+    rows = hp.comparison_rows()
+    parts = []
+    summary = []
+    for setting in ("Trained on the pooled mixture", "Trained on each dataset alone"):
+        subset = [r for r in rows if r["setting"] == setting]
+        table_rows = []
+        for r in subset:
+            table_rows.append([r["dataset"], r["head_label"], fmt(r["token_auroc"]), f"{r['linear_correctness_auroc']:.3f} ± {r['linear_correctness_auroc_std']:.3f}", f"{r['head_correctness_auroc']:.3f} ± {r['head_correctness_auroc_std']:.3f}",
+                               f"{r['diff_correctness_auroc']:+.3f}", f"{r['head_arch']} ({r['head_params']:,})", f"{r['linear_error_auprc']:.3f}", f"{r['head_error_auprc']:.3f}", hp.verdict(r)])
+        better = sum(1 for r in subset if hp.verdict(r) == "head better")
+        same = sum(1 for r in subset if hp.verdict(r) in ("within seed spread", "same model (the best head is linear)"))
+        worse = sum(1 for r in subset if hp.verdict(r) == "linear probe better")
+        gains = [r["diff_correctness_auroc"] for r in subset]
+        share = sorted((r["linear_correctness_auroc"] - r["token_auroc"]) / (r["head_correctness_auroc"] - r["token_auroc"]) for r in subset if r["head_correctness_auroc"] > r["token_auroc"])
+        summary.append(f"<li><b>{setting}.</b> The trained head is better than the linear probe by more than the seed spread in {better} of {len(subset)} comparisons, within the spread (or the same model) in {same}, and worse in {worse}. "
+                       f"The mean AUROC difference is {sum(gains) / len(gains):+.4f} and the largest is {max(gains):+.3f}. The linear probe delivers {100 * share[0]:.0f}% to {100 * share[-1]:.0f}% (median {100 * share[len(share) // 2]:.0f}%) of the head's gain over the answer-token probability.</li>")
+        parts.append(f"<h4>{setting}</h4>" + table(["Dataset", "Head", "Answer-token prob. AUROC", "Linear probe AUROC", "Trained head AUROC", "Difference", "Head architecture (parameters)", "Linear probe error AUPRC", "Trained head error AUPRC", "Reading"], table_rows, left_cols=(0, 1, 6, 9)))
+    chart_rows = []
+    for r in rows:
+        if r["setting"] == "Trained on the pooled mixture" and r["kind"] == "unified" and r["mode"] == "joint":
+            chart_rows.append((r["dataset"], {"token": r["token_auroc"], "linear": r["linear_correctness_auroc"], "head": r["head_correctness_auroc"]}))
+    series = [("token", SCORER_LABEL["token_confidence"], "c-tok"), ("linear", "Linear probe", "c-sp"), ("head", "Trained head", "c-uj")]
+    chart = dot_plot(chart_rows, series, 0.6, 1.0, "Correctness AUROC on the test split (axis starts at 0.6)", caption_id="fig-hvl") + legend([(label, css) for _, label, css in series])
+    text = r"""
+<h3>8.7 Trained heads against linear probes, per dataset</h3>
+<p>The question here is how much the extra capacity buys. A <b>linear probe</b> is the best linear head of a sweep: no hidden layer, 2,049 parameters for a separate head and 12,290 for the unified head. The <b>trained head</b> is the best head of the same sweep over all three architectures (linear, MLP-256, MLP-512), and it is a linear probe whenever the validation score prefers one. Both are chosen on validation with the old loss and scored on the test split, mean and standard deviation over three seeds. The comparison is made in the two training settings used in this report, for every head kind and mode. A difference is called real only if it is larger than the combined seed spread of the two. The answer-token probability is shown as a reference.</p>
+@@chart@@
+<ul>@@summary@@</ul>
+@@tables@@
+<div class="callout"><b class="t">Reading the comparison</b>The trained heads are better than linear probes, but only a little. Trained on the pool, the head is ahead in all 16 comparisons by 0.001 to 0.013 AUROC (mean 0.006), and the lead is larger than the seed spread in 12 of them; the largest leads are the question-only head on DocVQA (+0.013), the verifier on ChartQA (+0.010) and the question-only head on TextVQA (+0.010). Trained on each dataset alone, with 6,000 to 28,000 training rows, the mean lead falls to 0.003: the head wins by more than the seed spread in 7 comparisons, ties in 7 (in two of them the best head is a linear probe, the unified head on ChartQA), and loses in 2, both for the unified head on TextVQA (-0.002 and -0.006). A larger head therefore needs the pooled data to pay off consistently. Either way the linear probe delivers about 90% to 99% of the head's gain over the answer-token probability (above 100% where the probe is better) with well under 1% of the parameters of the larger head, which makes it the sensible default and the larger heads a small refinement.</div>
+"""
+    return fill(text, chart=figure("fig-hvl", "Unified head, joint mode: answer-token probability, linear probe and trained head (trained on the pool)", chart, "Each row is one dataset's test rows."), summary="".join(summary), tables="".join(parts))
 
 def image_tag(data: str) -> str:
     """An inline thumbnail from base64 JPEG data."""

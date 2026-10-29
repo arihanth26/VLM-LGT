@@ -14,6 +14,7 @@
 #   06  corrupted-image (noise) version of the new loss
 #   07  correction experiments (prompted retry, reranking, best-of-five, deeper pass)
 #   08  complete Approach 1 report (HTML and PDF) covering everything above, and its Excel workbook of tables
+#   09  trained heads against linear probes, per dataset (markdown table)
 
 import argparse
 import shutil
@@ -34,6 +35,7 @@ NUMBERED_FILES = [
     (HERE / "results" / "approach1_complete_report.html", "08_approach1_complete_report.html"),
     (HERE / "results" / "approach1_complete_report.pdf", "08_approach1_complete_report.pdf"),
     (HERE / "results" / "approach1_results.xlsx", "08_approach1_results.xlsx"),
+    (HERE / "results" / "heads_vs_linear_probes.md", "09_heads_vs_linear_probes.md"),
 ]
 
 

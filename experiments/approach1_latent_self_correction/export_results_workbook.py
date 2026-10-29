@@ -332,6 +332,23 @@ def add_timings(book: Book) -> None:
     book.add("Timings", "Wall-clock minutes from Slurm accounting on the ICE cluster (one GPU each)", ["Job", "Resources", "Minutes"], rows)
 
 
+def add_heads_vs_probes(book: Book) -> None:
+    """The trained-heads-against-linear-probes comparison with every metric."""
+    from experiments.approach1_latent_self_correction import heads_vs_probes as hp
+    rows = []
+    for r in hp.comparison_rows():
+        row = [r["setting"], r["dataset"], r["head_label"], r["token_auroc"], r["linear_arch"], r["linear_params"], r["head_arch"], r["head_params"]]
+        for metric in hp.METRICS:
+            row += [r[f"linear_{metric}"], r[f"linear_{metric}_std"], r[f"head_{metric}"], r[f"head_{metric}_std"], r[f"diff_{metric}"]]
+        row.append(hp.verdict(r))
+        rows.append(row)
+    headers = ["Setting", "Dataset", "Head", "Answer-token probability AUROC", "Linear probe architecture", "Linear probe parameters", "Trained head architecture", "Trained head parameters"]
+    for metric in hp.METRICS:
+        headers += [f"Linear {metric}", "std", f"Head {metric}", "std", f"Difference {metric}"]
+    headers.append("Reading")
+    book.add("Heads vs linear probes", "Best linear probe against best trained head per dataset, head kind and mode, pooled and dataset-alone training, all metrics", headers, rows)
+
+
 def build_workbook(path: Path = OUTPUT) -> Path:
     """Build the workbook and return its path."""
     r = Results()
@@ -340,6 +357,7 @@ def build_workbook(path: Path = OUTPUT) -> Path:
     add_foundations(book, r, pd)
     add_heads(book, pd)
     add_per_dataset_results(book, pd)
+    add_heads_vs_probes(book)
     add_mixture(book, r)
     add_sequential(book, r)
     add_trained_heads(book)
