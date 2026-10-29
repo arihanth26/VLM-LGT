@@ -36,7 +36,16 @@ def build_messages(image: Image.Image, question: str) -> list:
     ]
 
 
-def generate_with_confidence(model, processor, image: Image.Image, question: str, max_new_tokens: int = 256) -> InferenceResult:
+def generate_with_confidence(
+    model,
+    processor,
+    image: Image.Image,
+    question: str,
+    max_new_tokens: int = 256,
+    do_sample: bool = False,
+    temperature: float | None = None,
+    top_p: float | None = None,
+) -> InferenceResult:
     """Generate one answer and calculate confidence from selected-token probabilities."""
     messages = build_messages(image, question)
     inputs = processor.apply_chat_template(
@@ -47,11 +56,17 @@ def generate_with_confidence(model, processor, image: Image.Image, question: str
         return_tensors="pt",
     ).to(model.device)
 
+    generation_options = {"do_sample": do_sample}
+    if do_sample and temperature is not None:
+        generation_options["temperature"] = temperature
+    if do_sample and top_p is not None:
+        generation_options["top_p"] = top_p
     outputs = model.generate(
         **inputs,
         max_new_tokens=max_new_tokens,
         return_dict_in_generate=True,
         output_scores=True,
+        **generation_options,
     )
     input_length = inputs["input_ids"].shape[1]
     generated_ids = outputs.sequences[:, input_length:]
