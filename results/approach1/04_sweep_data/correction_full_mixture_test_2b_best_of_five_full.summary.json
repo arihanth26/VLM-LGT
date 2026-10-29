@@ -1,0 +1,189 @@
+{
+  "head_path": "/storage/ice1/9/7/ajayavijayan3/VLM-LGT/trained_heads/approach1/winners/mixture/unified_new_seed1.pt",
+  "candidate_count": 5,
+  "temperature": 0.9,
+  "top_p": 0.95,
+  "seed": 17,
+  "limit": null,
+  "full_test_split": true,
+  "policies": {
+    "greedy": {
+      "pooled": {
+        "examples": 9517,
+        "correct": 7878,
+        "accuracy": 0.8277818640327834
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 2500,
+          "correct": 1915,
+          "accuracy": 0.766
+        },
+        "textvqa": {
+          "examples": 2500,
+          "correct": 2031,
+          "accuracy": 0.8124
+        },
+        "docvqa": {
+          "examples": 2500,
+          "correct": 2176,
+          "accuracy": 0.8704
+        },
+        "scienceqa_img": {
+          "examples": 2017,
+          "correct": 1756,
+          "accuracy": 0.8705999008428359
+        }
+      }
+    },
+    "first_sample": {
+      "pooled": {
+        "examples": 9517,
+        "correct": 7801,
+        "accuracy": 0.8196910791215719
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 2500,
+          "correct": 1881,
+          "accuracy": 0.7524
+        },
+        "textvqa": {
+          "examples": 2500,
+          "correct": 2005,
+          "accuracy": 0.802
+        },
+        "docvqa": {
+          "examples": 2500,
+          "correct": 2163,
+          "accuracy": 0.8652
+        },
+        "scienceqa_img": {
+          "examples": 2017,
+          "correct": 1752,
+          "accuracy": 0.8686167575607338
+        }
+      }
+    },
+    "majority_vote": {
+      "pooled": {
+        "examples": 9517,
+        "correct": 7886,
+        "accuracy": 0.8286224650625197
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 2500,
+          "correct": 1897,
+          "accuracy": 0.7588
+        },
+        "textvqa": {
+          "examples": 2500,
+          "correct": 2040,
+          "accuracy": 0.816
+        },
+        "docvqa": {
+          "examples": 2500,
+          "correct": 2188,
+          "accuracy": 0.8752
+        },
+        "scienceqa_img": {
+          "examples": 2017,
+          "correct": 1761,
+          "accuracy": 0.8730788299454636
+        }
+      }
+    },
+    "token_best": {
+      "pooled": {
+        "examples": 9517,
+        "correct": 7889,
+        "accuracy": 0.8289376904486708
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 2500,
+          "correct": 1912,
+          "accuracy": 0.7648
+        },
+        "textvqa": {
+          "examples": 2500,
+          "correct": 2039,
+          "accuracy": 0.8156
+        },
+        "docvqa": {
+          "examples": 2500,
+          "correct": 2176,
+          "accuracy": 0.8704
+        },
+        "scienceqa_img": {
+          "examples": 2017,
+          "correct": 1762,
+          "accuracy": 0.873574615765989
+        }
+      }
+    },
+    "head_best": {
+      "pooled": {
+        "examples": 9517,
+        "correct": 7916,
+        "accuracy": 0.8317747189240307
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 2500,
+          "correct": 1905,
+          "accuracy": 0.762
+        },
+        "textvqa": {
+          "examples": 2500,
+          "correct": 2057,
+          "accuracy": 0.8228
+        },
+        "docvqa": {
+          "examples": 2500,
+          "correct": 2188,
+          "accuracy": 0.8752
+        },
+        "scienceqa_img": {
+          "examples": 2017,
+          "correct": 1766,
+          "accuracy": 0.8755577590480912
+        }
+      }
+    },
+    "oracle": {
+      "pooled": {
+        "examples": 9517,
+        "correct": 8334,
+        "accuracy": 0.8756961227277503
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 2500,
+          "correct": 2059,
+          "accuracy": 0.8236
+        },
+        "textvqa": {
+          "examples": 2500,
+          "correct": 2160,
+          "accuracy": 0.864
+        },
+        "docvqa": {
+          "examples": 2500,
+          "correct": 2265,
+          "accuracy": 0.906
+        },
+        "scienceqa_img": {
+          "examples": 2017,
+          "correct": 1850,
+          "accuracy": 0.917203767972236
+        }
+      }
+    }
+  },
+  "candidate_diversity": {
+    "mean_unique_answers": 1.3605127666281391,
+    "unanimous_fraction": 0.7918461700115582
+  }
+}

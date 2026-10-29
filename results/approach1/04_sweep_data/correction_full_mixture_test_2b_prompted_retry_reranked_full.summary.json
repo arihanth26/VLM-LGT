@@ -1,0 +1,719 @@
+{
+  "head_path": "/storage/ice1/9/7/ajayavijayan3/VLM-LGT/trained_heads/approach1/winners/mixture/unified_new_seed1.pt",
+  "threshold": 0.5,
+  "review_fraction": 0.2,
+  "random_seed": 0,
+  "limit": null,
+  "full_test_split": true,
+  "online": true,
+  "policies": {
+    "baseline_no_retry": {
+      "pooled": {
+        "examples": 9517,
+        "flagged": 0,
+        "retried": 0,
+        "coverage": 0.0,
+        "baseline_accuracy": 0.8272564883891983,
+        "final_accuracy": 0.8272564883891983,
+        "fixed_errors": 0,
+        "broken_answers": 0,
+        "net_corrections": 0
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 2500,
+          "flagged": 0,
+          "retried": 0,
+          "coverage": 0.0,
+          "baseline_accuracy": 0.766,
+          "final_accuracy": 0.766,
+          "fixed_errors": 0,
+          "broken_answers": 0,
+          "net_corrections": 0
+        },
+        "docvqa": {
+          "examples": 2500,
+          "flagged": 0,
+          "retried": 0,
+          "coverage": 0.0,
+          "baseline_accuracy": 0.8696,
+          "final_accuracy": 0.8696,
+          "fixed_errors": 0,
+          "broken_answers": 0,
+          "net_corrections": 0
+        },
+        "scienceqa_img": {
+          "examples": 2017,
+          "flagged": 0,
+          "retried": 0,
+          "coverage": 0.0,
+          "baseline_accuracy": 0.8681209717402082,
+          "final_accuracy": 0.8681209717402082,
+          "fixed_errors": 0,
+          "broken_answers": 0,
+          "net_corrections": 0
+        },
+        "textvqa": {
+          "examples": 2500,
+          "flagged": 0,
+          "retried": 0,
+          "coverage": 0.0,
+          "baseline_accuracy": 0.8132,
+          "final_accuracy": 0.8132,
+          "fixed_errors": 0,
+          "broken_answers": 0,
+          "net_corrections": 0
+        }
+      }
+    },
+    "retry_all": {
+      "pooled": {
+        "examples": 9517,
+        "flagged": 9517,
+        "retried": 9517,
+        "coverage": 1.0,
+        "baseline_accuracy": 0.8272564883891983,
+        "final_accuracy": 0.7999369549227697,
+        "fixed_errors": 272,
+        "broken_answers": 532,
+        "net_corrections": -260
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 2500,
+          "flagged": 2500,
+          "retried": 2500,
+          "coverage": 1.0,
+          "baseline_accuracy": 0.766,
+          "final_accuracy": 0.7476,
+          "fixed_errors": 60,
+          "broken_answers": 106,
+          "net_corrections": -46
+        },
+        "docvqa": {
+          "examples": 2500,
+          "flagged": 2500,
+          "retried": 2500,
+          "coverage": 1.0,
+          "baseline_accuracy": 0.8696,
+          "final_accuracy": 0.8604,
+          "fixed_errors": 18,
+          "broken_answers": 41,
+          "net_corrections": -23
+        },
+        "scienceqa_img": {
+          "examples": 2017,
+          "flagged": 2017,
+          "retried": 2017,
+          "coverage": 1.0,
+          "baseline_accuracy": 0.8681209717402082,
+          "final_accuracy": 0.7982151710461081,
+          "fixed_errors": 179,
+          "broken_answers": 320,
+          "net_corrections": -141
+        },
+        "textvqa": {
+          "examples": 2500,
+          "flagged": 2500,
+          "retried": 2500,
+          "coverage": 1.0,
+          "baseline_accuracy": 0.8132,
+          "final_accuracy": 0.7932,
+          "fixed_errors": 15,
+          "broken_answers": 65,
+          "net_corrections": -50
+        }
+      }
+    },
+    "head_threshold": {
+      "pooled": {
+        "examples": 9517,
+        "flagged": 1338,
+        "retried": 1338,
+        "coverage": 0.14059052222338972,
+        "baseline_accuracy": 0.8272564883891983,
+        "final_accuracy": 0.8262057371020279,
+        "fixed_errors": 144,
+        "broken_answers": 154,
+        "net_corrections": -10
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 2500,
+          "flagged": 579,
+          "retried": 579,
+          "coverage": 0.2316,
+          "baseline_accuracy": 0.766,
+          "final_accuracy": 0.758,
+          "fixed_errors": 39,
+          "broken_answers": 59,
+          "net_corrections": -20
+        },
+        "docvqa": {
+          "examples": 2500,
+          "flagged": 136,
+          "retried": 136,
+          "coverage": 0.0544,
+          "baseline_accuracy": 0.8696,
+          "final_accuracy": 0.868,
+          "fixed_errors": 3,
+          "broken_answers": 7,
+          "net_corrections": -4
+        },
+        "scienceqa_img": {
+          "examples": 2017,
+          "flagged": 218,
+          "retried": 218,
+          "coverage": 0.10808130887456618,
+          "baseline_accuracy": 0.8681209717402082,
+          "final_accuracy": 0.8820029747149232,
+          "fixed_errors": 96,
+          "broken_answers": 68,
+          "net_corrections": 28
+        },
+        "textvqa": {
+          "examples": 2500,
+          "flagged": 405,
+          "retried": 405,
+          "coverage": 0.162,
+          "baseline_accuracy": 0.8132,
+          "final_accuracy": 0.8076,
+          "fixed_errors": 6,
+          "broken_answers": 20,
+          "net_corrections": -14
+        }
+      }
+    },
+    "head_lowest_fraction": {
+      "pooled": {
+        "examples": 9517,
+        "flagged": 1904,
+        "retried": 1904,
+        "coverage": 0.20006304507723022,
+        "baseline_accuracy": 0.8272564883891983,
+        "final_accuracy": 0.8227382578543658,
+        "fixed_errors": 205,
+        "broken_answers": 248,
+        "net_corrections": -43
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 2500,
+          "flagged": 793,
+          "retried": 793,
+          "coverage": 0.3172,
+          "baseline_accuracy": 0.766,
+          "final_accuracy": 0.7536,
+          "fixed_errors": 52,
+          "broken_answers": 83,
+          "net_corrections": -31
+        },
+        "docvqa": {
+          "examples": 2500,
+          "flagged": 216,
+          "retried": 216,
+          "coverage": 0.0864,
+          "baseline_accuracy": 0.8696,
+          "final_accuracy": 0.868,
+          "fixed_errors": 8,
+          "broken_answers": 12,
+          "net_corrections": -4
+        },
+        "scienceqa_img": {
+          "examples": 2017,
+          "flagged": 349,
+          "retried": 349,
+          "coverage": 0.17302925136341102,
+          "baseline_accuracy": 0.8681209717402082,
+          "final_accuracy": 0.873574615765989,
+          "fixed_errors": 135,
+          "broken_answers": 124,
+          "net_corrections": 11
+        },
+        "textvqa": {
+          "examples": 2500,
+          "flagged": 546,
+          "retried": 546,
+          "coverage": 0.2184,
+          "baseline_accuracy": 0.8132,
+          "final_accuracy": 0.8056,
+          "fixed_errors": 10,
+          "broken_answers": 29,
+          "net_corrections": -19
+        }
+      }
+    },
+    "token_lowest_fraction": {
+      "pooled": {
+        "examples": 9517,
+        "flagged": 1904,
+        "retried": 1904,
+        "coverage": 0.20006304507723022,
+        "baseline_accuracy": 0.8272564883891983,
+        "final_accuracy": 0.8190606283492697,
+        "fixed_errors": 156,
+        "broken_answers": 234,
+        "net_corrections": -78
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 2500,
+          "flagged": 641,
+          "retried": 641,
+          "coverage": 0.2564,
+          "baseline_accuracy": 0.766,
+          "final_accuracy": 0.7536,
+          "fixed_errors": 34,
+          "broken_answers": 65,
+          "net_corrections": -31
+        },
+        "docvqa": {
+          "examples": 2500,
+          "flagged": 350,
+          "retried": 350,
+          "coverage": 0.14,
+          "baseline_accuracy": 0.8696,
+          "final_accuracy": 0.8688,
+          "fixed_errors": 10,
+          "broken_answers": 12,
+          "net_corrections": -2
+        },
+        "scienceqa_img": {
+          "examples": 2017,
+          "flagged": 325,
+          "retried": 325,
+          "coverage": 0.1611303916707982,
+          "baseline_accuracy": 0.8681209717402082,
+          "final_accuracy": 0.857709469509172,
+          "fixed_errors": 100,
+          "broken_answers": 121,
+          "net_corrections": -21
+        },
+        "textvqa": {
+          "examples": 2500,
+          "flagged": 588,
+          "retried": 588,
+          "coverage": 0.2352,
+          "baseline_accuracy": 0.8132,
+          "final_accuracy": 0.8036,
+          "fixed_errors": 12,
+          "broken_answers": 36,
+          "net_corrections": -24
+        }
+      }
+    },
+    "random_matched_fraction": {
+      "pooled": {
+        "examples": 9517,
+        "flagged": 1904,
+        "retried": 1904,
+        "coverage": 0.20006304507723022,
+        "baseline_accuracy": 0.8272564883891983,
+        "final_accuracy": 0.8205316801513082,
+        "fixed_errors": 47,
+        "broken_answers": 111,
+        "net_corrections": -64
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 2500,
+          "flagged": 460,
+          "retried": 460,
+          "coverage": 0.184,
+          "baseline_accuracy": 0.766,
+          "final_accuracy": 0.7624,
+          "fixed_errors": 10,
+          "broken_answers": 19,
+          "net_corrections": -9
+        },
+        "docvqa": {
+          "examples": 2500,
+          "flagged": 513,
+          "retried": 513,
+          "coverage": 0.2052,
+          "baseline_accuracy": 0.8696,
+          "final_accuracy": 0.8664,
+          "fixed_errors": 1,
+          "broken_answers": 9,
+          "net_corrections": -8
+        },
+        "scienceqa_img": {
+          "examples": 2017,
+          "flagged": 423,
+          "retried": 423,
+          "coverage": 0.20971740208230044,
+          "baseline_accuracy": 0.8681209717402082,
+          "final_accuracy": 0.8497768963807635,
+          "fixed_errors": 33,
+          "broken_answers": 70,
+          "net_corrections": -37
+        },
+        "textvqa": {
+          "examples": 2500,
+          "flagged": 508,
+          "retried": 508,
+          "coverage": 0.2032,
+          "baseline_accuracy": 0.8132,
+          "final_accuracy": 0.8092,
+          "fixed_errors": 3,
+          "broken_answers": 13,
+          "net_corrections": -10
+        }
+      }
+    },
+    "head_rerank": {
+      "pooled": {
+        "examples": 9517,
+        "flagged": 392,
+        "retried": 392,
+        "coverage": 0.04118945045707681,
+        "baseline_accuracy": 0.8272564883891983,
+        "final_accuracy": 0.8271514132604812,
+        "fixed_errors": 151,
+        "broken_answers": 152,
+        "net_corrections": -1
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 2500,
+          "flagged": 112,
+          "retried": 112,
+          "coverage": 0.0448,
+          "baseline_accuracy": 0.766,
+          "final_accuracy": 0.7636,
+          "fixed_errors": 36,
+          "broken_answers": 42,
+          "net_corrections": -6
+        },
+        "docvqa": {
+          "examples": 2500,
+          "flagged": 37,
+          "retried": 37,
+          "coverage": 0.0148,
+          "baseline_accuracy": 0.8696,
+          "final_accuracy": 0.8704,
+          "fixed_errors": 14,
+          "broken_answers": 12,
+          "net_corrections": 2
+        },
+        "scienceqa_img": {
+          "examples": 2017,
+          "flagged": 189,
+          "retried": 189,
+          "coverage": 0.09370352007932573,
+          "baseline_accuracy": 0.8681209717402082,
+          "final_accuracy": 0.8696083292017849,
+          "fixed_errors": 87,
+          "broken_answers": 84,
+          "net_corrections": 3
+        },
+        "textvqa": {
+          "examples": 2500,
+          "flagged": 54,
+          "retried": 54,
+          "coverage": 0.0216,
+          "baseline_accuracy": 0.8132,
+          "final_accuracy": 0.8132,
+          "fixed_errors": 14,
+          "broken_answers": 14,
+          "net_corrections": 0
+        }
+      }
+    },
+    "oracle_upper_bound": {
+      "pooled": {
+        "examples": 9517,
+        "flagged": 272,
+        "retried": 272,
+        "coverage": 0.028580435011032888,
+        "baseline_accuracy": 0.8272564883891983,
+        "final_accuracy": 0.8558369234002312,
+        "fixed_errors": 272,
+        "broken_answers": 0,
+        "net_corrections": 272
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 2500,
+          "flagged": 60,
+          "retried": 60,
+          "coverage": 0.024,
+          "baseline_accuracy": 0.766,
+          "final_accuracy": 0.79,
+          "fixed_errors": 60,
+          "broken_answers": 0,
+          "net_corrections": 60
+        },
+        "docvqa": {
+          "examples": 2500,
+          "flagged": 18,
+          "retried": 18,
+          "coverage": 0.0072,
+          "baseline_accuracy": 0.8696,
+          "final_accuracy": 0.8768,
+          "fixed_errors": 18,
+          "broken_answers": 0,
+          "net_corrections": 18
+        },
+        "scienceqa_img": {
+          "examples": 2017,
+          "flagged": 179,
+          "retried": 179,
+          "coverage": 0.0887456618740704,
+          "baseline_accuracy": 0.8681209717402082,
+          "final_accuracy": 0.9568666336142786,
+          "fixed_errors": 179,
+          "broken_answers": 0,
+          "net_corrections": 179
+        },
+        "textvqa": {
+          "examples": 2500,
+          "flagged": 15,
+          "retried": 15,
+          "coverage": 0.006,
+          "baseline_accuracy": 0.8132,
+          "final_accuracy": 0.8192,
+          "fixed_errors": 15,
+          "broken_answers": 0,
+          "net_corrections": 15
+        }
+      }
+    },
+    "head_gated_margin_0.00": {
+      "pooled": {
+        "examples": 9517,
+        "flagged": 237,
+        "retried": 237,
+        "coverage": 0.024902805505936744,
+        "baseline_accuracy": 0.8272564883891983,
+        "final_accuracy": 0.82967321634969,
+        "fixed_errors": 100,
+        "broken_answers": 77,
+        "net_corrections": 23
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 2500,
+          "flagged": 87,
+          "retried": 87,
+          "coverage": 0.0348,
+          "baseline_accuracy": 0.766,
+          "final_accuracy": 0.7648,
+          "fixed_errors": 29,
+          "broken_answers": 32,
+          "net_corrections": -3
+        },
+        "docvqa": {
+          "examples": 2500,
+          "flagged": 10,
+          "retried": 10,
+          "coverage": 0.004,
+          "baseline_accuracy": 0.8696,
+          "final_accuracy": 0.8704,
+          "fixed_errors": 3,
+          "broken_answers": 1,
+          "net_corrections": 2
+        },
+        "scienceqa_img": {
+          "examples": 2017,
+          "flagged": 111,
+          "retried": 111,
+          "coverage": 0.05503222607833416,
+          "baseline_accuracy": 0.8681209717402082,
+          "final_accuracy": 0.8805156172533466,
+          "fixed_errors": 62,
+          "broken_answers": 37,
+          "net_corrections": 25
+        },
+        "textvqa": {
+          "examples": 2500,
+          "flagged": 29,
+          "retried": 29,
+          "coverage": 0.0116,
+          "baseline_accuracy": 0.8132,
+          "final_accuracy": 0.8128,
+          "fixed_errors": 6,
+          "broken_answers": 7,
+          "net_corrections": -1
+        }
+      }
+    },
+    "head_gated_margin_0.05": {
+      "pooled": {
+        "examples": 9517,
+        "flagged": 130,
+        "retried": 130,
+        "coverage": 0.013659766733214248,
+        "baseline_accuracy": 0.8272564883891983,
+        "final_accuracy": 0.829463066092256,
+        "fixed_errors": 66,
+        "broken_answers": 45,
+        "net_corrections": 21
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 2500,
+          "flagged": 49,
+          "retried": 49,
+          "coverage": 0.0196,
+          "baseline_accuracy": 0.766,
+          "final_accuracy": 0.7672,
+          "fixed_errors": 25,
+          "broken_answers": 22,
+          "net_corrections": 3
+        },
+        "docvqa": {
+          "examples": 2500,
+          "flagged": 3,
+          "retried": 3,
+          "coverage": 0.0012,
+          "baseline_accuracy": 0.8696,
+          "final_accuracy": 0.87,
+          "fixed_errors": 1,
+          "broken_answers": 0,
+          "net_corrections": 1
+        },
+        "scienceqa_img": {
+          "examples": 2017,
+          "flagged": 57,
+          "retried": 57,
+          "coverage": 0.02825979176995538,
+          "baseline_accuracy": 0.8681209717402082,
+          "final_accuracy": 0.8770451165096679,
+          "fixed_errors": 35,
+          "broken_answers": 17,
+          "net_corrections": 18
+        },
+        "textvqa": {
+          "examples": 2500,
+          "flagged": 21,
+          "retried": 21,
+          "coverage": 0.0084,
+          "baseline_accuracy": 0.8132,
+          "final_accuracy": 0.8128,
+          "fixed_errors": 5,
+          "broken_answers": 6,
+          "net_corrections": -1
+        }
+      }
+    },
+    "head_gated_margin_0.10": {
+      "pooled": {
+        "examples": 9517,
+        "flagged": 56,
+        "retried": 56,
+        "coverage": 0.00588420720815383,
+        "baseline_accuracy": 0.8272564883891983,
+        "final_accuracy": 0.8284123148050856,
+        "fixed_errors": 30,
+        "broken_answers": 19,
+        "net_corrections": 11
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 2500,
+          "flagged": 25,
+          "retried": 25,
+          "coverage": 0.01,
+          "baseline_accuracy": 0.766,
+          "final_accuracy": 0.7684,
+          "fixed_errors": 15,
+          "broken_answers": 9,
+          "net_corrections": 6
+        },
+        "docvqa": {
+          "examples": 2500,
+          "flagged": 2,
+          "retried": 2,
+          "coverage": 0.0008,
+          "baseline_accuracy": 0.8696,
+          "final_accuracy": 0.87,
+          "fixed_errors": 1,
+          "broken_answers": 0,
+          "net_corrections": 1
+        },
+        "scienceqa_img": {
+          "examples": 2017,
+          "flagged": 17,
+          "retried": 17,
+          "coverage": 0.00842835894893406,
+          "baseline_accuracy": 0.8681209717402082,
+          "final_accuracy": 0.8696083292017849,
+          "fixed_errors": 10,
+          "broken_answers": 7,
+          "net_corrections": 3
+        },
+        "textvqa": {
+          "examples": 2500,
+          "flagged": 12,
+          "retried": 12,
+          "coverage": 0.0048,
+          "baseline_accuracy": 0.8132,
+          "final_accuracy": 0.8136,
+          "fixed_errors": 4,
+          "broken_answers": 3,
+          "net_corrections": 1
+        }
+      }
+    },
+    "head_gated_margin_0.20": {
+      "pooled": {
+        "examples": 9517,
+        "flagged": 12,
+        "retried": 12,
+        "coverage": 0.0012609015446043922,
+        "baseline_accuracy": 0.8272564883891983,
+        "final_accuracy": 0.8272564883891983,
+        "fixed_errors": 4,
+        "broken_answers": 4,
+        "net_corrections": 0
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 2500,
+          "flagged": 0,
+          "retried": 0,
+          "coverage": 0.0,
+          "baseline_accuracy": 0.766,
+          "final_accuracy": 0.766,
+          "fixed_errors": 0,
+          "broken_answers": 0,
+          "net_corrections": 0
+        },
+        "docvqa": {
+          "examples": 2500,
+          "flagged": 2,
+          "retried": 2,
+          "coverage": 0.0008,
+          "baseline_accuracy": 0.8696,
+          "final_accuracy": 0.87,
+          "fixed_errors": 1,
+          "broken_answers": 0,
+          "net_corrections": 1
+        },
+        "scienceqa_img": {
+          "examples": 2017,
+          "flagged": 5,
+          "retried": 5,
+          "coverage": 0.002478929102627665,
+          "baseline_accuracy": 0.8681209717402082,
+          "final_accuracy": 0.8676251859196827,
+          "fixed_errors": 2,
+          "broken_answers": 3,
+          "net_corrections": -1
+        },
+        "textvqa": {
+          "examples": 2500,
+          "flagged": 5,
+          "retried": 5,
+          "coverage": 0.002,
+          "baseline_accuracy": 0.8132,
+          "final_accuracy": 0.8132,
+          "fixed_errors": 1,
+          "broken_answers": 1,
+          "net_corrections": 0
+        }
+      }
+    }
+  }
+}
