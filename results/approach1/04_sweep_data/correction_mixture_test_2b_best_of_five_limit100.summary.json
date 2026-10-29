@@ -1,0 +1,188 @@
+{
+  "head_path": "/home/hice1/aroy389/VLM-LGT/trained_heads/approach1/winners/mixture/unified_new_seed1.pt",
+  "candidate_count": 5,
+  "temperature": 0.9,
+  "top_p": 0.95,
+  "seed": 17,
+  "limit": 100,
+  "policies": {
+    "greedy": {
+      "pooled": {
+        "examples": 100,
+        "correct": 78,
+        "accuracy": 0.78
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 25,
+          "correct": 13,
+          "accuracy": 0.52
+        },
+        "textvqa": {
+          "examples": 25,
+          "correct": 21,
+          "accuracy": 0.84
+        },
+        "docvqa": {
+          "examples": 25,
+          "correct": 23,
+          "accuracy": 0.92
+        },
+        "scienceqa_img": {
+          "examples": 25,
+          "correct": 21,
+          "accuracy": 0.84
+        }
+      }
+    },
+    "first_sample": {
+      "pooled": {
+        "examples": 100,
+        "correct": 80,
+        "accuracy": 0.8
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 25,
+          "correct": 13,
+          "accuracy": 0.52
+        },
+        "textvqa": {
+          "examples": 25,
+          "correct": 22,
+          "accuracy": 0.88
+        },
+        "docvqa": {
+          "examples": 25,
+          "correct": 23,
+          "accuracy": 0.92
+        },
+        "scienceqa_img": {
+          "examples": 25,
+          "correct": 22,
+          "accuracy": 0.88
+        }
+      }
+    },
+    "majority_vote": {
+      "pooled": {
+        "examples": 100,
+        "correct": 80,
+        "accuracy": 0.8
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 25,
+          "correct": 13,
+          "accuracy": 0.52
+        },
+        "textvqa": {
+          "examples": 25,
+          "correct": 22,
+          "accuracy": 0.88
+        },
+        "docvqa": {
+          "examples": 25,
+          "correct": 23,
+          "accuracy": 0.92
+        },
+        "scienceqa_img": {
+          "examples": 25,
+          "correct": 22,
+          "accuracy": 0.88
+        }
+      }
+    },
+    "token_best": {
+      "pooled": {
+        "examples": 100,
+        "correct": 78,
+        "accuracy": 0.78
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 25,
+          "correct": 13,
+          "accuracy": 0.52
+        },
+        "textvqa": {
+          "examples": 25,
+          "correct": 21,
+          "accuracy": 0.84
+        },
+        "docvqa": {
+          "examples": 25,
+          "correct": 23,
+          "accuracy": 0.92
+        },
+        "scienceqa_img": {
+          "examples": 25,
+          "correct": 21,
+          "accuracy": 0.84
+        }
+      }
+    },
+    "head_best": {
+      "pooled": {
+        "examples": 100,
+        "correct": 81,
+        "accuracy": 0.81
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 25,
+          "correct": 13,
+          "accuracy": 0.52
+        },
+        "textvqa": {
+          "examples": 25,
+          "correct": 23,
+          "accuracy": 0.92
+        },
+        "docvqa": {
+          "examples": 25,
+          "correct": 24,
+          "accuracy": 0.96
+        },
+        "scienceqa_img": {
+          "examples": 25,
+          "correct": 21,
+          "accuracy": 0.84
+        }
+      }
+    },
+    "oracle": {
+      "pooled": {
+        "examples": 100,
+        "correct": 85,
+        "accuracy": 0.85
+      },
+      "per_dataset": {
+        "chartqa_full": {
+          "examples": 25,
+          "correct": 14,
+          "accuracy": 0.56
+        },
+        "textvqa": {
+          "examples": 25,
+          "correct": 23,
+          "accuracy": 0.92
+        },
+        "docvqa": {
+          "examples": 25,
+          "correct": 24,
+          "accuracy": 0.96
+        },
+        "scienceqa_img": {
+          "examples": 25,
+          "correct": 24,
+          "accuracy": 0.96
+        }
+      }
+    }
+  },
+  "candidate_diversity": {
+    "mean_unique_answers": 1.36,
+    "unanimous_fraction": 0.76
+  }
+}

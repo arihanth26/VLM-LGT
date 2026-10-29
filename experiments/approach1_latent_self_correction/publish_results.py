@@ -12,6 +12,8 @@
 #   04  machine-readable sweep and analysis files, per dataset
 #   05  dataset-mixture and new-loss report
 #   06  corrupted-image (noise) version of the new loss
+#   07  correction experiments (prompted retry, reranking, best-of-five, deeper pass)
+#   08  complete Approach 1 report (HTML and PDF) covering everything above, and its Excel workbook of tables
 
 import argparse
 import shutil
@@ -28,6 +30,10 @@ NUMBERED_FILES = [
     (HERE / "results" / "q_head_comparison.md", "03_qhead_comparison_tables.md"),
     (HERE / "results" / "q_head_mixture_report.html", "05_mixture_new_loss_report.html"),
     (HERE / "results" / "q_head_corruption_report.html", "06_corruption_new_loss_report.html"),
+    (HERE / "results" / "correction_experiments_report.html", "07_correction_experiments_report.html"),
+    (HERE / "results" / "approach1_complete_report.html", "08_approach1_complete_report.html"),
+    (HERE / "results" / "approach1_complete_report.pdf", "08_approach1_complete_report.pdf"),
+    (HERE / "results" / "approach1_results.xlsx", "08_approach1_results.xlsx"),
 ]
 
 
@@ -78,6 +84,13 @@ def main() -> None:
         )
     copy_if_present(HERE / "results" / "analysis_mixture.json", args.output / "04_sweep_data" / "mixture_analysis.json")
     publish_corruption_data(args.output)
+    publish_correction_data(args.output)
+
+
+def publish_correction_data(output: Path) -> None:
+    """Copy the summaries and per-example records of the correction experiments."""
+    for path in sorted((HERE / "results").glob("mixture_test_2b_*_limit100.*")):
+        copy_if_present(path, output / "04_sweep_data" / f"correction_{path.name}")
 
 
 def publish_corruption_data(output: Path) -> None:

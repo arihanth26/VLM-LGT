@@ -170,7 +170,7 @@ def build() -> str:
             plot_rows.append((f"{KIND_LABEL[kind].split(' (')[0]}, {corruption}", grounding_against(noise[kind], "old", kind, corruption),
                               grounding_against(noise[kind], "new", kind, corruption), None))
     parts.append(figure("fig-transfer", "Grounding on corruptions that were never trained on", pair_plot(plot_rows, 0.85, 1.0, "Order accuracy (old loss, new loss trained with noise)", "fig-transfer"),
-                        "Blue is the old loss and orange the noise-trained new loss. Both are graded on mask and shuffle, which neither saw in training."))
+                        "Orange is the old loss and blue the noise-trained new loss. Both are graded on mask and shuffle, which neither saw in training."))
     parts.append("""<p>Training with either corruption raises grounding on every other corruption compared with the old loss. For heads trained with swap, the gain over the old loss is about 0.03 to 0.04 on noise and mask and about 0.015 to 0.024 on shuffle. For heads trained with noise, the gain is largest on mask (0.05 to 0.06), which is expected since both remove detail instead of changing content, and smallest on swap (0.02 to 0.03). Because both training choices improve all four, the gain is not just a detector for one corruption type, although all four corruptions still alter the hidden state in ways a head can read.</p>""")
 
     parts.append("<h2 id=\"single\">5. Each dataset alone</h2><p>Each dataset gets its own heads, with the old loss, the swap new loss and the noise new loss.</p>")
