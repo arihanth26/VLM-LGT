@@ -180,6 +180,8 @@ VLM-LGT/
 │   │   ├── build_mixture_report.py            Builds the mixture, sequential, and new-loss HTML report
 │   │   ├── export_heads.py                    Saves the trained heads (sweep winners, sequential) and loads them back
 │   │   ├── build_corruption_report.py         Builds the report on the noise version of the new loss
+│   │   ├── build_approach1_report.py          Builds the complete Approach 1 report (HTML, math embedded, PDF export)
+│   │   ├── export_results_workbook.py         Writes every results table to one Excel workbook
 │   │   ├── train_q_heads.py                   Pre-generation head and verifier head, shared losses and metrics
 │   │   ├── sweep_q_heads.py                   Architecture and hyperparameter sweep for the separate heads
 │   │   ├── sweep_verifier_early_stop.py       Early-stopping sweep over the verifier ranking weight
@@ -212,7 +214,10 @@ VLM-LGT/
 │   │   ├── 03_qhead_comparison_tables.md           Side-by-side metric tables
 │   │   ├── 04_sweep_data/                          Sweep and analysis JSON files per dataset and for the mixture
 │   │   ├── 05_mixture_new_loss_report.html         Mixture, sequential training, and the new loss
-│   │   └── 06_corruption_new_loss_report.html      The new loss with a noised image instead of a swapped one
+│   │   ├── 06_corruption_new_loss_report.html      The new loss with a noised image instead of a swapped one
+│   │   ├── 07_correction_experiments_report.html   Prompted retry, reranking, best-of-five, deeper pass
+│   │   ├── 08_approach1_complete_report.html       Everything in Approach 1, also as a PDF, for the mid-point report
+│   │   └── 08_approach1_results.xlsx               Every results table as one Excel workbook, one sheet per table
 │   └── approach2/                             Approach 2 results (none yet)
 │
 ├── slurm/                                     Job scripts for the ICE cluster
@@ -253,7 +258,8 @@ VLM-LGT/
 │   ├── test_mixture.py                        Offline tests for corruptions, the old and new loss, and the mixture sweep
 │   ├── test_continual.py                      Offline tests for sequential training and the retention metrics
 │   ├── test_mixture_report.py                 Offline test that the mixture report builds from the real result schema
-│   └── test_corruption_report.py              Offline test that the corruption report builds from the sweep schema
+│   ├── test_corruption_report.py              Offline test that the corruption report builds from the sweep schema
+│   └── test_approach1_report.py               Offline tests for the complete report builder helpers
 │
 ├── requirements.txt
 ├── DATASETS.md                                Reference table of every dataset id, with source links and known quirks
@@ -299,6 +305,7 @@ VLM-LGT/
    python -m tests.test_continual
    python -m tests.test_mixture_report
    python -m tests.test_corruption_report
+   python -m tests.test_approach1_report
    ```
 
 ## Approach 1 on the ICE cluster
