@@ -9,6 +9,7 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
+from experiments.approach1_latent_self_correction.correction_scale import cached_test_split, dataset_dir
 from experiments.approach1_latent_self_correction.baseline import (
     extract_image,
     extract_question,
@@ -83,8 +84,8 @@ def write_summary(records: list[dict], input_path: Path, output_path: Path) -> N
     print(f"[done] wrote {output_path} and {summary_path}")
 
 
-def run(input_path: Path, output_path: Path, head_path: Path, max_new_tokens: int) -> None:
-    """Run one deeper reconsideration pass for every best-of-five head winner."""
+def run(input_path: Path, output_path: Path, head_path: Path, max_new_tokens: int, cached: bool = False, summarize: bool = True) -> None:
+    """Run one deeper reconsideration pass for every best-of-five head winner in the input records."""
     source = [json.loads(line) for line in input_path.read_text(encoding="utf-8").splitlines() if line.strip()]
     source = [record for record in source if "candidates" in record]
     source_by_dataset = {
@@ -103,7 +104,7 @@ def run(input_path: Path, output_path: Path, head_path: Path, max_new_tokens: in
         if not source_rows:
             continue
         materialize = max(source_rows) + 1
-        split = load_test_split(dataset_name, materialize_limit=materialize)
+        split = cached_test_split(dataset_name) if cached else load_test_split(dataset_name, materialize_limit=materialize)
         for position, index in enumerate(sorted(source_rows), start=1):
             if (dataset_name, index) in completed:
                 continue
@@ -112,7 +113,7 @@ def run(input_path: Path, output_path: Path, head_path: Path, max_new_tokens: in
             chosen = original["candidates"][chosen_index]
             example = split[index]
             try:
-                image = extract_image(example, Path("."))
+                image = extract_image(example, dataset_dir(dataset_name) if cached else Path("."))
                 question = extract_question(example)
                 reference, _ = extract_reference(example)
                 original_prompt = f"{question}\nRespond with only the final answer, without explanation."
@@ -154,6 +155,9 @@ def run(input_path: Path, output_path: Path, head_path: Path, max_new_tokens: in
                 destination.write(json.dumps(record, default=str) + "\n")
             print(f"[{dataset_name} {position}/{len(source_rows)}] wrote index {index}", flush=True)
 
+    if not summarize:
+        print(f"[done] wrote {output_path}")
+        return
     successful = [record for record in records if "deep_answer" in record]
     add_selections(successful)
     errors = [record for record in records if "deep_answer" not in record]
@@ -170,8 +174,10 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--head", type=Path, default=DEFAULT_HEAD)
     parser.add_argument("--max-new-tokens", type=int, default=64)
+    parser.add_argument("--cached-splits", action="store_true", help="Read the test splits cached by the Q-head pipeline instead of downloading them.")
+    parser.add_argument("--no-summary", action="store_true", help="Write only the records, for sharded runs merged later.")
     args = parser.parse_args()
-    run(args.input, args.output, args.head, args.max_new_tokens)
+    run(args.input, args.output, args.head, args.max_new_tokens, args.cached_splits, not args.no_summary)
 
 
 if __name__ == "__main__":

@@ -23,6 +23,7 @@ from experiments.approach1_latent_self_correction.baseline import (
 )
 from experiments.approach1_latent_self_correction.export_heads import load_head, score
 from experiments.approach1_latent_self_correction.extract_q_features import answer_messages, encode_state
+from experiments.approach1_latent_self_correction.correction_scale import cached_test_split, dataset_dir, shard_range
 from experiments.approach1_latent_self_correction.online_prompted_retry import DATASET_NAMES, load_test_split
 from experiments.approach1_latent_self_correction.scoring import normalize_vqa_answer
 from models.load_model import load_qwen3_vl
@@ -164,8 +165,14 @@ def run(
     seed: int,
     max_new_tokens: int,
     limit: int | None,
+    datasets: tuple | None = None,
+    shard: int = 0,
+    num_shards: int = 1,
+    cached: bool = False,
+    summarize: bool = True,
+    max_examples: int | None = None,
 ) -> None:
-    """Run online best-of-N generation and confidence-based selection."""
+    """Run best-of-N generation and confidence-based selection, on the whole test split or one shard of it."""
     if candidates < 2:
         raise ValueError("candidates must be at least 2")
     existing = [json.loads(line) for line in output_path.read_text(encoding="utf-8").splitlines() if line.strip()] if output_path.exists() else []
@@ -180,15 +187,18 @@ def run(
     records = list(existing)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     for dataset_position, dataset_name in enumerate(DATASET_NAMES):
+        if datasets is not None and dataset_name not in datasets:
+            continue
         quota = None if quotas is None else quotas[dataset_name]
-        split = load_test_split(dataset_name, materialize_limit=quota)
+        split = cached_test_split(dataset_name) if cached else load_test_split(dataset_name, materialize_limit=quota)
         count = len(split) if quota is None else min(len(split), quota)
-        for index in range(count):
+        indices = shard_range(count, shard, num_shards, max_examples)
+        for index in indices:
             if (dataset_name, index) in completed:
                 continue
             example = split[index]
             try:
-                image = extract_image(example, Path("."))
+                image = extract_image(example, dataset_dir(dataset_name) if cached else Path("."))
                 question = extract_question(example)
                 reference, _ = extract_reference(example)
                 prompt = f"{question}\nRespond with only the final answer, without explanation."
@@ -225,8 +235,11 @@ def run(
             records.append(record)
             with output_path.open("a", encoding="utf-8") as destination:
                 destination.write(json.dumps(record, default=str) + "\n")
-            print(f"[{dataset_name} {index + 1}/{count}] wrote index {index}", flush=True)
+            print(f"[{dataset_name} {index + 1 - indices.start}/{len(indices)}] wrote index {index}", flush=True)
 
+    if not summarize:
+        print(f"[done] wrote {output_path}")
+        return
     successful = [record for record in records if "candidates" in record]
     metadata = {
         "head_path": str(head_path), "candidate_count": candidates,
@@ -250,8 +263,15 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=17)
     parser.add_argument("--max-new-tokens", type=int, default=64)
     parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--datasets", nargs="+", default=None, help="Only these datasets.")
+    parser.add_argument("--shard", type=int, default=0, help="Which block of each test split to run.")
+    parser.add_argument("--num-shards", type=int, default=1)
+    parser.add_argument("--cached-splits", action="store_true", help="Read the test splits cached by the Q-head pipeline instead of downloading them.")
+    parser.add_argument("--no-summary", action="store_true", help="Write only the records, for sharded runs merged later.")
+    parser.add_argument("--max-examples", type=int, default=None, help="Cap the examples per dataset and shard, for a smoke test.")
     args = parser.parse_args()
-    run(args.head, args.output, args.candidates, args.temperature, args.top_p, args.seed, args.max_new_tokens, args.limit)
+    run(args.head, args.output, args.candidates, args.temperature, args.top_p, args.seed, args.max_new_tokens, args.limit,
+        None if args.datasets is None else tuple(args.datasets), args.shard, args.num_shards, args.cached_splits, not args.no_summary, args.max_examples)
 
 
 if __name__ == "__main__":

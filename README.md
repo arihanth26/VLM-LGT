@@ -182,6 +182,10 @@ VLM-LGT/
 │   │   ├── export_heads.py                    Saves the trained heads (sweep winners, sequential) and loads them back
 │   │   ├── build_corruption_report.py         Builds the report on the noise version of the new loss
 │   │   ├── build_approach1_report.py          Builds the complete Approach 1 report (HTML, math embedded, PDF export)
+│   │   ├── heads_vs_probes.py                 Trained heads against linear probes, per dataset (markdown table)
+│   │   ├── correction_scale.py                Cached test splits and shard ranges for full-split correction runs
+│   │   ├── merge_correction_shards.py         Merges shard outputs into one result per correction experiment
+│   │   ├── correction_stats.py                Intervals, paired tests and AUROC for the correction experiments
 │   │   ├── export_results_workbook.py         Writes every results table to one Excel workbook
 │   │   ├── train_q_heads.py                   Pre-generation head and verifier head, shared losses and metrics
 │   │   ├── sweep_q_heads.py                   Architecture and hyperparameter sweep for the separate heads
@@ -244,6 +248,9 @@ VLM-LGT/
 │   ├── export_heads.sbatch                    Retrains and saves the heads of one tag to trained_heads/
 │   ├── run_export_pipeline.sh                 Submits the jobs that save every trained head
 │   ├── run_corruption_pipeline.sh             Submits the noise-corruption chain: features, builds, sweeps, sequential runs
+│   ├── run_correction_full_pipeline.sh        Submits the correction experiments on the full test splits, sharded, then merges
+│   ├── run_correction_shard.sbatch            One shard of best-of-five, prompted retry, or the deeper pass on a GPU
+│   ├── merge_correction_shards.sbatch         CPU job: merges the shards into one result per experiment
 │   └── check_scripts.sh                       Validates every job script: syntax, module paths, sbatch --test-only
 │
 ├── trained_heads/
@@ -260,7 +267,9 @@ VLM-LGT/
 │   ├── test_continual.py                      Offline tests for sequential training and the retention metrics
 │   ├── test_mixture_report.py                 Offline test that the mixture report builds from the real result schema
 │   ├── test_corruption_report.py              Offline test that the corruption report builds from the sweep schema
-│   └── test_approach1_report.py               Offline tests for the complete report builder helpers
+│   ├── test_approach1_report.py               Offline tests for the complete report builder helpers
+│   ├── test_correction_scale.py               Offline tests for sharding and merging of the correction runs
+│   └── test_correction_stats.py               Offline tests for the correction statistics
 │
 ├── requirements.txt
 ├── DATASETS.md                                Reference table of every dataset id, with source links and known quirks
@@ -395,6 +404,19 @@ or run it with no ids once the sweeps are done. Then build the report and publis
 python -m experiments.approach1_latent_self_correction.build_mixture_report
 python -m experiments.approach1_latent_self_correction.publish_results
 ```
+
+The correction experiments (prompted retry, best-of-five selection by the head, deeper pass) were first run
+on 100 examples. To run them on the full test splits of all four datasets (9,517 questions), after the Q-head
+pipeline and the head export have finished:
+
+```
+SHARDS=2 EXCLUDE_NODES=<bad node> bash slurm/run_correction_full_pipeline.sh
+```
+
+It reads the test splits cached by the Q-head pipeline (no downloads), runs each experiment in shards on GPUs in
+parallel, starts each deeper-pass shard when its best-of-five shard is done, and merges everything into
+`results/mixture_test_2b_*_full.*`. Use `SKIP` and `EXTRA_DEPS` to rerun only the shards that failed. On ICE the
+scheduler replaces a node exclusion on GPU jobs unless the partition is named, so the script names it.
 
 The corrupted-image version of the new loss (noise mixed into the same image instead of a swapped
 image) runs the same chain for the noise features, the pooled and per-dataset builds, all sweeps,
