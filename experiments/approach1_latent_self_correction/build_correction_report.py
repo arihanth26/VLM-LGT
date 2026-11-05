@@ -2,6 +2,9 @@
 #
 # Combines the prompted-retry and best-of-five correction experiments into one
 # self-contained HTML report with short explanations of every selection method.
+# --tag picks the run: limit100 is the first 100-example study, full is the whole
+# mixture test set merged by merge_correction_shards.py, which also scores every
+# answer with the linear probe so head and probe policies sit side by side.
 
 import argparse
 import html
@@ -10,6 +13,7 @@ from pathlib import Path
 
 RESULTS_DIR = Path(__file__).parent / "results"
 DEFAULT_OUTPUT = RESULTS_DIR / "correction_experiments_report.html"
+DEFAULT_TAG = "limit100"
 DATASETS = ("chartqa_full", "textvqa", "docvqa", "scienceqa_img")
 
 METHODS = {
@@ -24,6 +28,14 @@ METHODS = {
     "head_gated_margin_0.05": ("Gated reranking, margin 0.05", "Require a low-scored original and at least a 0.05 head-score improvement."),
     "head_gated_margin_0.10": ("Gated reranking, margin 0.10", "Require a low-scored original and at least a 0.10 head-score improvement."),
     "head_gated_margin_0.20": ("Gated reranking, margin 0.20", "Require a low-scored original and at least a 0.20 head-score improvement."),
+    "probe_threshold": ("Probe score < 0.5", "Retry only originals whose linear-probe score is below 0.5."),
+    "probe_lowest_fraction": ("Lowest 20% by probe", "Retry the fifth of examples with the lowest linear-probe scores."),
+    "probe_rerank": ("Probe reranking", "Score the original and retry with the linear probe and keep the higher-scored one."),
+    "probe_gated_margin_0.00": ("Probe-gated reranking, margin 0", "Use the retry only when the original probe score is below 0.5 and the retry scores higher."),
+    "probe_gated_margin_0.05": ("Probe-gated reranking, margin 0.05", "Probe gate with at least a 0.05 score improvement."),
+    "probe_gated_margin_0.10": ("Probe-gated reranking, margin 0.10", "Probe gate with at least a 0.10 score improvement."),
+    "probe_gated_margin_0.20": ("Probe-gated reranking, margin 0.20", "Probe gate with at least a 0.20 score improvement."),
+    "probe_best": ("Linear-probe best", "Choose the sampled candidate with the highest linear-probe score."),
     "oracle_upper_bound": ("Retry oracle", "Choose the retry exactly when it fixes an original error; this is an unattainable upper bound."),
     "greedy": ("Greedy baseline", "Generate one deterministic answer without sampling."),
     "first_sample": ("First sample", "Use the first of five temperature-sampled candidates without selection."),
@@ -100,29 +112,61 @@ def candidate_cases(records: list[dict]) -> str:
     return "".join(rows)
 
 
-def build_report(results_dir: Path, output: Path) -> None:
+def detection_table(summary: dict) -> str:
+    """Per-dataset AUROC of token confidence, the head, and the probe on the greedy answers."""
+    detection = summary.get("detection")
+    if not detection:
+        return ""
+    rows = []
+    for name in (*DATASETS, "pooled"):
+        row = detection.get(name)
+        if not row or "head" not in row:
+            continue
+        probe = row.get("probe", {})
+        rows.append(
+            f"<tr><td>{html.escape(name)}</td><td>{row['examples']}</td><td>{row['accuracy']:.1%}</td>"
+            f"<td>{row['token']['auroc']:.3f}</td><td>{row['head']['auroc']:.3f}</td>"
+            f"<td>{probe.get('auroc', float('nan')):.3f}</td>"
+            f"<td>{row['head']['error_auprc']:.3f}</td><td>{probe.get('error_auprc', float('nan')):.3f}</td></tr>"
+        )
+    return (
+        "<h2>0. Detection on the greedy answers</h2><p>Correctness AUROC and error AUPRC of each score on the "
+        "baseline answers generated in this run, per dataset.</p><table><thead><tr><th>Dataset</th><th>Examples</th>"
+        "<th>Accuracy</th><th>Token AUROC</th><th>Head AUROC</th><th>Probe AUROC</th><th>Head error AUPRC</th>"
+        f"<th>Probe error AUPRC</th></tr></thead><tbody>{''.join(rows)}</tbody></table>"
+    )
+
+
+def build_report(results_dir: Path, output: Path, tag: str = DEFAULT_TAG) -> None:
     """Load completed experiments and write the combined correction report."""
-    retry = load_json(results_dir / "mixture_test_2b_prompted_retry_limit100.summary.json")
-    reranked = load_json(results_dir / "mixture_test_2b_prompted_retry_reranked_limit100.summary.json")
-    candidates = load_json(results_dir / "mixture_test_2b_best_of_five_limit100.summary.json")
-    deep_path = results_dir / "mixture_test_2b_best_of_five_deep_limit100.summary.json"
+    first_study = tag == "limit100"
+    reranked = load_json(results_dir / f"mixture_test_2b_prompted_retry_{'reranked_' if first_study else ''}{tag}.summary.json")
+    # The first study ran the plain retry separately; later runs record every retry policy in one pass.
+    retry = load_json(results_dir / f"mixture_test_2b_prompted_retry_{tag}.summary.json") if first_study else reranked
+    candidates = load_json(results_dir / f"mixture_test_2b_best_of_five_{tag}.summary.json")
+    deep_path = results_dir / f"mixture_test_2b_best_of_five_deep_{tag}.summary.json"
     deep = load_json(deep_path) if deep_path.exists() else None
     candidate_records = [
         json.loads(line)
-        for line in (results_dir / "mixture_test_2b_best_of_five_limit100.jsonl").read_text(encoding="utf-8").splitlines()
+        for line in (results_dir / f"mixture_test_2b_best_of_five_{tag}.jsonl").read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
+    examples = candidates["policies"]["greedy"]["pooled"]["examples"]
+    greedy = candidates["policies"]["greedy"]["pooled"]["accuracy"]
+    head_best = candidates["policies"]["head_best"]["pooled"]["accuracy"]
+    oracle = candidates["policies"]["oracle"]["pooled"]["accuracy"]
 
     retry_order = (
         "baseline_no_retry", "retry_all", "head_threshold", "head_lowest_fraction",
-        "token_lowest_fraction", "random_matched_fraction",
+        "token_lowest_fraction", "random_matched_fraction", "probe_threshold", "probe_lowest_fraction",
     )
     rerank_order = (
         "baseline_no_retry", "retry_all", "head_rerank", "head_gated_margin_0.00",
         "head_gated_margin_0.05", "head_gated_margin_0.10", "head_gated_margin_0.20",
-        "oracle_upper_bound",
+        "probe_rerank", "probe_gated_margin_0.00", "probe_gated_margin_0.05", "probe_gated_margin_0.10",
+        "probe_gated_margin_0.20", "oracle_upper_bound",
     )
-    candidate_order = ("greedy", "first_sample", "majority_vote", "token_best", "head_best", "oracle")
+    candidate_order = ("greedy", "first_sample", "majority_vote", "token_best", "head_best", "probe_best", "oracle")
     deep_order = (
         "keep_best_of_five", "deep_replace_all", "deep_head_rerank", "deep_margin_0.00",
         "deep_margin_0.05", "deep_margin_0.10", "deep_margin_0.20", "deep_oracle",
@@ -142,23 +186,25 @@ def build_report(results_dir: Path, output: Path) -> None:
 body{{font:16px/1.5 system-ui,sans-serif;max-width:1500px;margin:40px auto;padding:0 24px;color:#17212b}}h1,h2{{line-height:1.2}}h2{{margin-top:42px}}table{{border-collapse:collapse;width:100%;margin:18px 0 28px}}th,td{{border:1px solid #ccd4dc;padding:9px;vertical-align:top;text-align:left}}th{{background:#edf2f6}}tr:nth-child(even){{background:#fafbfc}}.muted{{color:#64717d;font-size:.9em}}.positive{{color:#147a39}}.negative{{color:#ad2d2d}}.callout{{background:#edf6ff;border-left:5px solid #2878bd;padding:14px 18px;margin:20px 0}}code{{background:#eef1f4;padding:2px 5px;border-radius:4px}}
 </style></head><body>
 <h1>Approach 1: correction experiments</h1>
-<p>All experiments use frozen Qwen3-VL-2B and the exported mixture-trained unified correctness head. Each study contains 100 examples, balanced across ChartQA, TextVQA, DocVQA, and ScienceQA. Accuracy is the dataset-specific metric converted to the binary correctness definition used to train the head.</p>
+<p>All experiments use frozen Qwen3-VL-2B and the exported mixture-trained unified correctness head{"" if first_study else " (MLP), with the best linear probe of the same sweep scored on the same answers"}. {"Each study contains 100 examples, balanced across ChartQA, TextVQA, DocVQA, and ScienceQA." if first_study else f"Each study covers the full mixture test set: {examples:,} examples (ChartQA 2,500, TextVQA 2,500, DocVQA 2,500, ScienceQA 2,017)."} Accuracy is the dataset-specific metric converted to the binary correctness definition used to train the head.</p>
 <div class="callout"><strong>Main result.</strong> Sampling five candidates and selecting with the unified head reaches <strong>{candidates['policies']['head_best']['pooled']['accuracy']:.1%}</strong>, compared with <strong>{candidates['policies']['greedy']['pooled']['accuracy']:.1%}</strong> for greedy generation. The five-candidate oracle is <strong>{candidates['policies']['oracle']['pooled']['accuracy']:.1%}</strong>.</div>
+
+{detection_table(reranked)}
 
 <h2>1. Prompted retry</h2>
 <p>The model first answers normally. A second prompt shows the previous answer and asks it to inspect visual evidence again. These policies test when that retry should replace the original.</p>
 {accuracy_table(retry, retry_order, True)}
-<p class="muted">This first run began at 81% baseline accuracy. Retrying every answer reduced accuracy to 78%; head-based targeting also reached 78%, while the seeded random control reached 82% on this small sample.</p>
+{'<p class="muted">This first run began at 81% baseline accuracy. Retrying every answer reduced accuracy to 78%; head-based targeting also reached 78%, while the seeded random control reached 82% on this small sample.</p>' if first_study else ''}
 
 <h2>2. Scored retry and reranking</h2>
 <p>The same unified head scores both the original answer and its retry. Direct reranking picks the higher score. Gated variants also require the original score to be below 0.5 and optionally require a minimum score improvement.</p>
 {accuracy_table(reranked, rerank_order, True)}
-<p class="muted">This independently generated run began at 79%. The best practical retry policies reached 80%; the retry oracle reached 83%. Slight baseline variation between runs comes from generation and GPU nondeterminism, so comparisons should be made within each table.</p>
+{'<p class="muted">This independently generated run began at 79%. The best practical retry policies reached 80%; the retry oracle reached 83%. Slight baseline variation between runs comes from generation and GPU nondeterminism, so comparisons should be made within each table.</p>' if first_study else ''}
 
 <h2>3. Best-of-five candidate selection</h2>
 <p>Five independent answers are sampled at temperature {candidates['temperature']} with top-p {candidates['top_p']}. The learned selector scores every candidate from its answer-conditioned hidden state. Majority vote uses normalized answer text, while token confidence uses the geometric mean of generated-token probabilities.</p>
 {accuracy_table(candidates, candidate_order, False)}
-<p>Candidate sets contained an average of <strong>{candidates['candidate_diversity']['mean_unique_answers']:.2f}</strong> unique answers; all five samples agreed on <strong>{candidates['candidate_diversity']['unanimous_fraction']:.0%}</strong> of examples. Unified-head selection improved greedy accuracy by three points and captured three of the seven points available above greedy under the oracle.</p>
+<p>Candidate sets contained an average of <strong>{candidates['candidate_diversity']['mean_unique_answers']:.2f}</strong> unique answers; all five samples agreed on <strong>{candidates['candidate_diversity']['unanimous_fraction']:.0%}</strong> of examples. Unified-head selection changed greedy accuracy by {100 * (head_best - greedy):+.1f} points, against {100 * (oracle - greedy):+.1f} points available under the oracle.</p>
 {deep_section}
 
 <h2>Best-of-five changed outcomes</h2>
@@ -166,7 +212,7 @@ body{{font:16px/1.5 system-ui,sans-serif;max-width:1500px;margin:40px auto;paddi
 <table><thead><tr><th>Example</th><th>Question</th><th>Reference</th><th>Greedy</th><th>Head-selected candidate</th></tr></thead><tbody>{cases or '<tr><td colspan="5">No changed outcomes.</td></tr>'}</tbody></table>
 
 <h2>Interpretation</h2>
-<p>A single prompted retry is unstable: it fixes some errors but can overturn correct answers. Scoring the retry limits that damage but provides only a small gain. Best-of-five generation is more promising because it separates candidate creation from candidate selection. The learned head outperforms majority voting and token likelihood, although the 85% oracle shows that candidate selection and candidate diversity both still leave room for improvement.</p>
+{'<p>A single prompted retry is unstable: it fixes some errors but can overturn correct answers. Scoring the retry limits that damage but provides only a small gain. Best-of-five generation is more promising because it separates candidate creation from candidate selection. The learned head outperforms majority voting and token likelihood, although the 85% oracle shows that candidate selection and candidate diversity both still leave room for improvement.</p>' if first_study else '<p>Read the tables above directly: every policy is computed on the same generations, so differences between rows are paired comparisons on the full test set.</p>'}
 </body></html>"""
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(document, encoding="utf-8")
@@ -178,8 +224,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Build the combined correction experiment report.")
     parser.add_argument("--results-dir", type=Path, default=RESULTS_DIR)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--tag", default=DEFAULT_TAG, help="limit100 for the first study, full for the merged full run.")
     args = parser.parse_args()
-    build_report(args.results_dir, args.output)
+    build_report(args.results_dir, args.output, args.tag)
 
 
 if __name__ == "__main__":

@@ -3,6 +3,8 @@
 # Generates several sampled answers for each mixture-test question, scores every
 # answer with the unified correctness head, compares selection baselines, and
 # writes both machine-readable results and a self-contained HTML report.
+# Each candidate is also scored by the best linear probe (--probe), so head and
+# probe selection are compared on the same samples.
 
 import argparse
 import html
@@ -21,10 +23,10 @@ from experiments.approach1_latent_self_correction.baseline import (
     extract_reference,
     score_prediction,
 )
-from experiments.approach1_latent_self_correction.export_heads import load_head, score
+from experiments.approach1_latent_self_correction.export_heads import load_head
 from experiments.approach1_latent_self_correction.extract_q_features import answer_messages, encode_state
 from experiments.approach1_latent_self_correction.correction_scale import cached_test_split, dataset_dir, shard_range
-from experiments.approach1_latent_self_correction.online_prompted_retry import DATASET_NAMES, load_test_split
+from experiments.approach1_latent_self_correction.online_prompted_retry import DATASET_NAMES, DEFAULT_PROBE, load_test_split, score_pair
 from experiments.approach1_latent_self_correction.scoring import normalize_vqa_answer
 from models.load_model import load_qwen3_vl
 from models.run_inference import build_messages, generate_with_confidence
@@ -32,7 +34,7 @@ from models.run_inference import build_messages, generate_with_confidence
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_HEAD = REPO_ROOT / "trained_heads" / "approach1" / "winners" / "mixture" / "unified_new_seed1.pt"
 DEFAULT_OUTPUT = Path(__file__).parent / "results" / "mixture_test_2b_best_of_five.jsonl"
-POLICIES = ("greedy", "first_sample", "majority_vote", "token_best", "head_best", "oracle")
+POLICIES = ("greedy", "first_sample", "majority_vote", "token_best", "head_best", "probe_best", "oracle")
 
 
 def seed_everything(seed: int) -> None:
@@ -63,6 +65,8 @@ def select_indices(record: dict) -> dict[str, int]:
         "majority_vote": majority_index(candidates),
         "token_best": max(range(len(candidates)), key=lambda index: candidates[index]["token_confidence"]),
         "head_best": max(range(len(candidates)), key=lambda index: candidates[index]["head_confidence"]),
+        **({"probe_best": max(range(len(candidates)), key=lambda index: candidates[index]["probe_confidence"])}
+           if all("probe_confidence" in candidate for candidate in candidates) else {}),
         "oracle": correct[0] if correct else 0,
     }
 
@@ -93,6 +97,7 @@ def build_summary(records: list[dict], metadata: dict) -> dict:
                 },
             }
             for policy in POLICIES
+            if policy == "greedy" or all(policy in record["selected_indices"] for record in records)
         },
         "candidate_diversity": {
             "mean_unique_answers": float(np.mean([
@@ -112,10 +117,11 @@ def write_html(records: list[dict], summary: dict, output_path: Path) -> None:
     labels = {
         "greedy": "Greedy baseline", "first_sample": "First sampled answer",
         "majority_vote": "Majority vote", "token_best": "Best token confidence",
-        "head_best": "Best unified-head score", "oracle": "Oracle upper bound",
+        "head_best": "Best unified-head score", "probe_best": "Best linear-probe score",
+        "oracle": "Oracle upper bound",
     }
     rows = []
-    for policy in POLICIES:
+    for policy in (policy for policy in POLICIES if policy in summary["policies"]):
         result = summary["policies"][policy]["pooled"]
         cells = [f"<td>{html.escape(labels[policy])}</td>", f"<td>{result['correct']}/{result['examples']}</td>", f"<td>{result['accuracy']:.1%}</td>"]
         for name in DATASET_NAMES:
@@ -130,7 +136,7 @@ def write_html(records: list[dict], summary: dict, output_path: Path) -> None:
             continue
         candidates = "<br>".join(
             f"{index + 1}. {html.escape(candidate['answer'])} "
-            f"(head {candidate['head_confidence']:.3f}, token {candidate['token_confidence']:.3f}, "
+            f"(head {candidate['head_confidence']:.3f}, probe {candidate.get('probe_confidence', float('nan')):.3f}, token {candidate['token_confidence']:.3f}, "
             f"{'correct' if candidate['correct'] else 'wrong'})"
             for index, candidate in enumerate(record["candidates"])
         )
@@ -171,13 +177,16 @@ def run(
     cached: bool = False,
     summarize: bool = True,
     max_examples: int | None = None,
+    probe_path: Path | None = DEFAULT_PROBE,
 ) -> None:
     """Run best-of-N generation and confidence-based selection, on the whole test split or one shard of it."""
     if candidates < 2:
         raise ValueError("candidates must be at least 2")
     existing = [json.loads(line) for line in output_path.read_text(encoding="utf-8").splitlines() if line.strip()] if output_path.exists() else []
     completed = {(record["dataset"], record["index"]) for record in existing if "candidates" in record}
-    head, spec, temperatures = load_head(head_path)
+    heads = {"head": load_head(head_path)}
+    if probe_path is not None:
+        heads["probe"] = load_head(probe_path)
     model, processor = load_qwen3_vl("2b")
     quotas = None
     if limit is not None:
@@ -215,12 +224,11 @@ def run(
                     )
                     correct, answer_score = score_prediction(example, reference, answer.answer, question)
                     state = encode_state(model, processor, answer_messages(image, prompt, answer.answer))
-                    head_confidence = float(score(
-                        head, spec, temperatures, prompt_state.unsqueeze(0), state.unsqueeze(0)
-                    )["joint"][0])
+                    scores = score_pair(heads, prompt_state, state)
                     sampled.append({
                         **asdict(answer), "token_confidence": answer.confidence,
-                        "head_confidence": head_confidence, "correct": bool(correct),
+                        **{f"{name}_confidence": value for name, value in scores.items()},
+                        "correct": bool(correct),
                         "answer_score": float(answer_score),
                     })
                 record = {
@@ -242,7 +250,8 @@ def run(
         return
     successful = [record for record in records if "candidates" in record]
     metadata = {
-        "head_path": str(head_path), "candidate_count": candidates,
+        "head_path": str(head_path), "probe_path": None if probe_path is None else str(probe_path),
+        "datasets": None if datasets is None else list(datasets), "shard": shard, "num_shards": num_shards, "candidate_count": candidates,
         "temperature": temperature, "top_p": top_p, "seed": seed, "limit": limit,
     }
     summary = build_summary(successful, metadata)
@@ -269,9 +278,12 @@ def main() -> None:
     parser.add_argument("--cached-splits", action="store_true", help="Read the test splits cached by the Q-head pipeline instead of downloading them.")
     parser.add_argument("--no-summary", action="store_true", help="Write only the records, for sharded runs merged later.")
     parser.add_argument("--max-examples", type=int, default=None, help="Cap the examples per dataset and shard, for a smoke test.")
+    parser.add_argument("--probe", type=Path, default=DEFAULT_PROBE, help="Linear probe scored beside the head.")
+    parser.add_argument("--no-probe", action="store_true", help="Score with the head only.")
     args = parser.parse_args()
     run(args.head, args.output, args.candidates, args.temperature, args.top_p, args.seed, args.max_new_tokens, args.limit,
-        None if args.datasets is None else tuple(args.datasets), args.shard, args.num_shards, args.cached_splits, not args.no_summary, args.max_examples)
+        None if args.datasets is None else tuple(args.datasets), args.shard, args.num_shards, args.cached_splits, not args.no_summary,
+        args.max_examples, None if args.no_probe else args.probe)
 
 
 if __name__ == "__main__":
