@@ -91,6 +91,56 @@ def generate_with_confidence(
     )
 
 
+def sample_with_confidence(
+    model,
+    processor,
+    image: Image.Image,
+    question: str,
+    count: int,
+    temperature: float,
+    top_p: float | None = None,
+    max_new_tokens: int = 64,
+) -> list[InferenceResult]:
+    """Sample several answers in one generate call, with the same confidence values as one-at-a-time generation.
+
+    Finished sequences are padded in the batch, so token scores are kept only up to and
+    including each sequence's first end-of-sequence token, which is what a single
+    generation would have scored.
+    """
+    inputs = processor.apply_chat_template(
+        build_messages(image, question),
+        tokenize=True,
+        add_generation_prompt=True,
+        return_dict=True,
+        return_tensors="pt",
+    ).to(model.device)
+    options = {"do_sample": True, "temperature": temperature, "num_return_sequences": count}
+    if top_p is not None:
+        options["top_p"] = top_p
+    outputs = model.generate(
+        **inputs, max_new_tokens=max_new_tokens, return_dict_in_generate=True, output_scores=True, **options
+    )
+    input_length = inputs["input_ids"].shape[1]
+    generated_ids = outputs.sequences[:, input_length:]
+    transition_scores = model.compute_transition_scores(outputs.sequences, outputs.scores, normalize_logits=True)
+    eos = model.generation_config.eos_token_id
+    eos_ids = set(eos if isinstance(eos, (list, tuple)) else [eos])
+    results = []
+    for row in range(generated_ids.shape[0]):
+        tokens = generated_ids[row].tolist()
+        length = next((position + 1 for position, token in enumerate(tokens) if token in eos_ids), len(tokens))
+        log_probabilities = transition_scores[row, :length].detach().float().cpu().tolist()
+        confidence, mean_log_probability, minimum_probability = summarize_token_log_probabilities(log_probabilities)
+        results.append(InferenceResult(
+            answer=processor.decode(generated_ids[row, :length], skip_special_tokens=True).strip(),
+            confidence=confidence,
+            mean_log_probability=mean_log_probability,
+            minimum_token_probability=minimum_probability,
+            token_probabilities=[float(value) for value in transition_scores[row, :length].exp().detach().cpu().tolist()],
+        ))
+    return results
+
+
 def run_inference_detailed(
     size: str, image_path: str, question: str, max_new_tokens: int = 256
 ) -> InferenceResult:
