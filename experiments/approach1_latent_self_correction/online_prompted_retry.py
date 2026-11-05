@@ -3,6 +3,11 @@
 # Runs the prompted-retry benchmark without cached baselines or feature files.
 # Dataset caches live in node-local temporary storage, while only compact JSONL
 # results are written to the repository.
+#
+# Every answer is scored by two exported heads in the same pass: the trained
+# unified head (--head) and the best linear probe of the same sweep (--probe),
+# so the two can be compared on identical generations. The summary also reports
+# per-dataset detection AUROC and error AUPRC of the token, head and probe scores.
 
 import argparse
 import json
@@ -36,11 +41,13 @@ from experiments.approach1_latent_self_correction.prompted_retry import (
     policy_summary,
     retry_question,
 )
+from experiments.approach1_latent_self_correction.train_q_heads import average_precision, roc_auc
 from models.load_model import load_qwen3_vl
 from models.run_inference import build_messages, generate_with_confidence
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_HEAD = REPO_ROOT / "trained_heads" / "approach1" / "winners" / "mixture" / "unified_new_seed1.pt"
+DEFAULT_PROBE = REPO_ROOT / "trained_heads" / "approach1" / "winners" / "mixture" / "unified_new_linear_seed1.pt"
 DEFAULT_OUTPUT = Path(__file__).parent / "results" / "mixture_test_2b_prompted_retry_reranked.jsonl"
 DATASET_NAMES = ("chartqa_full", "textvqa", "docvqa", "scienceqa_img")
 RERANK_MARGINS = (0.0, 0.05, 0.1, 0.2)
@@ -92,11 +99,30 @@ def load_test_split(
     raise ValueError(f"unknown mixture dataset '{name}'")
 
 
+def add_scorer_selections(records: list[dict], scorer: str, threshold: float, fraction: float) -> None:
+    """Attach the threshold, lowest-fraction, and reranking decisions of one learned scorer."""
+    scores = np.asarray([record[f"{scorer}_confidence"] for record in records])
+    below = confidence_mask(scores, threshold, None)
+    lowest = confidence_mask(scores, threshold, fraction)
+    for index, record in enumerate(records):
+        baseline_score = record[f"{scorer}_confidence"]
+        retry_score = record[f"retry_{scorer}_confidence"]
+        record.update({
+            f"{scorer}_threshold_selected": bool(below[index]),
+            f"{scorer}_fraction_selected": bool(lowest[index]),
+            f"{scorer}_rerank_selected": retry_score > baseline_score,
+        })
+        for margin in RERANK_MARGINS:
+            name = str(margin).replace(".", "_")
+            record[f"{scorer}_gated_margin_{name}_selected"] = bool(
+                baseline_score < threshold and retry_score > baseline_score + margin
+            )
+
+
 def add_policy_selections(records: list[dict], threshold: float, fraction: float, random_seed: int) -> None:
     """Attach paired policy decisions after all online confidence scores exist."""
     head_scores = np.asarray([record["head_confidence"] for record in records])
     token_scores = np.asarray([record["token_confidence"] for record in records])
-    head_threshold = confidence_mask(head_scores, threshold, None)
     head_fraction = confidence_mask(head_scores, threshold, fraction)
     token_fraction = confidence_mask(token_scores, threshold, fraction)
     random_fraction = np.zeros(len(records), dtype=bool)
@@ -105,23 +131,39 @@ def add_policy_selections(records: list[dict], threshold: float, fraction: float
         generator = np.random.default_rng(random_seed)
         random_fraction[generator.choice(len(records), count, replace=False)] = True
     for index, record in enumerate(records):
-        baseline_head = record["head_confidence"]
-        retry_head = record["retry_head_confidence"]
         record.update(
             never_selected=False,
             retry_all_selected=True,
-            head_threshold_selected=bool(head_threshold[index]),
-            head_fraction_selected=bool(head_fraction[index]),
             token_fraction_selected=bool(token_fraction[index]),
             random_fraction_selected=bool(random_fraction[index]),
-            head_rerank_selected=retry_head > baseline_head,
             oracle_selected=bool(record["retry_correct"] and not record["baseline_correct"]),
         )
-        for margin in RERANK_MARGINS:
-            name = str(margin).replace(".", "_")
-            record[f"head_gated_margin_{name}_selected"] = bool(
-                baseline_head < threshold and retry_head > baseline_head + margin
-            )
+    add_scorer_selections(records, "head", threshold, fraction)
+    if records and all("probe_confidence" in record for record in records):
+        add_scorer_selections(records, "probe", threshold, fraction)
+
+
+def detection_metrics(records: list[dict]) -> dict:
+    """AUROC and error AUPRC of every available score against baseline correctness."""
+    labels = np.asarray([record["baseline_correct"] for record in records], dtype=float)
+    result = {"examples": len(records), "accuracy": float(labels.mean()) if len(labels) else 0.0}
+    for scorer in ("token", "head", "probe"):
+        if not records or any(f"{scorer}_confidence" not in record for record in records):
+            continue
+        scores = np.asarray([record[f"{scorer}_confidence"] for record in records], dtype=float)
+        result[scorer] = {
+            "auroc": roc_auc(labels, scores),
+            "error_auprc": average_precision(1 - labels, 1 - scores),
+        }
+    return result
+
+
+def detection_summary(records: list[dict]) -> dict:
+    """Detection metrics pooled and for each dataset."""
+    names = [name for name in DATASET_NAMES if any(record["dataset"] == name for record in records)]
+    summary = {name: detection_metrics([record for record in records if record["dataset"] == name]) for name in names}
+    summary["pooled"] = detection_metrics(records)
+    return summary
 
 
 def write_outputs(output_path: Path, records: list[dict], metadata: dict) -> None:
@@ -142,14 +184,32 @@ def write_outputs(output_path: Path, records: list[dict], metadata: dict) -> Non
     for margin in RERANK_MARGINS:
         name = str(margin).replace(".", "_")
         policies[f"head_gated_margin_{margin:.2f}"] = f"head_gated_margin_{name}_selected"
+    if records and "probe_threshold_selected" in records[0]:
+        policies.update({
+            "probe_threshold": "probe_threshold_selected",
+            "probe_lowest_fraction": "probe_fraction_selected",
+            "probe_rerank": "probe_rerank_selected",
+        })
+        for margin in RERANK_MARGINS:
+            name = str(margin).replace(".", "_")
+            policies[f"probe_gated_margin_{margin:.2f}"] = f"probe_gated_margin_{name}_selected"
     summary = {
         **metadata,
         "online": True,
         "policies": {name: policy_summary(records, key) for name, key in policies.items()},
+        "detection": detection_summary(records),
     }
     summary_path = output_path.with_suffix(".summary.json")
     summary_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     print(f"[done] wrote {output_path} and {summary_path}")
+
+
+def score_pair(heads: dict, prompt_state, answer_state) -> dict[str, float]:
+    """Joint-mode probability of every loaded head for one prompt and answer state."""
+    return {
+        name: float(score(head, spec, temperatures, prompt_state.unsqueeze(0), answer_state.unsqueeze(0))["joint"][0])
+        for name, (head, spec, temperatures) in heads.items()
+    }
 
 
 def run_online(
@@ -166,6 +226,7 @@ def run_online(
     cached: bool = False,
     summarize: bool = True,
     max_examples: int | None = None,
+    probe_path: Path | None = DEFAULT_PROBE,
 ) -> None:
     """Generate, score, and retry the mixture test examples in one model pass, on the whole test split or one shard."""
     existing = []
@@ -173,7 +234,9 @@ def run_online(
         existing = [json.loads(line) for line in output_path.read_text(encoding="utf-8").splitlines() if line.strip()]
     completed = {(record["dataset"], record["index"]) for record in existing}
 
-    head, spec, temperatures = load_head(head_path)
+    heads = {"head": load_head(head_path)}
+    if probe_path is not None:
+        heads["probe"] = load_head(probe_path)
     model, processor = load_qwen3_vl("2b")
     quotas = None
     if limit is not None:
@@ -207,9 +270,7 @@ def run_online(
                 answer_state = encode_state(
                     model, processor, answer_messages(image, baseline_prompt, baseline.answer)
                 )
-                head_confidence = float(
-                    score(head, spec, temperatures, prompt_state.unsqueeze(0), answer_state.unsqueeze(0))["joint"][0]
-                )
+                baseline_scores = score_pair(heads, prompt_state, answer_state)
                 retry = generate_with_confidence(
                     model, processor, image, retry_question(question, baseline.answer), max_new_tokens
                 )
@@ -221,27 +282,19 @@ def run_online(
                     processor,
                     answer_messages(image, baseline_prompt, retry.answer),
                 )
-                retry_head_confidence = float(
-                    score(
-                        head,
-                        spec,
-                        temperatures,
-                        prompt_state.unsqueeze(0),
-                        retry_state.unsqueeze(0),
-                    )["joint"][0]
-                )
+                retry_scores = score_pair(heads, prompt_state, retry_state)
                 record = {
                     "dataset": dataset_name,
                     "index": index,
                     "question": question,
                     "reference_answer": reference_answer,
-                    "head_confidence": head_confidence,
+                    **{f"{name}_confidence": value for name, value in baseline_scores.items()},
                     "token_confidence": baseline.confidence,
                     "baseline_prediction": asdict(baseline),
                     "baseline_correct": bool(baseline_correct),
                     "baseline_score": float(baseline_score),
                     "retry_prediction": asdict(retry),
-                    "retry_head_confidence": retry_head_confidence,
+                    **{f"retry_{name}_confidence": value for name, value in retry_scores.items()},
                     "retry_correct": bool(retry_correct),
                     "retry_score": float(retry_score),
                 }
@@ -264,6 +317,10 @@ def run_online(
         successful + errors,
         {
             "head_path": str(head_path),
+            "probe_path": None if probe_path is None else str(probe_path),
+            "datasets": None if datasets is None else list(datasets),
+            "shard": shard,
+            "num_shards": num_shards,
             "threshold": threshold,
             "review_fraction": review_fraction,
             "random_seed": random_seed,
@@ -288,6 +345,8 @@ def main() -> None:
     parser.add_argument("--cached-splits", action="store_true", help="Read the test splits cached by the Q-head pipeline instead of downloading them.")
     parser.add_argument("--no-summary", action="store_true", help="Write only the records, for sharded runs merged later.")
     parser.add_argument("--max-examples", type=int, default=None, help="Cap the examples per dataset and shard, for a smoke test.")
+    parser.add_argument("--probe", type=Path, default=DEFAULT_PROBE, help="Linear probe scored beside the head.")
+    parser.add_argument("--no-probe", action="store_true", help="Score with the head only.")
     args = parser.parse_args()
     run_online(
         args.head,
@@ -303,6 +362,7 @@ def main() -> None:
         args.cached_splits,
         not args.no_summary,
         args.max_examples,
+        None if args.no_probe else args.probe,
     )
 
 

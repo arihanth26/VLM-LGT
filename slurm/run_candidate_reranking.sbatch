@@ -18,7 +18,7 @@ ONLINE_CACHE="${TMPDIR:-/tmp}/vlm-lgt-candidates-${SLURM_JOB_ID}"
 mkdir -p "$ONLINE_CACHE"
 trap 'rm -rf "$ONLINE_CACHE"' EXIT
 export HF_DATASETS_CACHE="$ONLINE_CACHE/datasets"
-export HF_HUB_CACHE="$ONLINE_CACHE/hub"
+export HF_HUB_CACHE="${HF_HUB_CACHE:-$ONLINE_CACHE/hub}"
 export TRANSFORMERS_CACHE="$ONLINE_CACHE/models"
 export XDG_CACHE_HOME="$ONLINE_CACHE/xdg"
 
@@ -41,5 +41,7 @@ fi
 if [[ -n "${OUTPUT:-}" ]]; then
     ARGS+=(--output "$OUTPUT")
 fi
+[[ -n "${DATASETS:-}" ]] && ARGS+=(--datasets $DATASETS)
+[[ -n "${NO_PROBE:-}" ]] && ARGS+=(--no-probe)
 
 srun "$PYTHON_BIN" -m experiments.approach1_latent_self_correction.candidate_reranking "${ARGS[@]}"

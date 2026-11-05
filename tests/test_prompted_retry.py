@@ -5,7 +5,7 @@
 
 import numpy as np
 
-from experiments.approach1_latent_self_correction.online_prompted_retry import add_policy_selections
+from experiments.approach1_latent_self_correction.online_prompted_retry import add_policy_selections, detection_summary
 from experiments.approach1_latent_self_correction.candidate_reranking import majority_index, select_indices
 from experiments.approach1_latent_self_correction.deepen_selected_candidate import add_selections as add_deep_selections
 from experiments.approach1_latent_self_correction.prompted_retry import (
@@ -94,6 +94,32 @@ def test_deep_pass_selection_policies():
     record = records[0]
     assert record["deep_head_rerank"] and record["deep_margin_0_1"]
     assert not record["deep_margin_0_2"] and record["deep_oracle"]
+
+
+def test_probe_policies_mirror_head_policies():
+    """With a probe score present, every head policy gets a probe twin driven by the probe."""
+    records = [
+        {"dataset": "textvqa", "head_confidence": 0.2, "retry_head_confidence": 0.7,
+         "probe_confidence": 0.9, "retry_probe_confidence": 0.3, "token_confidence": 0.9,
+         "baseline_correct": False, "retry_correct": True},
+        {"dataset": "textvqa", "head_confidence": 0.8, "retry_head_confidence": 0.4,
+         "probe_confidence": 0.1, "retry_probe_confidence": 0.6, "token_confidence": 0.2,
+         "baseline_correct": True, "retry_correct": False},
+    ]
+    add_policy_selections(records, threshold=0.5, fraction=0.5, random_seed=0)
+    assert records[0]["head_fraction_selected"] and records[1]["probe_fraction_selected"]
+    assert not records[0]["probe_rerank_selected"] and records[1]["probe_rerank_selected"]
+    assert records[1]["probe_gated_margin_0_1_selected"] and not records[0]["probe_threshold_selected"]
+    detection = detection_summary(records)
+    assert detection["pooled"]["head"]["auroc"] == 1.0 and detection["pooled"]["probe"]["auroc"] == 0.0
+
+
+def test_records_without_probe_keep_head_policies_only():
+    """Older runs with no probe score still get every head policy and no probe policy."""
+    records = [{"dataset": "docvqa", "head_confidence": 0.3, "retry_head_confidence": 0.6,
+                "token_confidence": 0.5, "baseline_correct": False, "retry_correct": True}]
+    add_policy_selections(records, threshold=0.5, fraction=1.0, random_seed=0)
+    assert records[0]["head_threshold_selected"] and "probe_threshold_selected" not in records[0]
 
 
 def _run_all() -> None:
