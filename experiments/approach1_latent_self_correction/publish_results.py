@@ -15,6 +15,7 @@
 #   07  correction experiments (prompted retry, reranking, best-of-five, deeper pass)
 #   08  complete Approach 1 report (HTML and PDF) covering everything above, and its Excel workbook of tables
 #   09  trained heads against linear probes, per dataset (markdown table)
+#   10  candidate search (best-of-k up to 10, temperature) and the pre-generation head training sweep
 
 import argparse
 import shutil
@@ -36,6 +37,9 @@ NUMBERED_FILES = [
     (HERE / "results" / "approach1_complete_report.pdf", "08_approach1_complete_report.pdf"),
     (HERE / "results" / "approach1_results.xlsx", "08_approach1_results.xlsx"),
     (HERE / "results" / "heads_vs_linear_probes.md", "09_heads_vs_linear_probes.md"),
+    (HERE / "results" / "candidate_search_report.html", "10_candidate_search_report.html"),
+    (HERE / "results" / "candidate_search.md", "10_candidate_search_tables.md"),
+    (HERE / "results" / "pre_head_sweep.md", "10_pre_head_sweep_tables.md"),
 ]
 
 
@@ -88,6 +92,8 @@ def main() -> None:
     publish_corruption_data(args.output)
     publish_correction_data(args.output)
     publish_full_correction_data(args.output)
+    for name in ("candidate_search.json", "pre_head_sweep.json", "candidate_search_jobs.txt"):
+        copy_if_present(HERE / "results" / name, args.output / "04_sweep_data" / name)
 
 
 def publish_correction_data(output: Path) -> None:
