@@ -31,8 +31,9 @@ each one lives in its own folder so they can be developed independently.
 | Approach 1: new loss with a visual-grounding term, separate and unified heads on the mixture | Done |
 | Approach 1: sequential training (train on A, then B, then C) to test what an earlier dataset keeps, old and new loss, with and without replay | Done |
 | Approach 1: new loss with a noised image instead of a swapped one as the corrupted input, on the mixture, each dataset alone, and sequential training | Done |
-| Approach 1: prompted retry on answers flagged by the unified head | Implemented, experiment not yet run |
-| Approach 1: a learned latent correction step that acts on a flagged answer | Not started |
+| Approach 1: prompted retry, best-of-five and a deeper pass on answers flagged by the unified head | Done on the full test split (report 08) |
+| Approach 1: candidate search (best-of-k up to 10, temperature 0.7 to 1.3), within-question measurements, pre-generation head training sweep | Done (report 10) |
+| Approach 1: learned correction step: within-question candidate ranker with visual contrastive decoding and zoomed-crop candidates | In progress |
 | Approach 1: Qwen3-VL 4B check | Not started |
 | Approach 2: verifier reranking | Scaffold only: dataset configs and a failure-pool builder with a placeholder sampler |
 
@@ -108,6 +109,21 @@ Correction experiments on the full test split (9,517 questions; report
 - Prompted retry of every answer lowers accuracy by 2.7 points; only a gated retry gains, by at most 0.2 points. The deeper
   pass lowers accuracy by 12.8 points when applied to everything, partly from format failures (answers cut off at the
   token limit or repeating the prompt). The oracles leave room: +4.8 points for best-of-five, +2.9 for retry.
+
+Candidate search and pre-generation head training (report
+[results/approach1/10_candidate_search_report.html](results/approach1/10_candidate_search_report.html)):
+
+- Widening the search works: at temperature 1.3 with 10 samples, a right answer is in the pool for 90.8% of test questions,
+  against 82.8% greedy accuracy, and 22% of questions have both a right and a wrong candidate (3% at T = 0.7, k = 1).
+- Selecting from it does not yet: the configuration chosen on validation (T = 0.7, best-of-7, highest head score) gains
+  +0.44 points on test (p = 0.052), significant only on TextVQA (+1.4, p = 0.003).
+- The reason is a measurement gap. Pooled AUROC (about 0.88) compares answers to different questions. Within one question,
+  where a selector works, the head ranks a right answer above a wrong one with AUROC 0.65 to 0.70.
+- Routing only the 20% of questions with the lowest head score on the greedy answer to best-of-7 gets the whole gain at
+  2.4 generations per question.
+- The pre-generation head trains better on the pass rate over 8 samples than on greedy correctness; with a pairwise
+  pass-rate ranking term every target improves (test AUROC 0.862 to 0.868, AURC 0.0468 to 0.0448), on the same constant
+  question embedding.
 
 Corrupted image instead of a swapped one (report
 [results/approach1/06_corruption_new_loss_report.html](results/approach1/06_corruption_new_loss_report.html)):
@@ -197,6 +213,12 @@ VLM-LGT/
 │   │   ├── merge_correction_shards.py         Merges shard outputs into one result per correction experiment
 │   │   ├── correction_stats.py                Intervals, paired tests and AUROC for the correction experiments
 │   │   ├── export_results_workbook.py         Writes every results table to one Excel workbook
+│   │   ├── candidate_pools.py                 Greedy + K batched samples per question at one temperature, scored with the cached question embedding
+│   │   ├── selection_metrics.py               Selectors and within-question measurements (mixed-pool accuracy, grouped AUROC, headroom, AURC, compute curves)
+│   │   ├── analyze_candidate_pools.py         Temperature x k x selector grid, chosen on validation, read once on test
+│   │   ├── sweep_pre_head.py                  Training sweep of the pre-generation head (greedy, pass-rate, blend, any-correct targets)
+│   │   ├── build_search_report.py             Builds report 10
+│   │   ├── compare_heads_vs_linear.py         Heads against linear probes for both loss families and both metrics
 │   │   ├── train_q_heads.py                   Pre-generation head and verifier head, shared losses and metrics
 │   │   ├── sweep_q_heads.py                   Architecture and hyperparameter sweep for the separate heads
 │   │   ├── sweep_verifier_early_stop.py       Early-stopping sweep over the verifier ranking weight
@@ -232,7 +254,8 @@ VLM-LGT/
 │   │   ├── 06_corruption_new_loss_report.html      The new loss with a noised image instead of a swapped one
 │   │   ├── 07_correction_experiments_report.html   Prompted retry, reranking, best-of-five, deeper pass
 │   │   ├── 08_approach1_complete_report.html       Everything in Approach 1, also as a PDF, for the mid-point report
-│   │   └── 08_approach1_results.xlsx               Every results table as one Excel workbook, one sheet per table
+│   │   ├── 08_approach1_results.xlsx               Every results table as one Excel workbook, one sheet per table
+│   │   └── 10_candidate_search_report.html         Candidate search (best-of-k, temperature), within-question measurements, pre-generation head sweep
 │   └── approach2/                             Approach 2 results (none yet)
 │
 ├── slurm/                                     Job scripts for the ICE cluster
@@ -261,6 +284,10 @@ VLM-LGT/
 │   ├── run_correction_full_pipeline.sh        Submits the correction experiments on the full test splits, sharded, then merges
 │   ├── run_correction_shard.sbatch            One shard of best-of-five, prompted retry, or the deeper pass on a GPU
 │   ├── merge_correction_shards.sbatch         CPU job: merges the shards into one result per experiment
+│   ├── run_search_pipeline.sh                 Submits the candidate-search pools, train pass-rate labels, analysis, and pre-generation head sweep
+│   ├── run_candidate_pool.sbatch              One shard of candidate pools on a GPU
+│   ├── analyze_candidate_pools.sbatch         The candidate-search analysis, on a GPU node
+│   ├── sweep_pre_head.sbatch                  The pre-generation head training sweep on a GPU
 │   └── check_scripts.sh                       Validates every job script: syntax, module paths, sbatch --test-only
 │
 ├── trained_heads/
@@ -279,7 +306,8 @@ VLM-LGT/
 │   ├── test_corruption_report.py              Offline test that the corruption report builds from the sweep schema
 │   ├── test_approach1_report.py               Offline tests for the complete report builder helpers
 │   ├── test_correction_scale.py               Offline tests for sharding and merging of the correction runs
-│   └── test_correction_stats.py               Offline tests for the correction statistics
+│   ├── test_correction_stats.py               Offline tests for the correction statistics
+│   └── test_candidate_search.py               Offline tests for the selectors, measurements, and pre-generation sweep helpers
 │
 ├── requirements.txt
 ├── DATASETS.md                                Reference table of every dataset id, with source links and known quirks
