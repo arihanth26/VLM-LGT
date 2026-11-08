@@ -33,7 +33,8 @@ each one lives in its own folder so they can be developed independently.
 | Approach 1: new loss with a noised image instead of a swapped one as the corrupted input, on the mixture, each dataset alone, and sequential training | Done |
 | Approach 1: prompted retry, best-of-five and a deeper pass on answers flagged by the unified head | Done on the full test split (report 08) |
 | Approach 1: candidate search (best-of-k up to 10, temperature 0.7 to 1.3), within-question measurements, pre-generation head training sweep | Done (report 10) |
-| Approach 1: learned correction step: within-question candidate ranker with visual contrastive decoding and zoomed-crop candidates | In progress |
+| Approach 1: learned correction step: within-question candidate ranker with visual contrastive decoding and zoomed-crop candidates | Done (report 11): +1.07 points on the full test split, p < 0.0001 |
+| Approach 1: second round: grounded crops, step-by-step reasoning, the model as its own judge, ranker trained on 12,000 fully covered questions | Running on ICE |
 | Approach 1: Qwen3-VL 4B check | Not started |
 | Approach 2: verifier reranking | Scaffold only: dataset configs and a failure-pool builder with a placeholder sampler |
 
@@ -109,6 +110,21 @@ Correction experiments on the full test split (9,517 questions; report
 - Prompted retry of every answer lowers accuracy by 2.7 points; only a gated retry gains, by at most 0.2 points. The deeper
   pass lowers accuracy by 12.8 points when applied to everything, partly from format failures (answers cut off at the
   token limit or repeating the prompt). The oracles leave room: +4.8 points for best-of-five, +2.9 for retry.
+
+The learned correction step (report
+[results/approach1/11_correction_ranker_report.html](results/approach1/11_correction_ranker_report.html)):
+
+- The first correction step in Approach 1 that clearly improves accuracy: 82.78% to 83.85% on the full test split, +1.07
+  points (95% interval +0.77 to +1.40, McNemar p < 0.0001), 164 answers fixed and 62 broken, 6.2% of greedy errors removed.
+  TextVQA +2.28, DocVQA +1.08, ScienceQA +0.55; ChartQA does not move.
+- How the answer is chosen matters most: the same five samples gain +0.57 with the head choosing and +0.91 with a ranker
+  trained for the within-question choice (softmax over each question's candidates).
+- Zoomed crops (four corners, upscaled 2x) are the cheapest good candidate source: greedy + crops + ranker, no sampling,
+  reaches 83.83%. Visual contrastive decoding alone gives +0.34 and adds nothing next to crops or samples.
+- More samples do not help: with the ranker, best-of-5, 7, 9, 11, 13 and 15 are within 0.1 points of each other, although
+  the oracle rises from 92.0% to 93.2%.
+- Correcting only the 30% of questions with the lowest answer probability keeps +1.05 points at 5.2 model passes per
+  question instead of 13.5 (crops only: +0.98 at 3.2).
 
 Candidate search and pre-generation head training (report
 [results/approach1/10_candidate_search_report.html](results/approach1/10_candidate_search_report.html)):
@@ -219,6 +235,13 @@ VLM-LGT/
 │   │   ├── sweep_pre_head.py                  Training sweep of the pre-generation head (greedy, pass-rate, blend, any-correct targets)
 │   │   ├── build_search_report.py             Builds report 10
 │   │   ├── compare_heads_vs_linear.py         Heads against linear probes for both loss families and both metrics
+│   │   ├── correction_candidates.py           Contrastive-decoding and zoomed-crop candidates, and the encoding of every candidate
+│   │   ├── train_candidate_ranker.py          The within-question candidate ranker (report 11)
+│   │   ├── extend_pools.py                    Samples 11 to 16 for best-of-k past ten
+│   │   ├── analyze_ranker.py                  k curves, within-question measurements, attribution, gating and cases for report 11
+│   │   ├── build_ranker_report.py             Builds report 11
+│   │   ├── correction_v2.py                   Grounded crops, step-by-step reasoning, and the self-judge feature
+│   │   ├── train_ranker_v2.py                 The second ranker with those, compared with the first
 │   │   ├── train_q_heads.py                   Pre-generation head and verifier head, shared losses and metrics
 │   │   ├── sweep_q_heads.py                   Architecture and hyperparameter sweep for the separate heads
 │   │   ├── sweep_verifier_early_stop.py       Early-stopping sweep over the verifier ranking weight
@@ -255,7 +278,8 @@ VLM-LGT/
 │   │   ├── 07_correction_experiments_report.html   Prompted retry, reranking, best-of-five, deeper pass
 │   │   ├── 08_approach1_complete_report.html       Everything in Approach 1, also as a PDF, for the mid-point report
 │   │   ├── 08_approach1_results.xlsx               Every results table as one Excel workbook, one sheet per table
-│   │   └── 10_candidate_search_report.html         Candidate search (best-of-k, temperature), within-question measurements, pre-generation head sweep
+│   │   ├── 10_candidate_search_report.html         Candidate search (best-of-k, temperature), within-question measurements, pre-generation head sweep
+│   │   └── 11_correction_ranker_report.html        The learned correction step: candidate sources, the ranker, best-of-5 to 16, compute, cases
 │   └── approach2/                             Approach 2 results (none yet)
 │
 ├── slurm/                                     Job scripts for the ICE cluster
@@ -307,7 +331,9 @@ VLM-LGT/
 │   ├── test_approach1_report.py               Offline tests for the complete report builder helpers
 │   ├── test_correction_scale.py               Offline tests for sharding and merging of the correction runs
 │   ├── test_correction_stats.py               Offline tests for the correction statistics
-│   └── test_candidate_search.py               Offline tests for the selectors, measurements, and pre-generation sweep helpers
+│   ├── test_candidate_search.py               Offline tests for the selectors, measurements, and pre-generation sweep helpers
+│   ├── test_correction_ranker.py              Offline tests for the crops, candidate features, listwise loss and ranker
+│   └── test_correction_v2.py                  Offline tests for box parsing, reasoning extraction and the second ranker's features
 │
 ├── requirements.txt
 ├── DATASETS.md                                Reference table of every dataset id, with source links and known quirks

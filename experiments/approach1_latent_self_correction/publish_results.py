@@ -16,6 +16,7 @@
 #   08  complete Approach 1 report (HTML and PDF) covering everything above, and its Excel workbook of tables
 #   09  trained heads against linear probes, per dataset (markdown table)
 #   10  candidate search (best-of-k up to 10, temperature) and the pre-generation head training sweep
+#   11  the learned correction step: contrastive and zoomed-crop candidates, the within-question ranker, best-of-k to 16
 
 import argparse
 import shutil
@@ -40,6 +41,8 @@ NUMBERED_FILES = [
     (HERE / "results" / "candidate_search_report.html", "10_candidate_search_report.html"),
     (HERE / "results" / "candidate_search.md", "10_candidate_search_tables.md"),
     (HERE / "results" / "pre_head_sweep.md", "10_pre_head_sweep_tables.md"),
+    (HERE / "results" / "correction_ranker_report.html", "11_correction_ranker_report.html"),
+    (HERE / "results" / "candidate_ranker.md", "11_correction_ranker_tables.md"),
 ]
 
 
@@ -92,7 +95,8 @@ def main() -> None:
     publish_corruption_data(args.output)
     publish_correction_data(args.output)
     publish_full_correction_data(args.output)
-    for name in ("candidate_search.json", "pre_head_sweep.json", "candidate_search_jobs.txt"):
+    for name in ("candidate_search.json", "pre_head_sweep.json", "candidate_search_jobs.txt",
+                 "candidate_ranker.json", "ranker_analysis.json", "correction_jobs.txt"):
         copy_if_present(HERE / "results" / name, args.output / "04_sweep_data" / name)
 
 
