@@ -34,7 +34,7 @@ each one lives in its own folder so they can be developed independently.
 | Approach 1: prompted retry, best-of-five and a deeper pass on answers flagged by the unified head | Done on the full test split (report 08) |
 | Approach 1: candidate search (best-of-k up to 10, temperature 0.7 to 1.3), within-question measurements, pre-generation head training sweep | Done (report 10) |
 | Approach 1: learned correction step: within-question candidate ranker with visual contrastive decoding and zoomed-crop candidates | Done (report 11): +1.07 points on the full test split, p < 0.0001 |
-| Approach 1: second round: grounded crops, step-by-step reasoning, the model as its own judge, ranker trained on 12,000 fully covered questions | Running on ICE |
+| Approach 1: second round: grounded crops, step-by-step reasoning, the model as its own judge, ranker trained on 12,000 fully covered questions | Done (report 11, Section 13): +1.84 points, p < 0.0001; ChartQA +4.16 |
 | Approach 1: Qwen3-VL 4B check | Not started |
 | Approach 2: verifier reranking | Scaffold only: dataset configs and a failure-pool builder with a placeholder sampler |
 
@@ -113,6 +113,12 @@ Correction experiments on the full test split (9,517 questions; report
 
 The learned correction step (report
 [results/approach1/11_correction_ranker_report.html](results/approach1/11_correction_ranker_report.html)):
+
+- Best result, second round: greedy + one step-by-step reasoning answer, chosen by a ranker that also uses the model's own
+  yes/no judgement of each candidate: 82.78% to 84.62%, +1.84 points (95% interval +1.44 to +2.24, p < 0.0001), 10.7% of
+  greedy errors removed. ChartQA, which nothing else moved, +4.16; ScienceQA +1.59; TextVQA +1.12; DocVQA +0.44 (not
+  significant).
+- First round:
 
 - The first correction step in Approach 1 that clearly improves accuracy: 82.78% to 83.85% on the full test split, +1.07
   points (95% interval +0.77 to +1.40, McNemar p < 0.0001), 164 answers fixed and 62 broken, 6.2% of greedy errors removed.

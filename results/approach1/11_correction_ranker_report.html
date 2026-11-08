@@ -50,7 +50,7 @@ choice made on validation (6,420 questions) and test read once.</p>
 within-question measurements).</p>
 <div class="toc"><a href="#summary">Summary</a><a href="#story">Where this fits</a><a href="#idea">The idea</a><a href="#sources">Candidate sources</a>
 <a href="#ranker">The ranker</a><a href="#result">Main result</a><a href="#k">Best-of-5, 7, 9, 11+</a><a href="#contrib">What each source adds</a>
-<a href="#why">Why it works</a><a href="#ablation">Ablations</a><a href="#compute">Compute</a><a href="#cases">Cases</a><a href="#meaning">What it means</a>
+<a href="#why">Why it works</a><a href="#ablation">Ablations</a><a href="#compute">Compute</a><a href="#cases">Cases</a><a href="#round2">Second round</a><a href="#meaning">What it means</a>
 <a href="#limits">Limits</a><a href="#next">Next</a><a href="#appendix">Appendix</a></div>
 
 <h2 id="summary">1. Summary</h2>
@@ -61,6 +61,7 @@ within-question measurements).</p>
 <div class="stat"><b>12.3%</b><span>of TextVQA errors removed (+2.28 pts)</span></div>
 </div>
 <div class="card summary"><ul>
+<li><b>Best result (second round, Section 13): 82.78% → 84.62%, +1.84 points (95% interval +1.44 to +2.24, p &lt; 0.0001), 10.7% of greedy errors removed,</b> from the greedy answer plus one step-by-step reasoning answer, chosen by a ranker that also uses the model's own yes/no judgement of each candidate. ChartQA, untouched by the first round, gains +4.16 points; ScienceQA +1.59, TextVQA +1.12, DocVQA +0.44 (not significant). Sections 6–12 describe the first round, Section 13 the second.</li>
 <li><b>This is the first correction step in Approach 1 that clearly improves accuracy.</b> On the full test split it moves accuracy from
 82.78% to 83.85%, +1.07 points (95% interval +0.77 to
 +1.40, McNemar p &lt; 0.0001): it fixes 164 wrong greedy answers and breaks 62 right ones.
@@ -233,15 +234,74 @@ A. Pittsburgh
 B. Philadelphia
 C. Phoenix
 D. Harrisburg
-Answer with the letter of the correct option only.</p><p class="ans">Reference: <b>D</b></p><p class="ans">Greedy: D → ranker: <b>B</b></p></div></div><div class="tablewrap"><table><thead><tr><th>Candidate</th><th>Proposed by</th><th>Correct</th><th>Ranker score</th><th>Head</th><th>Sample vote</th></tr></thead><tbody><tr><td class='l'>B</td><td class='l'>sampled answer, contrastive decoding, zoomed crop</td><td>wrong</td><td>+0.45</td><td>0.97</td><td>40%</td></tr><tr><td class='l'>D</td><td class='l'>greedy, sampled answer, zoomed crop</td><td>right</td><td>-0.07</td><td>0.91</td><td>60%</td></tr></tbody></table></div></div><h2 id="meaning">13. What it means</h2>
+Answer with the letter of the correct option only.</p><p class="ans">Reference: <b>D</b></p><p class="ans">Greedy: D → ranker: <b>B</b></p></div></div><div class="tablewrap"><table><thead><tr><th>Candidate</th><th>Proposed by</th><th>Correct</th><th>Ranker score</th><th>Head</th><th>Sample vote</th></tr></thead><tbody><tr><td class='l'>B</td><td class='l'>sampled answer, contrastive decoding, zoomed crop</td><td>wrong</td><td>+0.45</td><td>0.97</td><td>40%</td></tr><tr><td class='l'>D</td><td class='l'>greedy, sampled answer, zoomed crop</td><td>right</td><td>-0.07</td><td>0.91</td><td>60%</td></tr></tbody></table></div></div><h2 id="round2">13. Second round: grounded crops, step-by-step reasoning, and the model as its own judge</h2>
+<p>Sections 6 to 12 left three gaps: candidates came from fixed corner crops that often miss the evidence, nothing fixed ChartQA, where errors are arithmetic
+over values the model reads correctly, and the ranker's strongest within-question signal was still the head. The second round adds one answer to each gap
+and a bigger training set, all evaluated like the first round: chosen on validation, test read once.</p>
+<div class="card"><ul>
+<li><b>Grounded crop.</b> The model is asked for the bounding box of the region that answers the question (Qwen3-VL returns boxes on a 0–1000 grid). That
+region, widened by 15% on each side and at least 20% of the image, is cropped and upscaled 2×, and the question is asked on it alone
+(<i>grounded crop</i>) and as a second image next to the full image (<i>grounded crop next to the full image</i>). Unlike the corner crops, the crop follows
+the evidence.</li>
+<li><b>Step-by-step reasoning.</b> The model is asked to think in at most three short steps and end with "Answer: …" (256-token limit); the text after the last
+"Answer:" is the candidate. Replies that never reach an answer line are dropped (3% of test questions) rather than turned into a fragment. Report 08's
+"deeper pass" failed mostly on format; this version extracts the answer and keeps the original answer as the default unless the ranker prefers the new one.</li>
+<li><b>The model as its own judge.</b> For every distinct candidate, the model sees the image, the question and the candidate and is asked whether the
+candidate is correct; the feature is P(Yes) / (P(Yes) + P(No)) of its next token, one forward pass per candidate. It is added to the ranker's features as the
+probability and its logit.</li>
+<li><b>More training.</b> 12,000 training questions (3,000 per dataset, spread over each split) get every source, first-round and second-round, against 3,200
+with first-round corrections before. Ranker v2 is trained on these only, so every training set can contain every source, in three variants: answer states
+and the first ranker's scalars (<i>no judge</i>), plus the judge (<i>+ judge</i>), and scalars with the judge but no states (<i>scalars + judge</i>).</li>
+</ul></div>
+<h3>13.1 Main result of the second round</h3>
+<p>Chosen on validation: <b>greedy + one step-by-step reasoning answer, no samples</b>, ranked by <b>ranker v2 (scalars + judge)</b>, validation gain
++1.60 points. Test, read once:</p>
+<div class="tablewrap"><table><thead><tr><th class="">Dataset</th><th class="">Greedy</th><th class="">Corrected</th><th class="">Difference, points (95% interval)</th><th class="">Fixed / broken</th><th class="">McNemar p</th><th class="">Errors removed</th><th class="">Ranker v1 on the same candidates</th><th class="">Oracle</th></tr></thead><tbody><tr class="best"><td class=""><b>All four</b></td><td class="">82.78%</td><td class="">84.62%</td><td class="">+1.84 (+1.44 to +2.24)</td><td class="">+276 / −101</td><td class="">&lt; 0.0001</td><td class="">10.7%</td><td class="">83.72%</td><td class="">88.3%</td></tr><tr><td class="">ChartQA</td><td class="">76.48%</td><td class="">80.64%</td><td class="">+4.16 (+3.20 to +5.12)</td><td class="">+126 / −22</td><td class="">&lt; 0.0001</td><td class="">17.7%</td><td class="">77.40%</td><td class="">86.2%</td></tr><tr><td class="">TextVQA</td><td class="">81.52%</td><td class="">82.64%</td><td class="">+1.12 (+0.32 to +1.96)</td><td class="">+64 / −36</td><td class="">0.0066</td><td class="">6.1%</td><td class="">82.80%</td><td class="">85.0%</td></tr><tr><td class="">DocVQA</td><td class="">87.04%</td><td class="">87.48%</td><td class="">+0.44 (-0.28 to +1.08)</td><td class="">+42 / −31</td><td class="">0.242</td><td class="">3.4%</td><td class="">87.84%</td><td class="">90.0%</td></tr><tr><td class="">ScienceQA</td><td class="">86.86%</td><td class="">88.45%</td><td class="">+1.59 (+0.89 to +2.38)</td><td class="">+44 / −12</td><td class="">&lt; 0.0001</td><td class="">12.1%</td><td class="">87.61%</td><td class="">93.1%</td></tr></tbody></table></div>
+<p><b>The second round nearly doubles the first-round gain.</b> +1.84 points against +1.07 for the first-round
+step, with two candidates per question (the greedy answer and one reasoning answer) instead of up to twelve. The reasoning answer is one long generation
+(up to 256 tokens), so the cost is about that of four or five short generations plus two judge and two encoding passes, roughly a third of the
+first-round step. <b>ChartQA, which nothing in the first round moved,
+gains +4.16 points (17.7% of its errors).</b> Its errors are arithmetic and
+comparisons over values the model reads correctly, which no crop or sample changes and step-by-step reasoning does. ScienceQA gains
++1.59, TextVQA +1.12. DocVQA (+0.44, not
+significant) is better served by the first-round crops, where its errors are reading errors. With five samples added to the same two candidates the test
+accuracy is 84.86% (+2.08); that configuration came second on validation, so the chosen one is reported.</p>
+<h3>13.2 Who chooses matters again</h3>
+<p>Gain over greedy (points, test) on the chosen candidates, greedy + reasoning, by selector:</p>
+<div class="tablewrap"><table><thead><tr><th class="l">Selector</th><th class="">All four</th><th class="">ChartQA</th><th class="">TextVQA</th><th class="">DocVQA</th><th class="">ScienceQA</th></tr></thead><tbody><tr><td class="l">Head picks</td><td class="">+1.21</td><td class="">+3.28</td><td class="">+0.52</td><td class="">+0.04</td><td class="">+0.94</td></tr><tr><td class="l">Judge picks</td><td class="">+0.92</td><td class="">+3.36</td><td class="">-1.28</td><td class="">+0.36</td><td class="">+1.34</td></tr><tr><td class="l">Ranker v1 (report 11)</td><td class="">+0.95</td><td class="">+0.92</td><td class="">+1.28</td><td class="">+0.80</td><td class="">+0.74</td></tr><tr><td class="l">Ranker v2, no judge</td><td class="">+1.17</td><td class="">+1.60</td><td class="">+1.28</td><td class="">+1.00</td><td class="">+0.69</td></tr><tr><td class="l">Ranker v2 + judge</td><td class="">+1.11</td><td class="">+1.52</td><td class="">+1.24</td><td class="">+0.96</td><td class="">+0.64</td></tr><tr class="best"><td class="l">Ranker v2, scalars + judge</td><td class="">+1.84</td><td class="">+4.16</td><td class="">+1.12</td><td class="">+0.44</td><td class="">+1.59</td></tr></tbody></table></div>
+<p>The reasoning answer is the main ingredient: even the head alone gains +1.21 with it. The judge on its own is a poor
+selector (+0.92; it says Yes to most fluent answers and hurts TextVQA), but as one feature among the vote, the head score
+and the answer probability it adds the rest. On these two-candidate sets the scalar ranker with the judge beats the variants with hidden states, which fit
+the many-candidate sets of training better than this small one.</p>
+<h3>13.3 Every second-round configuration (test accuracy, pooled)</h3>
+<div class="tablewrap"><table><thead><tr><th class="l">Candidates</th><th class="">Ranker v1</th><th class="">v2, no judge</th><th class="">v2 + judge</th><th class="">v2, scalars + judge</th><th class="">Oracle</th></tr></thead><tbody><tr><td class="l">Greedy + corner crops</td><td class="">83.83%</td><td class="">83.86%</td><td class="">83.89%</td><td class="">83.76%</td><td class="">89.5%</td></tr><tr><td class="l">Greedy + contrastive decoding</td><td class="">83.11%</td><td class="">83.11%</td><td class="">83.16%</td><td class="">83.01%</td><td class="">84.5%</td></tr><tr><td class="l">Greedy + corner crops + contrastive decoding</td><td class="">83.76%</td><td class="">83.89%</td><td class="">83.94%</td><td class="">83.86%</td><td class="">90.2%</td></tr><tr><td class="l">Greedy + grounded crops</td><td class="">83.53%</td><td class="">83.62%</td><td class="">83.63%</td><td class="">83.86%</td><td class="">87.5%</td></tr><tr><td class="l">Greedy + step-by-step reasoning</td><td class="">83.72%</td><td class="">83.94%</td><td class="">83.89%</td><td class="">84.62%</td><td class="">88.3%</td></tr><tr><td class="l">Greedy + grounded crops + reasoning</td><td class="">83.84%</td><td class="">84.08%</td><td class="">84.04%</td><td class="">84.21%</td><td class="">91.1%</td></tr><tr><td class="l">Greedy + corner + grounded crops</td><td class="">83.89%</td><td class="">83.90%</td><td class="">83.97%</td><td class="">83.79%</td><td class="">91.0%</td></tr><tr><td class="l">Greedy + every source</td><td class="">83.92%</td><td class="">84.02%</td><td class="">84.05%</td><td class="">83.93%</td><td class="">93.7%</td></tr><tr><td class="l">Greedy + 5 samples + nothing else</td><td class="">83.69%</td><td class="">83.65%</td><td class="">83.77%</td><td class="">83.63%</td><td class="">88.1%</td></tr><tr><td class="l">Greedy + 5 samples + corner crops</td><td class="">83.86%</td><td class="">83.91%</td><td class="">84.03%</td><td class="">83.99%</td><td class="">91.9%</td></tr><tr><td class="l">Greedy + 5 samples + contrastive decoding</td><td class="">83.51%</td><td class="">83.53%</td><td class="">83.65%</td><td class="">83.43%</td><td class="">88.4%</td></tr><tr><td class="l">Greedy + 5 samples + corner crops + contrastive decoding</td><td class="">83.85%</td><td class="">83.83%</td><td class="">84.01%</td><td class="">83.94%</td><td class="">92.0%</td></tr><tr><td class="l">Greedy + 5 samples + grounded crops</td><td class="">83.77%</td><td class="">83.86%</td><td class="">83.94%</td><td class="">84.12%</td><td class="">90.4%</td></tr><tr><td class="l">Greedy + 5 samples + step-by-step reasoning</td><td class="">83.91%</td><td class="">84.11%</td><td class="">84.20%</td><td class="">84.86%</td><td class="">91.4%</td></tr><tr><td class="l">Greedy + 5 samples + grounded crops + reasoning</td><td class="">83.98%</td><td class="">84.01%</td><td class="">84.06%</td><td class="">84.29%</td><td class="">92.8%</td></tr><tr><td class="l">Greedy + 5 samples + corner + grounded crops</td><td class="">83.89%</td><td class="">83.84%</td><td class="">83.97%</td><td class="">84.09%</td><td class="">92.7%</td></tr><tr><td class="l">Greedy + 5 samples + every source</td><td class="">83.84%</td><td class="">83.86%</td><td class="">84.01%</td><td class="">83.98%</td><td class="">94.5%</td></tr></tbody></table></div>
+<p>Ranker v2 with the judge is above ranker v1 on every candidate set, by 0.05 to 0.3 points. Which v2 variant is best depends on the candidates: on sets
+with many crop answers the variants with answer states do best, and on small sets containing a reasoning answer the scalar variant with the judge is clearly
+best (it is the only one that reaches 84.6% with greedy + reasoning).
+Grounded crops are much better candidates than corner crops one by one (next table), but in the pool they mostly propose answers a corner crop or
+sample already proposed, so they add little on top. The oracle with every source is 94.5%: a right answer exists for almost every question, and the
+remaining gap is again the choice.</p>
+<h3>13.4 Each source on its own (test)</h3>
+<div class="tablewrap"><table><thead><tr><th class="l">Source</th><th class="">Questions</th><th class="">Accuracy when used alone</th><th class="">Differs from greedy</th></tr></thead><tbody><tr><td class="l">Contrastive decoding, alpha 0.5</td><td class="">9,517</td><td class="">81.93%</td><td class="">10.0%</td></tr><tr><td class="l">Contrastive decoding, alpha 1.0</td><td class="">9,517</td><td class="">81.75%</td><td class="">12.6%</td></tr><tr><td class="l">Corner crop, top left</td><td class="">9,517</td><td class="">45.00%</td><td class="">57.4%</td></tr><tr><td class="l">Corner crop, top right</td><td class="">9,517</td><td class="">42.86%</td><td class="">59.2%</td></tr><tr><td class="l">Corner crop, bottom left</td><td class="">9,517</td><td class="">37.14%</td><td class="">64.3%</td></tr><tr><td class="l">Corner crop, bottom right</td><td class="">9,517</td><td class="">37.18%</td><td class="">63.7%</td></tr><tr><td class="l">Grounded crop</td><td class="">9,512</td><td class="">68.54%</td><td class="">35.0%</td></tr><tr><td class="l">Grounded crop next to the full image</td><td class="">9,512</td><td class="">78.48%</td><td class="">27.4%</td></tr><tr><td class="l">Step-by-step reasoning</td><td class="">9,237</td><td class="">82.23%</td><td class="">27.0%</td></tr></tbody></table></div>
+<p>A source is useful when it is often right <i>and</i> often different from greedy. Corner crops are rarely right alone (37–45%) but differ from greedy on most
+questions, which is why they help only through a ranker. Grounded crops are far more accurate (68.5%, and 78.5% next to the full image), confirming that the
+box follows the evidence. Reasoning is as accurate as greedy (82.2% against 82.8%) yet differs from it on 27% of questions: it is a second opinion of the same
+quality that makes different mistakes, which is what a ranker can use. Grounding failed to return a box on 5
+of 9,517 test questions; reasoning ended without an answer line on 280.</p>
+<h3>13.5 Training sweep of ranker v2 (validation accuracy, greedy + 5 samples + every source)</h3>
+<div class="tablewrap"><table><thead><tr><th class="">Variant</th><th class="">Learning rate</th><th class="">Validation accuracy</th></tr></thead><tbody><tr><td class="">full</td><td class="">0.0003</td><td class="">82.02%</td></tr><tr><td class="">full</td><td class="">0.001</td><td class="">81.97%</td></tr><tr><td class="">full_judge</td><td class="">0.0003</td><td class="">82.13%</td></tr><tr><td class="">full_judge</td><td class="">0.001</td><td class="">82.09%</td></tr><tr><td class="">scalars_judge</td><td class="">0.0003</td><td class="">81.88%</td></tr><tr><td class="">scalars_judge</td><td class="">0.001</td><td class="">81.95%</td></tr></tbody></table></div>
+<h2 id="meaning">14. What it means</h2>
 <ul>
 <li>Correction works once the choice is made by a model trained for it. The same candidates that gained 0.4 to 0.6 points under the head (and fell below greedy once crop
 answers were added) gain about a point under the ranker. Candidates matter second: crops are the cheapest good source, samples are a close substitute, contrastive decoding helps only on its own.</li>
 <li>Detection still matters, in two places: the head score is one of the ranker's strongest features, and it is the gate that decides which questions to correct.</li>
+<li>The second round shows what the remaining gains look like: a candidate source matched to a dataset's kind of error (reasoning for ChartQA's
+arithmetic, crops for TextVQA's small text) and a judge feature from the model itself. Combining them per question, reasoning and crops together with a ranker
+that knows which to trust for which question type, is the obvious next configuration.</li>
 <li>The remaining headroom is large (91.99% oracle against 83.85%). The most direct ways to use it are a stronger judge (the model
 itself asked to compare candidates against the image, or a ranker trained with more correction candidates) and more evidence-changing candidates, not more samples.</li>
 </ul>
-<h2 id="limits">14. Limits</h2>
+<h2 id="limits">15. Limits</h2>
 <ul>
 <li>One model size (2B). The crop grid is fixed (four corners); a question whose evidence sits in the centre is helped only by the overlap.</li>
 <li>The ranker trains on correction candidates for only 3,200 of 50,517 training questions, so it saw far fewer zoom and contrastive candidates than samples.</li>
@@ -249,15 +309,19 @@ itself asked to compare candidates against the image, or a ranker trained with m
 <li>Correctness uses the thresholds of the earlier reports (VQA score ≥ 0.5, ANLS ≥ 0.9, option letter), which can count near-misses as wrong both ways.</li>
 <li>Contrastive decoding uses one noise strength and one plausibility cutoff; neither was tuned.</li>
 </ul>
-<h2 id="next">15. Next</h2>
+<h2 id="next">16. Next</h2>
 <ol>
-<li>Train the ranker with correction candidates on all training questions (now 3,200), the cheapest likely gain.</li>
-<li>A finer or adaptive crop grid (3 × 3, or crops around the regions the model attends to), since zoom is the source that works.</li>
-<li>The model as its own judge: ask it whether each candidate is supported by the image and use that probability as a ranker feature.</li>
-<li>Repeat on Qwen3-VL-4B to see whether the gain holds with a stronger base model.</li>
+<li>Combine the best sources of both rounds per question (reasoning for chart and science questions, crops for text questions) and train the ranker on all
+50,517 training questions with every source; the 12,000-question training set of ranker v2 is still a quarter of the data.</li>
+<li>Gate the second-round step like the first (Section 11): reasoning costs one long generation, and most questions keep the greedy answer.</li>
+<li>Improve the judge: it says Yes to most fluent answers; asking it to compare two candidates, or calibrating it per dataset, should make it a stronger feature.</li>
+<li>Repeat on Qwen3-VL-4B to see whether the gains hold with a stronger base model.</li>
 </ol>
 <h2 id="appendix">Appendix A. Files and jobs</h2>
 <ul>
+<li>Second round: <code>correction_v2.py</code> (grounded crops, reasoning, judge), <code>train_ranker_v2.py</code>, <code>repair_v2_shards.py</code> (re-encodes the
+18 test questions of a shard the scheduler killed), jobs <code>run_correction_v2_pipeline.sh</code>, <code>run_correction_v2.sbatch</code>,
+<code>train_ranker_v2.sbatch</code>, tests <code>tests/test_correction_v2.py</code>; data <code>04_sweep_data/candidate_ranker_v2.json</code>.</li>
 <li>Code: <code>correction_candidates.py</code> (contrastive decoding, crops, candidate encoding), <code>train_candidate_ranker.py</code> (ranker, loss, sweep),
 <code>extend_pools.py</code> (samples 11 to 16), <code>analyze_ranker.py</code> (this report's analyses), <code>build_ranker_report.py</code>. Jobs:
 <code>slurm/run_correction_learning_pipeline.sh</code>, <code>run_correction_candidates.sbatch</code>, <code>train_candidate_ranker.sbatch</code>,
