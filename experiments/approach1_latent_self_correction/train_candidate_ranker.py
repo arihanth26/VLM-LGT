@@ -52,7 +52,7 @@ def read_jsonl(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
-def load_questions(split: str) -> list[dict]:
+def load_questions(split: str, include_extra: bool = False) -> list[dict]:
     """Every question of a split with its distinct candidates, their states and features, and its pools."""
     pools = {}
     temperatures = ("1",) if split == "train" else ("1", "1.3")
@@ -89,8 +89,29 @@ def load_questions(split: str) -> list[dict]:
                 "samples": {t: [c["answer"] for c in pools[key][t]["samples"]] for t in pools[key]},
                 "corrections": {c["source"]: c["answer"] for c in record.get("corrections", [])},
             }
+    if include_extra:
+        add_extra_samples(questions, split)
     order = {name: i for i, name in enumerate(DATASET_NAMES)}
     return sorted(questions.values(), key=lambda q: (order[q["key"][0]], q["key"][1]))
+
+
+def add_extra_samples(questions: dict, split: str) -> None:
+    """Append the samples of extend_pools.py (pools past ten) and the states of their new answers."""
+    for path in sorted((HERE / "results" / "correction_extra" / split).glob("*.jsonl")):
+        saved = torch.load(path.with_suffix(".pt"), weights_only=False)["questions"]
+        for record in read_jsonl(path):
+            key = (record["dataset"], record["index"])
+            if "samples" not in record or key not in questions:
+                continue
+            question = questions[key]
+            new = saved.get(record["index"])
+            if new is not None:
+                missing = [i for i, answer in enumerate(new["answers"]) if answer not in question["encoded"]]
+                question["answers"] = question["answers"] + [new["answers"][i] for i in missing]
+                question["states"] = torch.cat([question["states"], new["states"][missing]]) if missing else question["states"]
+                question["encoded"] = {**record["encoded"], **question["encoded"]}
+            if all(c["answer"] in question["encoded"] for c in record["samples"]):
+                question["samples"][record["temperature"]] = question["samples"][record["temperature"]][:10] + [c["answer"] for c in record["samples"]]
 
 
 def candidate_set(question: dict, temperature: str, k: int, sources: tuple[str, ...]) -> tuple[list[int], np.ndarray, np.ndarray]:
