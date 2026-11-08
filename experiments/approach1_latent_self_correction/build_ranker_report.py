@@ -126,6 +126,101 @@ def case_html(case: dict) -> str:
             f'<tbody>{rows}</tbody></table></div></div>')
 
 
+V2_SOURCE_LABEL = {"vcd_0.5": "Contrastive decoding, alpha 0.5", "vcd_1": "Contrastive decoding, alpha 1.0", "zoom_0": "Corner crop, top left",
+                   "zoom_1": "Corner crop, top right", "zoom_2": "Corner crop, bottom left", "zoom_3": "Corner crop, bottom right",
+                   "ground": "Grounded crop", "ground_ctx": "Grounded crop next to the full image", "cot": "Step-by-step reasoning"}
+V2_SET_LABEL = {"zoom": "corner crops", "vcd": "contrastive decoding", "first_round": "corner crops + contrastive decoding",
+                "ground": "grounded crops", "cot": "step-by-step reasoning", "ground_cot": "grounded crops + reasoning",
+                "zoom_ground": "corner + grounded crops", "everything": "every source", "none": "nothing else"}
+V2_SELECTORS = (("head_best", "Head picks"), ("judge_best", "Judge picks"), ("ranker_v1", "Ranker v1 (report 11)"),
+                ("ranker_v2_full", "Ranker v2, no judge"), ("ranker_v2_full_judge", "Ranker v2 + judge"),
+                ("ranker_v2_scalars_judge", "Ranker v2, scalars + judge"))
+
+
+def v2_section(v2: dict) -> str:
+    """Section 13: grounded crops, step-by-step reasoning, the self-judge feature, and the second ranker."""
+    choice = v2["choice"]
+    test = choice["test"]
+    selector = choice["selector"]
+    rows = []
+    for name in ("pooled", *DATASETS):
+        r = test[selector][name]
+        rows.append([DATASETS.get(name, "<b>All four</b>"), pct(r["greedy"]), pct(r["accuracy"]), ci(r), f"+{r['fixed']} / −{r['broken']}", pval(r["p_value"]),
+                     errors_removed(r), pct(test["ranker_v1"][name]["accuracy"]), pct(test["oracle"][name]["accuracy"], 1)])
+    selector_rows = [[label] + [pts(test[key][d]["difference"]) for d in ("pooled", *DATASETS)] for key, label in V2_SELECTORS]
+    config_rows = []
+    for key, entry in v2["test"].items():
+        k = key.split("_k")[1].split("_")[0]
+        name = key.split(f"_k{k}_")[1]
+        label = ("Greedy" if k == "0" else "Greedy + 5 samples") + f" + {V2_SET_LABEL[name]}"
+        best = max((sel for sel, _ in V2_SELECTORS if sel.startswith("ranker")), key=lambda sel: v2["val"][key][sel]["pooled"]["accuracy"])
+        config_rows.append([label, pct(entry["ranker_v1"]["pooled"]["accuracy"])] +
+                           [pct(entry[f"ranker_v2_{v}"]["pooled"]["accuracy"]) for v in ("full", "full_judge", "scalars_judge")] +
+                           [pct(entry["oracle"]["pooled"]["accuracy"], 1)])
+    source_rows = [[V2_SOURCE_LABEL[sname], f"{r['questions']:,}", pct(r["accuracy"]), pct(r["differs_from_greedy"], 1)]
+                   for sname, r in v2["source_accuracy"]["test"].items()]
+    sweep_rows = [[e["variant"], f"{e['learning_rate']:g}", pct(e["val_accuracy"])] for e in v2["sweep"]]
+    val = choice["val"]
+    k5 = v2["test"]["T1_k5_cot"][selector]["pooled"]
+    return f"""<h2 id="round2">13. Second round: grounded crops, step-by-step reasoning, and the model as its own judge</h2>
+<p>Sections 6 to 12 left three gaps: candidates came from fixed corner crops that often miss the evidence, nothing fixed ChartQA, where errors are arithmetic
+over values the model reads correctly, and the ranker's strongest within-question signal was still the head. The second round adds one answer to each gap
+and a bigger training set, all evaluated like the first round: chosen on validation, test read once.</p>
+<div class="card"><ul>
+<li><b>Grounded crop.</b> The model is asked for the bounding box of the region that answers the question (Qwen3-VL returns boxes on a 0–1000 grid). That
+region, widened by 15% on each side and at least 20% of the image, is cropped and upscaled 2×, and the question is asked on it alone
+(<i>grounded crop</i>) and as a second image next to the full image (<i>grounded crop next to the full image</i>). Unlike the corner crops, the crop follows
+the evidence.</li>
+<li><b>Step-by-step reasoning.</b> The model is asked to think in at most three short steps and end with "Answer: …" (256-token limit); the text after the last
+"Answer:" is the candidate. Replies that never reach an answer line are dropped (3% of test questions) rather than turned into a fragment. Report 08's
+"deeper pass" failed mostly on format; this version extracts the answer and keeps the original answer as the default unless the ranker prefers the new one.</li>
+<li><b>The model as its own judge.</b> For every distinct candidate, the model sees the image, the question and the candidate and is asked whether the
+candidate is correct; the feature is P(Yes) / (P(Yes) + P(No)) of its next token, one forward pass per candidate. It is added to the ranker's features as the
+probability and its logit.</li>
+<li><b>More training.</b> 12,000 training questions (3,000 per dataset, spread over each split) get every source, first-round and second-round, against 3,200
+with first-round corrections before. Ranker v2 is trained on these only, so every training set can contain every source, in three variants: answer states
+and the first ranker's scalars (<i>no judge</i>), plus the judge (<i>+ judge</i>), and scalars with the judge but no states (<i>scalars + judge</i>).</li>
+</ul></div>
+<h3>13.1 Main result of the second round</h3>
+<p>Chosen on validation: <b>greedy + one step-by-step reasoning answer, no samples</b>, ranked by <b>ranker v2 (scalars + judge)</b>, validation gain
+{pts(val['difference'])} points. Test, read once:</p>
+{table(["Dataset", "Greedy", "Corrected", "Difference, points (95% interval)", "Fixed / broken", "McNemar p", "Errors removed", "Ranker v1 on the same candidates", "Oracle"], rows, best_rows=(0,))}
+<p><b>The second round nearly doubles the first-round gain.</b> {pts(test[selector]['pooled']['difference'])} points against {pts(curve_gain_v1)} for the first-round
+step, with two candidates per question (the greedy answer and one reasoning answer) instead of up to twelve. The reasoning answer is one long generation
+(up to 256 tokens), so the cost is about that of four or five short generations plus two judge and two encoding passes, roughly a third of the
+first-round step. <b>ChartQA, which nothing in the first round moved,
+gains {pts(test[selector]['chartqa_full']['difference'])} points ({errors_removed(test[selector]['chartqa_full'])} of its errors).</b> Its errors are arithmetic and
+comparisons over values the model reads correctly, which no crop or sample changes and step-by-step reasoning does. ScienceQA gains
+{pts(test[selector]['scienceqa_img']['difference'])}, TextVQA {pts(test[selector]['textvqa']['difference'])}. DocVQA ({pts(test[selector]['docvqa']['difference'])}, not
+significant) is better served by the first-round crops, where its errors are reading errors. With five samples added to the same two candidates the test
+accuracy is {pct(k5['accuracy'])} ({pts(k5['difference'])}); that configuration came second on validation, so the chosen one is reported.</p>
+<h3>13.2 Who chooses matters again</h3>
+<p>Gain over greedy (points, test) on the chosen candidates, greedy + reasoning, by selector:</p>
+{table(["Selector", "All four"] + list(DATASETS.values()), selector_rows, best_rows=(5,), left_cols=(0,))}
+<p>The reasoning answer is the main ingredient: even the head alone gains {pts(test['head_best']['pooled']['difference'])} with it. The judge on its own is a poor
+selector ({pts(test['judge_best']['pooled']['difference'])}; it says Yes to most fluent answers and hurts TextVQA), but as one feature among the vote, the head score
+and the answer probability it adds the rest. On these two-candidate sets the scalar ranker with the judge beats the variants with hidden states, which fit
+the many-candidate sets of training better than this small one.</p>
+<h3>13.3 Every second-round configuration (test accuracy, pooled)</h3>
+{table(["Candidates", "Ranker v1", "v2, no judge", "v2 + judge", "v2, scalars + judge", "Oracle"], config_rows, left_cols=(0,))}
+<p>Ranker v2 with the judge is above ranker v1 on every candidate set, by 0.05 to 0.3 points. Which v2 variant is best depends on the candidates: on sets
+with many crop answers the variants with answer states do best, and on small sets containing a reasoning answer the scalar variant with the judge is clearly
+best (it is the only one that reaches 84.6% with greedy + reasoning).
+Grounded crops are much better candidates than corner crops one by one (next table), but in the pool they mostly propose answers a corner crop or
+sample already proposed, so they add little on top. The oracle with every source is 94.5%: a right answer exists for almost every question, and the
+remaining gap is again the choice.</p>
+<h3>13.4 Each source on its own (test)</h3>
+{table(["Source", "Questions", "Accuracy when used alone", "Differs from greedy"], source_rows, left_cols=(0,))}
+<p>A source is useful when it is often right <i>and</i> often different from greedy. Corner crops are rarely right alone (37–45%) but differ from greedy on most
+questions, which is why they help only through a ranker. Grounded crops are far more accurate (68.5%, and 78.5% next to the full image), confirming that the
+box follows the evidence. Reasoning is as accurate as greedy (82.2% against 82.8%) yet differs from it on 27% of questions: it is a second opinion of the same
+quality that makes different mistakes, which is what a ranker can use. Grounding failed to return a box on {9517 - v2['source_accuracy']['test']['ground']['questions']}
+of 9,517 test questions; reasoning ended without an answer line on {9517 - v2['source_accuracy']['test']['cot']['questions']}.</p>
+<h3>13.5 Training sweep of ranker v2 (validation accuracy, greedy + 5 samples + every source)</h3>
+{table(["Variant", "Learning rate", "Validation accuracy"], sweep_rows)}
+"""
+
+
 def jobs_table(path: Path) -> tuple[str, dict]:
     """Scheduler record as a table with totals."""
     if not path.exists():
@@ -167,6 +262,17 @@ def build(analysis_path: Path) -> str:
     for name in DATASETS:
         main[name]["greedy"] = ranker["choice"]["test"]["greedy"][name]["accuracy"]
 
+    v2_file = RESULTS / "candidate_ranker_v2.json"
+    v2_summary = ""
+    if v2_file.exists():
+        v2c = json.loads(v2_file.read_text())["choice"]
+        r2 = v2c["test"][v2c["selector"]]
+        v2_summary = (f"<li><b>Best result (second round, Section 13): {pct(r2['pooled']['greedy'])} → {pct(r2['pooled']['accuracy'])}, "
+                      f"{pts(r2['pooled']['difference'])} points (95% interval {pts(r2['pooled']['ci_low'])} to {pts(r2['pooled']['ci_high'])}, p {pval(r2['pooled']['p_value'])}), "
+                      f"{errors_removed(r2['pooled'])} of greedy errors removed,</b> from the greedy answer plus one step-by-step reasoning answer, chosen by a ranker that also "
+                      f"uses the model's own yes/no judgement of each candidate. ChartQA, untouched by the first round, gains {pts(r2['chartqa_full']['difference'])} points; "
+                      f"ScienceQA {pts(r2['scienceqa_img']['difference'])}, TextVQA {pts(r2['textvqa']['difference'])}, DocVQA {pts(r2['docvqa']['difference'])} (not significant). "
+                      f"Sections 6–12 describe the first round, Section 13 the second.</li>")
     parts = [f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Learned Correction Report</title><style>{CSS}</style></head><body><main>
 <h1>Approach 1, report 11: the learned correction step</h1>
@@ -178,7 +284,7 @@ choice made on validation (6,420 questions) and test read once.</p>
 within-question measurements).</p>
 <div class="toc"><a href="#summary">Summary</a><a href="#story">Where this fits</a><a href="#idea">The idea</a><a href="#sources">Candidate sources</a>
 <a href="#ranker">The ranker</a><a href="#result">Main result</a><a href="#k">Best-of-5, 7, 9, 11+</a><a href="#contrib">What each source adds</a>
-<a href="#why">Why it works</a><a href="#ablation">Ablations</a><a href="#compute">Compute</a><a href="#cases">Cases</a><a href="#meaning">What it means</a>
+<a href="#why">Why it works</a><a href="#ablation">Ablations</a><a href="#compute">Compute</a><a href="#cases">Cases</a><a href="#round2">Second round</a><a href="#meaning">What it means</a>
 <a href="#limits">Limits</a><a href="#next">Next</a><a href="#appendix">Appendix</a></div>
 
 <h2 id="summary">1. Summary</h2>
@@ -189,6 +295,7 @@ within-question measurements).</p>
 <div class="stat"><b>{errors_removed(main['textvqa'])}</b><span>of TextVQA errors removed ({pts(main['textvqa']['difference'])} pts)</span></div>
 </div>
 <div class="card summary"><ul>
+{v2_summary}
 <li><b>This is the first correction step in Approach 1 that clearly improves accuracy.</b> On the full test split it moves accuracy from
 {pct(main['pooled']['greedy'])} to {pct(main['pooled']['accuracy'])}, {pts(main['pooled']['difference'])} points (95% interval {pts(main['pooled']['ci_low'])} to
 {pts(main['pooled']['ci_high'])}, McNemar p {pval(main['pooled']['p_value'])}): it fixes {main['pooled']['fixed']} wrong greedy answers and breaks {main['pooled']['broken']} right ones.
@@ -443,21 +550,30 @@ good signal of where alternative answers exist. With crops only and the same gat
 {gating_zoom['token']['0.3']['passes_per_question']:.1f} passes per question, about three times the cost of greedy decoding for almost the whole gain. That makes the step usable
 as an adaptive-compute layer: a cheap score decides where to spend, the correction step spends it.</p>""")
 
+    v2_path = RESULTS / "candidate_ranker_v2.json"
+    v2 = json.loads(v2_path.read_text()) if v2_path.exists() else None
     cases = analysis.get("cases", [])
     parts.append(f"""<h2 id="cases">12. Case studies</h2>
 <p>Two fixes and one break per dataset from the test split, chosen as the first in index order, not curated. Each lists every candidate with the sources that
 proposed it, whether it is right, the ranker score, the head score and the share of samples agreeing.</p>
 {''.join(case_html(c) for c in cases)}""")
+    if v2 is not None:
+        global curve_gain_v1
+        curve_gain_v1 = main["pooled"]["difference"]
+        parts.append(v2_section(v2))
 
-    parts.append(f"""<h2 id="meaning">13. What it means</h2>
+    parts.append(f"""<h2 id="meaning">14. What it means</h2>
 <ul>
 <li>Correction works once the choice is made by a model trained for it. The same candidates that gained 0.4 to 0.6 points under the head (and fell below greedy once crop
 answers were added) gain about a point under the ranker. Candidates matter second: crops are the cheapest good source, samples are a close substitute, contrastive decoding helps only on its own.</li>
 <li>Detection still matters, in two places: the head score is one of the ranker's strongest features, and it is the gate that decides which questions to correct.</li>
+<li>The second round shows what the remaining gains look like: a candidate source matched to a dataset's kind of error (reasoning for ChartQA's
+arithmetic, crops for TextVQA's small text) and a judge feature from the model itself. Combining them per question, reasoning and crops together with a ranker
+that knows which to trust for which question type, is the obvious next configuration.</li>
 <li>The remaining headroom is large ({pct(oracle_main)} oracle against {pct(main['pooled']['accuracy'])}). The most direct ways to use it are a stronger judge (the model
 itself asked to compare candidates against the image, or a ranker trained with more correction candidates) and more evidence-changing candidates, not more samples.</li>
 </ul>
-<h2 id="limits">14. Limits</h2>
+<h2 id="limits">15. Limits</h2>
 <ul>
 <li>One model size (2B). The crop grid is fixed (four corners); a question whose evidence sits in the centre is helped only by the overlap.</li>
 <li>The ranker trains on correction candidates for only 3,200 of 50,517 training questions, so it saw far fewer zoom and contrastive candidates than samples.</li>
@@ -465,15 +581,19 @@ itself asked to compare candidates against the image, or a ranker trained with m
 <li>Correctness uses the thresholds of the earlier reports (VQA score ≥ 0.5, ANLS ≥ 0.9, option letter), which can count near-misses as wrong both ways.</li>
 <li>Contrastive decoding uses one noise strength and one plausibility cutoff; neither was tuned.</li>
 </ul>
-<h2 id="next">15. Next</h2>
+<h2 id="next">16. Next</h2>
 <ol>
-<li>Train the ranker with correction candidates on all training questions (now 3,200), the cheapest likely gain.</li>
-<li>A finer or adaptive crop grid (3 × 3, or crops around the regions the model attends to), since zoom is the source that works.</li>
-<li>The model as its own judge: ask it whether each candidate is supported by the image and use that probability as a ranker feature.</li>
-<li>Repeat on Qwen3-VL-4B to see whether the gain holds with a stronger base model.</li>
+<li>Combine the best sources of both rounds per question (reasoning for chart and science questions, crops for text questions) and train the ranker on all
+50,517 training questions with every source; the 12,000-question training set of ranker v2 is still a quarter of the data.</li>
+<li>Gate the second-round step like the first (Section 11): reasoning costs one long generation, and most questions keep the greedy answer.</li>
+<li>Improve the judge: it says Yes to most fluent answers; asking it to compare two candidates, or calibrating it per dataset, should make it a stronger feature.</li>
+<li>Repeat on Qwen3-VL-4B to see whether the gains hold with a stronger base model.</li>
 </ol>
 <h2 id="appendix">Appendix A. Files and jobs</h2>
 <ul>
+<li>Second round: <code>correction_v2.py</code> (grounded crops, reasoning, judge), <code>train_ranker_v2.py</code>, <code>repair_v2_shards.py</code> (re-encodes the
+18 test questions of a shard the scheduler killed), jobs <code>run_correction_v2_pipeline.sh</code>, <code>run_correction_v2.sbatch</code>,
+<code>train_ranker_v2.sbatch</code>, tests <code>tests/test_correction_v2.py</code>; data <code>04_sweep_data/candidate_ranker_v2.json</code>.</li>
 <li>Code: <code>correction_candidates.py</code> (contrastive decoding, crops, candidate encoding), <code>train_candidate_ranker.py</code> (ranker, loss, sweep),
 <code>extend_pools.py</code> (samples 11 to 16), <code>analyze_ranker.py</code> (this report's analyses), <code>build_ranker_report.py</code>. Jobs:
 <code>slurm/run_correction_learning_pipeline.sh</code>, <code>run_correction_candidates.sbatch</code>, <code>train_candidate_ranker.sbatch</code>,

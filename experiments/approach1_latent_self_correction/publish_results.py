@@ -96,7 +96,7 @@ def main() -> None:
     publish_correction_data(args.output)
     publish_full_correction_data(args.output)
     for name in ("candidate_search.json", "pre_head_sweep.json", "candidate_search_jobs.txt",
-                 "candidate_ranker.json", "ranker_analysis.json", "correction_jobs.txt"):
+                 "candidate_ranker.json", "ranker_analysis.json", "correction_jobs.txt", "candidate_ranker_v2.json"):
         copy_if_present(HERE / "results" / name, args.output / "04_sweep_data" / name)
 
 
