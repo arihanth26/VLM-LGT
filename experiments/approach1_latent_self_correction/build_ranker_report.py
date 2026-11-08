@@ -196,15 +196,21 @@ Every earlier step was within noise or harmful: prompted retry −2.7 points, be
 <li><b>Significant on three of four datasets:</b> TextVQA {pts(main['textvqa']['difference'])} (p {pval(main['textvqa']['p_value'])}), DocVQA {pts(main['docvqa']['difference'])}
 (p {pval(main['docvqa']['p_value'])}), ScienceQA {pts(main['scienceqa_img']['difference'])} (p {pval(main['scienceqa_img']['p_value'])}); ChartQA {pts(main['chartqa_full']['difference'])}
 (p {pval(main['chartqa_full']['p_value'])}) does not move.</li>
-<li><b>Two changes did it, and how the answer is chosen matters most.</b> A ranker trained to choose among the candidates of one question,
-instead of the correctness head, and new candidates from zoomed crops that let the model read small detail. Zoomed crops plus the greedy answer, with no
-sampling at all, already reach {pct(zoom0['accuracy']) if zoom0 else '–'} ({pts(zoom0['difference']) if zoom0 else '–'} points).</li>
+<li><b>How the answer is chosen matters most.</b> The same five samples gain {pts(curve['T1_k5_none']['head_best']['pooled']['difference'])} points when the head
+picks and {pts(curve['T1_k5_none']['ranker']['pooled']['difference'])} when the ranker picks. Zoomed crops are the cheapest good source of candidates: the
+greedy answer plus four crops, with no sampling at all, reach {pct(zoom0['accuracy']) if zoom0 else '–'} ({pts(zoom0['difference']) if zoom0 else '–'} points),
+as much as five samples and every correction together. Samples and crops overlap, so combining them adds little.</li>
 <li><b>More samples do not help.</b> With the ranker, best-of-5 ({pct(accuracy('T1_k5_all'))}), best-of-7 ({pct(accuracy('T1_k7_all'))}), best-of-9
 ({pct(accuracy('T1_k9_all'))}) and best-of-11 ({pct(accuracy('T1_k11_all'))}) are within a fraction of a point, although the oracle keeps rising. Section 7 answers
 "should we go to 9 or 11" in detail: no, the pool is not the limit, choosing is.</li>
-<li><b>The ranker is a better within-question judge than the head.</b> On the same candidates it ranks a right answer above a wrong one with grouped
-AUROC {within_main['ranker']['grouped_auroc']:.3f} against {within_main['head']['grouped_auroc']:.3f} for the head, and picks a right answer on {pct(within_main['ranker']['mixed_accuracy'], 1)} of
-questions that have both a right and a wrong candidate, against {pct(within_main['head']['mixed_accuracy'], 1)} for the head.</li>
+<li><b>The ranker is a better within-question judge than the head.</b> On the same candidates it picks a right answer on {pct(within_main['ranker']['mixed_accuracy'], 1)} of
+questions that have both a right and a wrong candidate, against {pct(within_main['head']['mixed_accuracy'], 1)} for the head and {pct(within_main['vote']['mixed_accuracy'], 1)} for the
+sample vote (grouped AUROC {within_main['ranker']['grouped_auroc']:.3f} against {within_main['head']['grouped_auroc']:.3f}). Picking by the head alone from these sets falls
+below greedy ({pct(curve['T1_k5_all']['head_best']['pooled']['accuracy'])}), because it rates some wrong crop answers highly.</li>
+<li><b>Most of the gain needs a fraction of the compute.</b> Correcting only the 30% of questions with the lowest answer probability gives
+{pts(analysis['gating_main']['token']['0.3']['difference'])} points at {analysis['gating_main']['token']['0.3']['passes_per_question']:.1f} model passes per question instead of
+{analysis['gating_main']['token']['1.0']['passes_per_question']:.1f}; with crops only, {pts(analysis['gating_zoom_only']['token']['0.3']['difference'])} points at
+{analysis['gating_zoom_only']['token']['0.3']['passes_per_question']:.1f} passes.</li>
 <li><b>There is a lot of headroom left:</b> a right answer is among these candidates for {pct(oracle_main)} of questions, so the ranker uses about
 {100 * main['pooled']['difference'] / (oracle_main - main['pooled']['greedy']):.0f}% of what the pool offers.</li>
 </ul></div>
@@ -318,7 +324,8 @@ reasoning over plotted values that no candidate source changes.</p>""")
                   f"{search['test']['0.7'][str(k)]['pooled']['selectors']['head_best']['p_value']:.3f}",
                   pct(search["test"]["0.7"][str(k)]["pooled"]["pool"]["oracle_accuracy"], 1)] for k in (5, 7, 10)]
     ranker_rows = [r for r in (k_row(f"Best-of-{k}, ranker, samples only, T = 1.0", f"T1_k{k}_none") for k in (5, 7, 9, 10, 11, 13, 15)) if r]
-    corrected_rows = [r for r in (k_row(f"Best-of-{k} + corrections, ranker, T = 1.0", f"T1_k{k}_all") for k in (0, 5, 7, 9, 10, 11, 13, 15)) if r]
+    corrected_rows = [r for r in (k_row("No samples, greedy + corrections, ranker" if k == 0 else f"Best-of-{k} + corrections, ranker, T = 1.0", f"T1_k{k}_all")
+                                  for k in (0, 5, 7, 9, 10, 11, 13, 15)) if r]
     hot_rows = [r for r in (k_row(f"Best-of-{k} + corrections, ranker, T = 1.3", f"T1.3_k{k}_all") for k in (5, 7, 9, 11, 13, 15)) if r]
     if best5:
         head_rows.insert(0, ["Best-of-5, head picks, T = 0.9, no greedy in the pool (report 08)", pct(best5["head_best"]["pooled"]["accuracy"]),
@@ -345,14 +352,16 @@ spent on more evidence-changing candidates (finer crop grids, crops chosen by at
     rows = []
     for name, label in (("vcd", "Contrastive decoding only (2 candidates)"), ("zoom", "Zoomed crops only (4 candidates)"), ("all", "Both (6 candidates)")):
         key = f"T1_k0_{name}"
-        if key in curve:
-            r = curve[key]["ranker"]["pooled"]
-            rows.append([label, pct(r["accuracy"]), ci(r), f"+{r['fixed']} / −{r['broken']}", pval(r["p_value"]), pct(curve[key]["oracle"]["pooled"]["accuracy"], 1)])
+        source = curve.get(key, {}).get("ranker") or ranker["test"].get(key, {}).get("ranker_full")
+        if source is not None:
+            r = source["pooled"]
+            oracle = (curve.get(key) or ranker["test"][key])["oracle"]["pooled"]["accuracy"]
+            rows.append([label, pct(r["accuracy"]), ci(r), f"+{r['fixed']} / −{r['broken']}", pval(r["p_value"]), pct(oracle, 1)])
     for name in ("none", "vcd", "zoom", "all"):
         key = f"T1_k5_{name}"
         if key in curve:
             r = curve[key]["ranker"]["pooled"]
-            rows.append([f"Five samples + {SET_LABEL[name].removeprefix('samples').strip(' +') or 'nothing else'}", pct(r["accuracy"]), ci(r),
+            rows.append(["Five samples only" if name == "none" else f"Five samples + {SET_LABEL[name].removeprefix('samples + ')}", pct(r["accuracy"]), ci(r),
                          f"+{r['fixed']} / −{r['broken']}", pval(r["p_value"]), pct(curve[key]["oracle"]["pooled"]["accuracy"], 1)])
     attribution = analysis.get("attribution_main", {})
     attr_rows = [[esc(" + ".join(SOURCE_LABEL.get(s, s) for s in key.split("+"))), v["changed"], v["fixed"], v["broken"], v["wrong_to_wrong"], v["right_to_right"],
@@ -360,9 +369,12 @@ spent on more evidence-changing candidates (finer crop grids, crops chosen by at
     parts.append(f"""<h2 id="contrib">8. What each candidate source adds</h2>
 <p>All rows use the same trained ranker and the greedy answer; only the extra candidates change.</p>
 {table(["Candidates besides greedy", "Accuracy", "Difference, points (95% interval)", "Fixed / broken", "p", "Oracle"], rows, left_cols=(0,))}
-<p><b>Zoomed crops carry the gain.</b> With no sampling, the four crops and the ranker reach almost the full result, and adding them to five samples is what
-separates the corrected configuration from samples alone. Contrastive decoding on its own changes little: most of the time it reproduces the greedy answer,
-because for a 2B model reading text the language prior is rarely what goes wrong. When it disagrees with greedy, though, it is usually worth looking at.</p>
+<p><b>Zoomed crops are the strongest single source.</b> With no sampling, the four crops and the ranker match five samples plus every correction, at
+fewer passes. Added to five samples they change little, because the two sources often propose the same alternative answers; the attribution table
+shows that answers proposed by both a sample and a crop are the most reliable changes. <b>Contrastive decoding is the weakest source</b>: on its own it gives a small
+but significant gain, and next to crops or samples it adds nothing. It mostly reproduces the greedy answer, and in the full configuration an answer
+proposed only by contrastive decoding is as likely to break as to fix (see below). For a 2B model reading text, the language prior is rarely what goes
+wrong.</p>
 <h3>Where the ranker's changes come from (test, main configuration)</h3>
 <p>Questions where the ranker did not keep the greedy answer, grouped by which sources proposed the answer it chose. A source can share an answer with others.</p>
 {table(["Chosen answer proposed by", "Changed", "Fixed", "Broken", "Wrong to wrong", "Right to right", "Net"], attr_rows, left_cols=(0,))}""")
@@ -379,10 +391,14 @@ because for a 2B model reading text the language prior is rarely what goes wrong
 <em>of the same question</em>) and mixed-pool accuracy (how often the top candidate is right, on questions that have both). Here they compare the ranker with the
 head and with the vote share, on identical candidate sets.</p>
 {table(["Candidate set (test)", "Grouped AUROC, ranker", "Head", "Vote share", "Mixed-pool accuracy: ranker / head / random pick", "Mixed questions"], rows, left_cols=(0,))}
-<p>The ranker is a clearly better within-question judge than the head it builds on, and better than the vote alone. It combines them: it learns, for example,
-that a zoomed-crop answer agreeing with several samples is more reliable than either signal alone, and that a confident answer that no other source proposes
-is suspicious. The head was trained to rank answers across questions, where question difficulty does most of the work, and never had to make this
-comparison.</p>""")
+<p>On every candidate set the ranker is the better within-question judge, in grouped AUROC and, more to the point, in how often its top choice is right
+on mixed questions. It combines signals that are each weaker alone: it learns, for example, that a crop answer agreeing with several samples is more reliable
+than either signal alone, and that a confident answer no other source proposes is suspicious. The head was trained to rank answers across questions, where
+question difficulty does most of the work, and never had to make this comparison.</p>
+<p class="small"><b>Not comparable with report 10.</b> Report 10 measured grouped AUROC on sample pools only (0.65 to 0.70 for the head). The sets here also contain
+crop and contrastive answers, many of them plainly wrong and easy to rank low, which raises every scorer's grouped AUROC. The comparison that matters is
+between scorers on the same sets. A high grouped AUROC also does not guarantee a right top choice: the head ranks most wrong crop answers low, but the few it
+rates highly are enough to pull its top choice below greedy.</p>""")
 
     # Ablations.
     variants = analysis.get("variants", {})
@@ -419,9 +435,13 @@ the rest keep the greedy answer. Passes per question count generations and encod
 {table(["Gate", "Questions corrected", "Accuracy", "Difference, points (95% interval)", "p", "Passes per question"], gating_rows(gating), left_cols=(0,))}
 <h3>The cheapest strong configuration: greedy + four zoomed crops</h3>
 {table(["Gate", "Questions corrected", "Accuracy", "Difference, points (95% interval)", "p", "Passes per question"], gating_rows(gating_zoom), left_cols=(0,))}
-<p>Because the ranker usually keeps the greedy answer when the greedy answer is confident, most of the gain sits in the questions the head already flags. With
-the head as the gate, correcting a minority of questions recovers most of the full gain at a fraction of the passes, which is what makes the step usable as
-an adaptive-compute layer: detection decides where to spend, correction spends it.</p>""")
+<p>The ranker usually keeps a confident greedy answer, so most of the gain sits in a minority of questions. The best gate here is the answer probability of the
+greedy answer, not the head: routing its lowest 30% reaches {pts(gating['token']['0.3']['difference'])} of the full {pts(gating['token']['1.0']['difference'])} points at
+{gating['token']['0.3']['passes_per_question']:.1f} of {gating['token']['1.0']['passes_per_question']:.1f} passes. The head gate needs about half the questions for the same share,
+and the pre-generation score, which sees no answer, is the weakest. This matches report 10: the answer probability is a weak detector across questions but a
+good signal of where alternative answers exist. With crops only and the same gate, 30% of questions give {pts(gating_zoom['token']['0.3']['difference'])} points at
+{gating_zoom['token']['0.3']['passes_per_question']:.1f} passes per question, about three times the cost of greedy decoding for almost the whole gain. That makes the step usable
+as an adaptive-compute layer: a cheap score decides where to spend, the correction step spends it.</p>""")
 
     cases = analysis.get("cases", [])
     parts.append(f"""<h2 id="cases">12. Case studies</h2>
@@ -431,8 +451,8 @@ proposed it, whether it is right, the ranker score, the head score and the share
 
     parts.append(f"""<h2 id="meaning">13. What it means</h2>
 <ul>
-<li>Correction works once the two halves are separated: generate candidates that look at the evidence differently, and choose with a model trained for that choice.
-Neither half alone was enough: the head choosing from samples gained 0.4 points, and the same ranker over samples alone gains less than over samples and crops.</li>
+<li>Correction works once the choice is made by a model trained for it. The same candidates that gained 0.4 to 0.6 points under the head (and fell below greedy once crop
+answers were added) gain about a point under the ranker. Candidates matter second: crops are the cheapest good source, samples are a close substitute, contrastive decoding helps only on its own.</li>
 <li>Detection still matters, in two places: the head score is one of the ranker's strongest features, and it is the gate that decides which questions to correct.</li>
 <li>The remaining headroom is large ({pct(oracle_main)} oracle against {pct(main['pooled']['accuracy'])}). The most direct ways to use it are a stronger judge (the model
 itself asked to compare candidates against the image, or a ranker trained with more correction candidates) and more evidence-changing candidates, not more samples.</li>
