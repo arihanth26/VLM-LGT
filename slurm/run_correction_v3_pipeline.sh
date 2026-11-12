@@ -20,5 +20,5 @@ for DATASET in chartqa_full textvqa docvqa scienceqa_img; do
     echo "$DATASET: submitted"
 done
 DEPS=$(IFS=:; echo "${JOBS[*]}")
-RANKER=$("${SUBMIT[@]}" --dependency=afterok:"$DEPS" --export=ALL,RANKER_ARGS="--with-cot-samples" slurm/train_ranker_v3.sbatch)
+RANKER=$("${SUBMIT[@]}" --dependency=afterok:"$DEPS" --export=ALL,RANKER_ARGS="--with-cot-samples --variants full_ds scalars_ds full_nods scalars_nods" slurm/train_ranker_v3.sbatch)
 echo "${#JOBS[@]} reasoning jobs; ranker v3 with samples: $RANKER"

@@ -43,7 +43,7 @@ def test_v3_ranker_shapes():
     q = _question()
     s = candidate_set(q, "1", 2, SETS["zoom_ground_cot"])
     batch = batch_tensors([q], [s], "cpu")
-    for variant in ("full_ds", "scalars_ds"):
+    for variant in ("full_ds", "scalars_ds", "full_nods", "scalars_nods"):
         assert RankerV3(variant, 16)(batch["question"], batch["answer"], batch["scalars"]).shape == (1, len(s[0]))
 
 
@@ -80,6 +80,31 @@ def test_merge_cot_samples_adds_sources_states_and_judge(tmp_path=None):
     from_cot = features[:, len(SCALARS_V2) + list(GROUPS).index("cot")]
     by_answer = {q["answers"][r]: i for i, r in enumerate(rows)}
     assert abs(from_cot[by_answer["cow"]] - 2 / 3) < 1e-6 and abs(from_cot[by_answer["owl"]] - 1 / 3) < 1e-6
+
+
+def test_nods_ignores_the_dataset_input():
+    q = _question()
+    rows, features, labels = candidate_set(q, "1", 0, SETS["zoom_cot"])
+    batch = batch_tensors([q], [(rows, features, labels)], "cpu")
+    other = batch["scalars"].clone()
+    other[..., -len(DATASET_NAMES):] = torch.roll(other[..., -len(DATASET_NAMES):], 1, dims=-1)
+    torch.manual_seed(0)
+    model = RankerV3("scalars_nods", 16).eval()
+    assert torch.equal(model(batch["question"], batch["answer"], batch["scalars"]), model(batch["question"], batch["answer"], other))
+    with_ds = RankerV3("scalars_ds", 16).eval()
+    assert not torch.equal(with_ds(batch["question"], batch["answer"], batch["scalars"]), with_ds(batch["question"], batch["answer"], other))
+
+
+def test_generation_calls_and_cost_curve():
+    from experiments.approach1_latent_self_correction.train_ranker_v3 import cost_curve, generation_calls
+    assert generation_calls(0, ()) == 1 and generation_calls(0, ("cot",)) == 2
+    assert generation_calls(0, ("ground", "ground_ctx")) == 4 and generation_calls(5, SETS["zoom_cot"]) == 11
+    row = lambda a: {"pooled": {"accuracy": a, "difference": a - 0.8, "ci_low": 0, "ci_high": 0}}
+    result = {"val": {"cheap": {"greedy": row(0.80), "r": row(0.82)}, "dear": {"greedy": row(0.80), "r": row(0.85)}},
+              "test": {"cheap": {"greedy": row(0.80), "r": row(0.81)}, "dear": {"greedy": row(0.80), "r": row(0.86)}}}
+    curve = cost_curve(result, {"cheap": {"calls": 2, "candidates": 2.0}, "dear": {"calls": 9, "candidates": 5.0}})
+    assert [(c["budget"], c["configuration"]) for c in curve] == [(2, "cheap"), (9, "dear")]
+    assert abs(curve[1]["test_accuracy"] - 0.86) < 1e-9
 
 
 def _run_all() -> None:
