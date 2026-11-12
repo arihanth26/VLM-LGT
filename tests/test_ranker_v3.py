@@ -56,6 +56,32 @@ def test_router_picks_per_dataset_on_validation():
     assert routed["test"] == [True, False, True, False]
 
 
+def test_merge_cot_samples_adds_sources_states_and_judge(tmp_path=None):
+    import json, tempfile
+    from pathlib import Path
+    from experiments.approach1_latent_self_correction import train_ranker_v3 as v3
+    root = Path(tmp_path or tempfile.mkdtemp())
+    (root / "val").mkdir(parents=True)
+    record = {"dataset": "docvqa", "index": 0, "encoded": {"owl": {"tf_confidence": 0.4, "tokens": 1, "correct": False,
+              "head_confidence": 0.3, "probe_confidence": 0.3}}, "judge": {"owl": 0.1},
+              "corrections": [{"source": "cot_s0", "answer": "owl"}, {"source": "cot_s1", "answer": "cow"},
+                              {"source": "cot_s2", "answer": "never_encoded"}]}
+    (root / "val" / "docvqa_shard0of1.jsonl").write_text(json.dumps(record) + "\n")
+    torch.save({"questions": {0: {"answers": ["owl"], "states": torch.zeros(1, 2048).half()}}}, root / "val" / "docvqa_shard0of1.pt")
+    old, v3.V3_DIR = v3.V3_DIR, root
+    try:
+        q = _question()
+        assert v3.merge_cot_samples([q], "val") == 1
+    finally:
+        v3.V3_DIR = old
+    assert q["answers"][-1] == "owl" and q["states"].shape[0] == 4 and q["judge"]["owl"] == 0.1
+    assert q["corrections"]["cot_s0"] == "owl" and q["corrections"]["cot_s1"] == "cow" and "cot_s2" not in q["corrections"]
+    rows, features, labels = candidate_set(q, "1", 0, v3.MULTI_SETS["cot_multi"])
+    from_cot = features[:, len(SCALARS_V2) + list(GROUPS).index("cot")]
+    by_answer = {q["answers"][r]: i for i, r in enumerate(rows)}
+    assert abs(from_cot[by_answer["cow"]] - 2 / 3) < 1e-6 and abs(from_cot[by_answer["owl"]] - 1 / 3) < 1e-6
+
+
 def _run_all() -> None:
     tests = [obj for name, obj in globals().items() if name.startswith("test_") and callable(obj)]
     for test in tests:

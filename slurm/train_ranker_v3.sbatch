@@ -11,7 +11,8 @@
 
 # GPU job: trains the third candidate ranker (reasoning + crops in one ranker, source and dataset
 # features, per-dataset router) and compares it with v1 and v2 on the same candidate sets.
-# Writes results/candidate_ranker_v3.json and .md. Usage: sbatch slurm/train_ranker_v3.sbatch
+# Writes results/candidate_ranker_v3.json and .md (with RANKER_ARGS="--with-cot-samples": candidate_ranker_v3_multi.*).
+# Usage: sbatch slurm/train_ranker_v3.sbatch
 
 set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"
@@ -19,4 +20,4 @@ cd "$SLURM_SUBMIT_DIR"
 module load anaconda3
 PYTHON_BIN="$SLURM_SUBMIT_DIR/.venv/bin/python"
 [[ -x "$PYTHON_BIN" ]] || { echo "Run: sbatch slurm/setup_environment.sbatch"; exit 2; }
-srun "$PYTHON_BIN" -m experiments.approach1_latent_self_correction.train_ranker_v3
+srun "$PYTHON_BIN" -m experiments.approach1_latent_self_correction.train_ranker_v3 ${RANKER_ARGS:-}
