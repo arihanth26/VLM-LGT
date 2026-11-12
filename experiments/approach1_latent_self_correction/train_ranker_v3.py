@@ -66,6 +66,7 @@ MULTI_SETS = {
 }
 V3_DIR = RESULTS / "correction_v3"
 SCALARS_V3 = SCALARS_V2 + tuple(f"from_{g}" for g in GROUPS) + tuple(f"dataset_{d}" for d in DATASET_NAMES)
+ALL_VARIANTS = ("full_ds", "scalars_ds", "full_nods", "scalars_nods")  # *_nods: no dataset one-hot (ablation)
 VARIANTS = ("full_ds", "scalars_ds")
 SELECT = ("1", 0, SETS["zoom_cot"])
 
@@ -113,19 +114,25 @@ def candidate_set(q: dict, temperature: str, k: int, sources: tuple) -> tuple[li
 
 
 class RankerV3(nn.Module):
-    """The v2 network with the source and dataset features; scalars_ds drops the hidden states."""
+    """The v2 network with the source and dataset features.
+
+    full_* reads the hidden states, scalars_* does not; *_ds sees the dataset one-hot, *_nods does not
+    (the dataset columns are last in the scalar block and are dropped).
+    """
 
     def __init__(self, variant: str, hidden: int, state_size: int = 2048):
         super().__init__()
+        assert variant in ALL_VARIANTS, variant
         self.variant = variant
-        self.use_states = variant == "full_ds"
+        self.use_states = variant.startswith("full")
+        self.scalars = len(SCALARS_V3) - (0 if variant.endswith("_ds") else len(DATASET_NAMES))
         self.question_norm, self.answer_norm = nn.LayerNorm(state_size), nn.LayerNorm(state_size)
-        inputs = (2 * state_size if self.use_states else 0) + len(SCALARS_V3)
+        inputs = (2 * state_size if self.use_states else 0) + self.scalars
         self.network = nn.Sequential(nn.Linear(inputs, hidden), nn.GELU(), nn.Dropout(0.2), nn.Linear(hidden, 1))
 
     def forward(self, question, answer, scalars):
         parts = [self.question_norm(question.float()), self.answer_norm(answer.float())] if self.use_states else []
-        parts.append(scalars)
+        parts.append(scalars[..., : self.scalars])
         return self.network(torch.cat(parts, dim=-1)).squeeze(-1)
 
 
@@ -196,6 +203,33 @@ def train(variant: str, rate: float, seed: int, train_q: list[dict], val_q: list
     return model, best
 
 
+def generation_calls(k: int, sources: tuple) -> int:
+    """Model generate calls per question for a configuration: greedy, k samples, and the correction sources.
+
+    The grounded crops share one box call; each sampled reasoning answer counts as one call. Scoring
+    passes (encoding and judging each distinct candidate, one forward each without generation) are
+    reported separately as the mean candidate count.
+    """
+    calls = 1 + k + sum(1 for s in sources if s not in ("ground", "ground_ctx"))
+    grounded = sum(1 for s in sources if s in ("ground", "ground_ctx"))
+    return calls + (grounded + 1 if grounded else 0)
+
+
+def cost_curve(result: dict, costs: dict[str, dict]) -> list[dict]:
+    """For each budget of generate calls, the (configuration, selector) best on validation within it, read on test."""
+    curve = []
+    for budget in sorted({c["calls"] for c in costs.values()}):
+        allowed = [(key, sel) for key in result["val"] if costs[key]["calls"] <= budget
+                   for sel in result["val"][key] if sel != "oracle"]
+        key, sel = max(allowed, key=lambda c: (result["val"][c[0]][c[1]]["pooled"]["accuracy"], c[1] == "greedy"))
+        test = result["test"][key][sel]["pooled"]
+        curve.append({"budget": budget, "configuration": key, "selector": sel, "calls": costs[key]["calls"],
+                      "candidates": costs[key]["candidates"], "val_accuracy": result["val"][key][sel]["pooled"]["accuracy"],
+                      "test_accuracy": test["accuracy"], "test_difference": test["difference"],
+                      "ci_low": test["ci_low"], "ci_high": test["ci_high"]})
+    return curve
+
+
 def v2_rankers(device) -> dict[str, list[RankerV2]]:
     """The saved v2 rankers (three seeds per variant), or none if the file is missing."""
     path = RESULTS / "candidate_ranker_v2_models.pt"
@@ -237,15 +271,20 @@ def router(questions: dict[str, list[dict]], outcomes: dict[str, dict[tuple, lis
 
 def main() -> None:
     """Train the v3 variants, score v1/v2/v3 and the router on every configuration, choose on validation."""
+    global VARIANTS
     parser = argparse.ArgumentParser(description="Train the third candidate ranker (reasoning + crops, source and dataset features).")
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--rates", type=float, nargs="+", default=[3e-4, 1e-3])
     parser.add_argument("--with-cot-samples", action="store_true",
                         help="Merge results/correction_v3 (sampled reasoning answers) and add the *_multi candidate sets.")
+    parser.add_argument("--variants", nargs="+", default=list(VARIANTS), choices=ALL_VARIANTS,
+                        help="Ranker variants to train; *_nods drops the dataset input (ablation).")
+    parser.add_argument("--tag", default="", help="Suffix for the output files, e.g. _ablation.")
     parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
-    suffix = "_multi" if args.with_cot_samples else ""
+    VARIANTS = tuple(args.variants)
+    suffix = ("_multi" if args.with_cot_samples else "") + args.tag
     args.output = args.output or RESULTS / f"candidate_ranker_v3{suffix}.json"
     if args.with_cot_samples:
         SETS.update(MULTI_SETS)
@@ -271,6 +310,9 @@ def main() -> None:
     result = {"questions": {s: len(q) for s, q in data.items()}, "sweep": sweep, "winners": winners,
               "source_accuracy": {s: source_accuracy(data[s]) for s in ("val", "test")}, "val": {}, "test": {}, **result_extra}
     configs = [("1", k, name) for k in (0, 5) for name in SETS if not (k == 0 and name == "none")]
+    costs = {f"T{t}_k{k}_{name}": {"calls": generation_calls(k, SETS[name]),
+                                    "candidates": float(np.mean([len(candidate_set(q, t, k, SETS[name])[0]) for q in data["val"]]))}
+             for t, k, name in configs}
     per_question = {"val": {}, "test": {}}
     for split in ("val", "test"):
         for temperature, k, name in configs:
@@ -292,6 +334,9 @@ def main() -> None:
     greedy = {s: per_question[s][("T1_k0_cot", "greedy")] for s in ("val", "test")}
     result["router"] = {"choices": choices,
                         **{s: rows_for(data[s], {"greedy": greedy[s], "router": routed[s]})["router"] for s in ("val", "test")}}
+
+    result["costs"] = costs
+    result["cost_curve"] = cost_curve(result, costs)
 
     candidates = [(key, sel) for key in result["val"] for sel in result["val"][key] if sel.startswith("ranker")]
     best_key, best_sel = max(candidates, key=lambda c: result["val"][c[0]][c[1]]["pooled"]["accuracy"])
@@ -326,6 +371,15 @@ def markdown(result: dict, v2_variants: list[str]) -> str:
                          f"{100 * r['difference']:+.2f} ({100 * r['ci_low']:+.2f} to {100 * r['ci_high']:+.2f}) |")
     r = router_test["pooled"]
     lines.append(f"| pooled | | | | {100 * r['difference']:+.2f} ({100 * r['ci_low']:+.2f} to {100 * r['ci_high']:+.2f}), accuracy {100 * r['accuracy']:.2f}% |")
+    lines += ["", "## Accuracy against cost (each row chosen on validation within the budget, read on test)", "",
+              "Cost is model generate calls per question (greedy, samples, correction sources; the grounded crops share one box call). "
+              "Candidates is the mean number of distinct candidates, each needing one encoding pass and one judge pass (no generation).", "",
+              "| Budget (calls) | Configuration | Selector | Calls | Candidates | Val accuracy | Test accuracy | Test difference (95% interval) |",
+              "|---:|---|---|---:|---:|---:|---:|---|"]
+    for row in result["cost_curve"]:
+        lines.append(f"| {row['budget']} | `{row['configuration']}` | `{row['selector']}` | {row['calls']} | {row['candidates']:.2f} | "
+                     f"{100 * row['val_accuracy']:.2f}% | {100 * row['test_accuracy']:.2f}% | "
+                     f"{100 * row['test_difference']:+.2f} ({100 * row['ci_low']:+.2f} to {100 * row['ci_high']:+.2f}) |")
     names = (["greedy", "head_best", "judge_best", "ranker_v1"] + [f"ranker_v2_{v}" for v in v2_variants]
              + [f"ranker_v3_{v}" for v in VARIANTS] + ["oracle"])
     lines += ["", "## Every configuration on test (pooled accuracy)", "", "| Configuration | " + " | ".join(names) + " |", "|---|" + "---:|" * len(names)]
