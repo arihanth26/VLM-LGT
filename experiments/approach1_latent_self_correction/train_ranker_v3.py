@@ -51,15 +51,51 @@ from experiments.approach1_latent_self_correction.train_ranker_v2 import (
 from experiments.approach1_latent_self_correction.train_ranker_v2 import SETS as SETS_V2
 from experiments.approach1_latent_self_correction.train_ranker_v2 import VARIANTS as VARIANTS_V2
 
-GROUPS = {"zoom": FIRST[2:], "vcd": FIRST[:2], "ground": ("ground", "ground_ctx"), "cot": ("cot",)}
+COT_SAMPLES = ("cot_s0", "cot_s1", "cot_s2")  # correction_v3_cot.py sources; absent unless --with-cot-samples
+GROUPS = {"zoom": FIRST[2:], "vcd": FIRST[:2], "ground": ("ground", "ground_ctx"), "cot": ("cot",) + COT_SAMPLES}
 SETS = {
     **SETS_V2,
-    "zoom_cot": GROUPS["zoom"] + GROUPS["cot"],
-    "zoom_ground_cot": GROUPS["zoom"] + GROUPS["ground"] + GROUPS["cot"],
+    "zoom_cot": FIRST[2:] + ("cot",),
+    "zoom_ground_cot": FIRST[2:] + ("ground", "ground_ctx", "cot"),
 }
+MULTI_SETS = {
+    "cot_multi": ("cot",) + COT_SAMPLES,
+    "ground_cot_multi": ("ground", "ground_ctx", "cot") + COT_SAMPLES,
+    "zoom_cot_multi": FIRST[2:] + ("cot",) + COT_SAMPLES,
+    "everything_multi": SETS_V2["everything"] + COT_SAMPLES,
+}
+V3_DIR = RESULTS / "correction_v3"
 SCALARS_V3 = SCALARS_V2 + tuple(f"from_{g}" for g in GROUPS) + tuple(f"dataset_{d}" for d in DATASET_NAMES)
 VARIANTS = ("full_ds", "scalars_ds")
 SELECT = ("1", 0, SETS["zoom_cot"])
+
+
+def merge_cot_samples(questions: list[dict], split: str) -> int:
+    """Add correction_v3_cot.py's sampled reasoning answers, states and judge scores in place; returns questions updated."""
+    by_key = {q["key"]: q for q in questions}
+    updated = 0
+    for path in sorted((V3_DIR / split).glob("*.jsonl")):
+        pt = path.with_suffix(".pt")
+        saved = torch.load(pt, weights_only=False)["questions"] if pt.exists() else {}
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            record = json.loads(line)
+            q = by_key.get((record["dataset"], record["index"]))
+            if q is None or "error" in record:
+                continue
+            new = saved.get(record["index"])
+            if new is not None:
+                missing = [i for i, a in enumerate(new["answers"]) if a not in q["encoded"]]
+                q["answers"] = q["answers"] + [new["answers"][i] for i in missing]
+                if missing:
+                    q["states"] = torch.cat([q["states"], new["states"][missing]])
+            q["encoded"] = {**record["encoded"], **q["encoded"]}
+            q["judge"] = {**record["judge"], **q["judge"]}
+            added = {c["source"]: c["answer"] for c in record["corrections"] if c["answer"] in q["encoded"]}
+            q["corrections"] = {**q["corrections"], **added}
+            updated += bool(added)
+    return updated
 
 
 def candidate_set(q: dict, temperature: str, k: int, sources: tuple) -> tuple[list[int], np.ndarray, np.ndarray]:
@@ -205,11 +241,22 @@ def main() -> None:
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--rates", type=float, nargs="+", default=[3e-4, 1e-3])
-    parser.add_argument("--output", type=Path, default=RESULTS / "candidate_ranker_v3.json")
+    parser.add_argument("--with-cot-samples", action="store_true",
+                        help="Merge results/correction_v3 (sampled reasoning answers) and add the *_multi candidate sets.")
+    parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
+    suffix = "_multi" if args.with_cot_samples else ""
+    args.output = args.output or RESULTS / f"candidate_ranker_v3{suffix}.json"
+    if args.with_cot_samples:
+        SETS.update(MULTI_SETS)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     data = {split: merge_v2(load_questions(split), split) for split in ("train", "val", "test")}
     print({s: len(q) for s, q in data.items()}, flush=True)
+    if args.with_cot_samples:
+        print({s: merge_cot_samples(q, s) for s, q in data.items()}, "questions with sampled reasoning", flush=True)
+        result_extra = {"cot_samples": {s: sum(any(c in q["corrections"] for c in COT_SAMPLES) for q in qs) for s, qs in data.items()}}
+    else:
+        result_extra = {}
 
     sweep, models = [], {}
     for variant, rate in itertools.product(VARIANTS, args.rates):
@@ -222,7 +269,7 @@ def main() -> None:
     first, second = first_rankers(device), v2_rankers(device)
 
     result = {"questions": {s: len(q) for s, q in data.items()}, "sweep": sweep, "winners": winners,
-              "source_accuracy": {s: source_accuracy(data[s]) for s in ("val", "test")}, "val": {}, "test": {}}
+              "source_accuracy": {s: source_accuracy(data[s]) for s in ("val", "test")}, "val": {}, "test": {}, **result_extra}
     configs = [("1", k, name) for k in (0, 5) for name in SETS if not (k == 0 and name == "none")]
     per_question = {"val": {}, "test": {}}
     for split in ("val", "test"):
@@ -251,7 +298,7 @@ def main() -> None:
     result["choice"] = {"configuration": best_key, "selector": best_sel, "val": result["val"][best_key][best_sel]["pooled"],
                         "test": result["test"][best_key]}
     args.output.write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8")
-    torch.save({v: [m.state_dict() for m in ms] for v, ms in chosen_models.items()}, RESULTS / "candidate_ranker_v3_models.pt")
+    torch.save({v: [m.state_dict() for m in ms] for v, ms in chosen_models.items()}, RESULTS / f"candidate_ranker_v3{suffix}_models.pt")
     args.output.with_suffix(".md").write_text(markdown(result, sorted(second)), encoding="utf-8")
     print(f"[done] wrote {args.output}")
 
