@@ -31,6 +31,11 @@ MODEL_VARIANTS = {
         hf_repo_id="Qwen/Qwen3-VL-4B-Instruct",
         description="Larger Qwen3-VL checkpoint, closer to what full experiments will use.",
     ),
+    "8b": ModelVariant(
+        name="qwen3-vl-8b",
+        hf_repo_id="Qwen/Qwen3-VL-8B-Instruct",
+        description="Largest checkpoint used here; the escalation target for hard questions (escalation.py).",
+    ),
 }
 
 
