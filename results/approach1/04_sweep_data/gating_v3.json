@@ -1,0 +1,7145 @@
+{
+ "budgets": [
+  0.0,
+  0.05,
+  0.1,
+  0.15,
+  0.2,
+  0.25,
+  0.3,
+  0.35,
+  0.4,
+  0.45,
+  0.5,
+  0.55,
+  0.6,
+  0.65,
+  0.7,
+  0.75,
+  0.8,
+  0.85,
+  0.9,
+  0.95,
+  1.0
+ ],
+ "configurations": [
+  "T1_k5_everything",
+  "T1_k0_ground_cot",
+  "T1_k0_cot",
+  "T1_k0_zoom_cot"
+ ],
+ "detectors": [
+  "token",
+  "pre_head",
+  "after_head",
+  "judge",
+  "random"
+ ],
+ "greedy_val": 0.8077881619937695,
+ "greedy_test": 0.8277818640327834,
+ "ungated_test_accuracy": {
+  "T1_k5_everything": 0.8587790270043081,
+  "T1_k0_ground_cot": 0.85835872648944,
+  "T1_k0_cot": 0.8534201954397395,
+  "T1_k0_zoom_cot": 0.8557318482715142
+ },
+ "headlines": [
+  {
+   "name": "correct every question (no gate)",
+   "configuration": "T1_k5_everything",
+   "detector": "token",
+   "budget": 1.0,
+   "val": {
+    "accuracy": 0.8375389408099688,
+    "passes": 22.10747663551402,
+    "share": 1.0
+   },
+   "test_share": 1.0,
+   "test_passes": 22.132184511926027,
+   "test_calls": 14.0,
+   "test": {
+    "pooled": {
+     "difference": 0.03099716297152464,
+     "ci_low": 0.02553325627823894,
+     "ci_high": 0.036355994536093304,
+     "fixed": 474,
+     "broken": 179,
+     "p_value": 1.0843178108298643e-31,
+     "accuracy": 0.8587790270043081,
+     "accuracy_low": 0.851637425950933,
+     "accuracy_high": 0.8656310978736835,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.0568,
+     "ci_low": 0.04479,
+     "ci_high": 0.0692,
+     "fixed": 194,
+     "broken": 52,
+     "p_value": 1.9013548722002503e-20,
+     "accuracy": 0.8216,
+     "accuracy_low": 0.8061022916736351,
+     "accuracy_high": 0.8361108579121853,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.0288,
+     "ci_low": 0.01839,
+     "ci_high": 0.0392,
+     "fixed": 118,
+     "broken": 46,
+     "p_value": 1.7584330225765028e-08,
+     "accuracy": 0.844,
+     "accuracy_low": 0.8292493970794006,
+     "accuracy_high": 0.8576950166566759,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.014,
+     "ci_low": 0.0068,
+     "ci_high": 0.0208,
+     "fixed": 59,
+     "broken": 24,
+     "p_value": 0.00015455941078329165,
+     "accuracy": 0.8844,
+     "accuracy_low": 0.8712719719195016,
+     "accuracy_high": 0.8963484718018583,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.022806147744174516,
+     "ci_low": 0.010907288051561725,
+     "ci_high": 0.035696579077838374,
+     "fixed": 103,
+     "broken": 57,
+     "p_value": 0.00034385757310835937,
+     "accuracy": 0.8914229053049083,
+     "accuracy_low": 0.8770940096533699,
+     "accuracy_high": 0.9042636187723315,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.8587790270043082,
+   "vs_random": {
+    "difference": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0,
+    "fixed": 0,
+    "broken": 0,
+    "p_value": 1.0
+   }
+  },
+  {
+   "name": "best detector at a 20% budget",
+   "configuration": "T1_k5_everything",
+   "detector": "token",
+   "budget": 0.2,
+   "val": {
+    "accuracy": 0.8316199376947041,
+    "passes": 6.168535825545171,
+    "share": 0.2
+   },
+   "test_share": 0.1944940632552275,
+   "test_passes": 6.004203005148681,
+   "test_calls": 3.5284228223179572,
+   "test": {
+    "pooled": {
+     "difference": 0.025218030892087843,
+     "ci_low": 0.02080487548597247,
+     "ci_high": 0.029526111169486183,
+     "fixed": 348,
+     "broken": 108,
+     "p_value": 1.7469591464032036e-30,
+     "accuracy": 0.8529998949248713,
+     "accuracy_low": 0.8457430536961527,
+     "accuracy_high": 0.8599718696568417,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.0472,
+     "ci_low": 0.03679,
+     "ci_high": 0.058,
+     "fixed": 155,
+     "broken": 37,
+     "p_value": 2.2424679560604087e-18,
+     "accuracy": 0.812,
+     "accuracy_low": 0.7962096561165121,
+     "accuracy_high": 0.8268329516906273,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.0268,
+     "ci_low": 0.0184,
+     "ci_high": 0.0356,
+     "fixed": 92,
+     "broken": 25,
+     "p_value": 3.365762747550113e-10,
+     "accuracy": 0.842,
+     "accuracy_low": 0.827178768028379,
+     "accuracy_high": 0.855771782837139,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.0084,
+     "ci_low": 0.0032,
+     "ci_high": 0.0136,
+     "fixed": 33,
+     "broken": 12,
+     "p_value": 0.0024589003220967243,
+     "accuracy": 0.8788,
+     "accuracy_low": 0.865422132602226,
+     "accuracy_high": 0.89101549508157,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.01685671789786812,
+     "ci_low": 0.0074367873078829945,
+     "ci_high": 0.026772434308378782,
+     "fixed": 68,
+     "broken": 34,
+     "p_value": 0.000986536808184603,
+     "accuracy": 0.8854734754586019,
+     "accuracy_low": 0.8708368544033226,
+     "accuracy_high": 0.8986445339449775,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.8341010822738256,
+   "vs_random": {
+    "difference": 0.018598297782914785,
+    "ci_low": 0.014605442891667542,
+    "ci_high": 0.022486077545444995,
+    "fixed": 291,
+    "broken": 114,
+    "p_value": 6.024254753816088e-19
+   }
+  },
+  {
+   "name": "best detector at a 30% budget",
+   "configuration": "T1_k5_everything",
+   "detector": "token",
+   "budget": 0.3,
+   "val": {
+    "accuracy": 0.8370716510903426,
+    "passes": 8.353894080996884,
+    "share": 0.3
+   },
+   "test_share": 0.29557633708101294,
+   "test_passes": 8.245875801197856,
+   "test_calls": 4.842492382053168,
+   "test": {
+    "pooled": {
+     "difference": 0.029210885783335083,
+     "ci_low": 0.024374802984133657,
+     "ci_high": 0.03404434170431859,
+     "fixed": 422,
+     "broken": 144,
+     "p_value": 1.2330699343455646e-32,
+     "accuracy": 0.8569927498161185,
+     "accuracy_low": 0.8498151147135051,
+     "accuracy_high": 0.8638822962380645,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.0536,
+     "ci_low": 0.0424,
+     "ci_high": 0.0652,
+     "fixed": 179,
+     "broken": 45,
+     "p_value": 4.134387628705927e-20,
+     "accuracy": 0.8184,
+     "accuracy_low": 0.8028030133243171,
+     "accuracy_high": 0.8330199556686095,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.0288,
+     "ci_low": 0.0192,
+     "ci_high": 0.0384,
+     "fixed": 109,
+     "broken": 37,
+     "p_value": 1.980365676693407e-09,
+     "accuracy": 0.844,
+     "accuracy_low": 0.8292493970794006,
+     "accuracy_high": 0.8576950166566759,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.0116,
+     "ci_low": 0.00559,
+     "ci_high": 0.018,
+     "fixed": 49,
+     "broken": 20,
+     "p_value": 0.0006361729964503618,
+     "accuracy": 0.882,
+     "accuracy_low": 0.8687637863801883,
+     "accuracy_high": 0.8940640218965014,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.021318790282597918,
+     "ci_low": 0.010411502231036193,
+     "ci_high": 0.033217649975210706,
+     "fixed": 85,
+     "broken": 42,
+     "p_value": 0.00017009447829625175,
+     "accuracy": 0.8899355478433317,
+     "accuracy_low": 0.8755285618075511,
+     "accuracy_high": 0.9028600065988002,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.8371860880529579,
+   "vs_random": {
+    "difference": 0.019859199327519176,
+    "ci_low": 0.015761269307554903,
+    "ci_high": 0.024167279604917515,
+    "fixed": 307,
+    "broken": 118,
+    "p_value": 1.730490435690961e-20
+   }
+  },
+  {
+   "name": "best detector at a 50% budget",
+   "configuration": "T1_k5_everything",
+   "detector": "token",
+   "budget": 0.5,
+   "val": {
+    "accuracy": 0.838006230529595,
+    "passes": 12.380996884735202,
+    "share": 0.5
+   },
+   "test_share": 0.4971104339602816,
+   "test_passes": 12.31480508563623,
+   "test_calls": 7.462435641483661,
+   "test": {
+    "pooled": {
+     "difference": 0.031207313228958707,
+     "ci_low": 0.02584848166439004,
+     "ci_high": 0.036355994536093304,
+     "fixed": 470,
+     "broken": 173,
+     "p_value": 1.252603535242238e-32,
+     "accuracy": 0.8589891772617422,
+     "accuracy_low": 0.8518518403095954,
+     "accuracy_high": 0.865836814441262,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.056,
+     "ci_low": 0.0436,
+     "ci_high": 0.0684,
+     "fixed": 192,
+     "broken": 52,
+     "p_value": 4.7421996490243576e-20,
+     "accuracy": 0.8208,
+     "accuracy_low": 0.8052773065338642,
+     "accuracy_high": 0.8353382979037327,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.0288,
+     "ci_low": 0.01839,
+     "ci_high": 0.0392,
+     "fixed": 118,
+     "broken": 46,
+     "p_value": 1.7584330225765028e-08,
+     "accuracy": 0.844,
+     "accuracy_low": 0.8292493970794006,
+     "accuracy_high": 0.8576950166566759,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.0144,
+     "ci_low": 0.0076,
+     "ci_high": 0.0212,
+     "fixed": 59,
+     "broken": 23,
+     "p_value": 8.715478657320522e-05,
+     "accuracy": 0.8848,
+     "accuracy_low": 0.8716901685485994,
+     "accuracy_high": 0.8967290477468723,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.024293505205751114,
+     "ci_low": 0.012890431333663858,
+     "ci_high": 0.03718393653941497,
+     "fixed": 101,
+     "broken": 52,
+     "p_value": 9.176460450517718e-05,
+     "accuracy": 0.8929102627664849,
+     "accuracy_low": 0.878660253229353,
+     "accuracy_high": 0.9056664352156988,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.8433813176421141,
+   "vs_random": {
+    "difference": 0.017442471367027423,
+    "ci_low": 0.013554691604497215,
+    "ci_high": 0.021120100872123567,
+    "fixed": 247,
+    "broken": 81,
+    "p_value": 1.1594876846961962e-20
+   }
+  },
+  {
+   "name": "smallest budget keeping 90% of the full validation gain",
+   "configuration": "T1_k5_everything",
+   "detector": "token",
+   "budget": 0.3,
+   "val": {
+    "accuracy": 0.8370716510903426,
+    "passes": 8.353894080996884,
+    "share": 0.3
+   },
+   "test_share": 0.29557633708101294,
+   "test_passes": 8.245875801197856,
+   "test_calls": 4.842492382053168,
+   "test": {
+    "pooled": {
+     "difference": 0.029210885783335083,
+     "ci_low": 0.024374802984133657,
+     "ci_high": 0.03404434170431859,
+     "fixed": 422,
+     "broken": 144,
+     "p_value": 1.2330699343455646e-32,
+     "accuracy": 0.8569927498161185,
+     "accuracy_low": 0.8498151147135051,
+     "accuracy_high": 0.8638822962380645,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.0536,
+     "ci_low": 0.0424,
+     "ci_high": 0.0652,
+     "fixed": 179,
+     "broken": 45,
+     "p_value": 4.134387628705927e-20,
+     "accuracy": 0.8184,
+     "accuracy_low": 0.8028030133243171,
+     "accuracy_high": 0.8330199556686095,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.0288,
+     "ci_low": 0.0192,
+     "ci_high": 0.0384,
+     "fixed": 109,
+     "broken": 37,
+     "p_value": 1.980365676693407e-09,
+     "accuracy": 0.844,
+     "accuracy_low": 0.8292493970794006,
+     "accuracy_high": 0.8576950166566759,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.0116,
+     "ci_low": 0.00559,
+     "ci_high": 0.018,
+     "fixed": 49,
+     "broken": 20,
+     "p_value": 0.0006361729964503618,
+     "accuracy": 0.882,
+     "accuracy_low": 0.8687637863801883,
+     "accuracy_high": 0.8940640218965014,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.021318790282597918,
+     "ci_low": 0.010411502231036193,
+     "ci_high": 0.033217649975210706,
+     "fixed": 85,
+     "broken": 42,
+     "p_value": 0.00017009447829625175,
+     "accuracy": 0.8899355478433317,
+     "accuracy_low": 0.8755285618075511,
+     "accuracy_high": 0.9028600065988002,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.8371860880529579,
+   "vs_random": {
+    "difference": 0.019859199327519176,
+    "ci_low": 0.015761269307554903,
+    "ci_high": 0.024167279604917515,
+    "fixed": 307,
+    "broken": 118,
+    "p_value": 1.730490435690961e-20
+   }
+  },
+  {
+   "name": "correct every question (no gate)",
+   "configuration": "T1_k0_ground_cot",
+   "detector": "token",
+   "budget": 1.0,
+   "val": {
+    "accuracy": 0.8366043613707165,
+    "passes": 8.52803738317757,
+    "share": 1.0
+   },
+   "test_share": 1.0,
+   "test_passes": 8.525690868971315,
+   "test_calls": 5.0,
+   "test": {
+    "pooled": {
+     "difference": 0.03057686245665651,
+     "ci_low": 0.025638331406955973,
+     "ci_high": 0.03572554376379111,
+     "fixed": 441,
+     "broken": 150,
+     "p_value": 3.5043647121232543e-34,
+     "accuracy": 0.85835872648944,
+     "accuracy_low": 0.8512086129605861,
+     "accuracy_high": 0.8652196490115489,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.0608,
+     "ci_low": 0.0488,
+     "ci_high": 0.0728,
+     "fixed": 195,
+     "broken": 43,
+     "p_value": 2.621229967366915e-24,
+     "accuracy": 0.8256,
+     "accuracy_low": 0.8102288992144054,
+     "accuracy_high": 0.8399719761125322,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.0224,
+     "ci_low": 0.0136,
+     "ci_high": 0.0316,
+     "fixed": 92,
+     "broken": 36,
+     "p_value": 7.881599522005472e-07,
+     "accuracy": 0.8376,
+     "accuracy_low": 0.8226261984760563,
+     "accuracy_high": 0.8515378540742328,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.0128,
+     "ci_low": 0.006,
+     "ci_high": 0.019609999999999943,
+     "fixed": 54,
+     "broken": 22,
+     "p_value": 0.0003129786008370501,
+     "accuracy": 0.8832,
+     "accuracy_low": 0.8700176673642248,
+     "accuracy_high": 0.8952064586348,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.02528507684680218,
+     "ci_low": 0.013882002974714923,
+     "ci_high": 0.03767972235994051,
+     "fixed": 100,
+     "broken": 49,
+     "p_value": 3.5671156619444306e-05,
+     "accuracy": 0.8939018344075359,
+     "accuracy_low": 0.8797048648428106,
+     "accuracy_high": 0.9066011969484746,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.85835872648944,
+   "vs_random": {
+    "difference": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0,
+    "fixed": 0,
+    "broken": 0,
+    "p_value": 1.0
+   }
+  },
+  {
+   "name": "best detector at a 20% budget",
+   "configuration": "T1_k0_ground_cot",
+   "detector": "token",
+   "budget": 0.2,
+   "val": {
+    "accuracy": 0.8289719626168224,
+    "passes": 2.838006230529595,
+    "share": 0.2
+   },
+   "test_share": 0.1944940632552275,
+   "test_passes": 2.8016181569822423,
+   "test_calls": 1.77797625302091,
+   "test": {
+    "pooled": {
+     "difference": 0.024902805505936744,
+     "ci_low": 0.020699800357255438,
+     "ci_high": 0.029210885783335083,
+     "fixed": 326,
+     "broken": 89,
+     "p_value": 7.48538142086453e-33,
+     "accuracy": 0.8526846695387201,
+     "accuracy_low": 0.8454216527201132,
+     "accuracy_high": 0.8596630742435198,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.05,
+     "ci_low": 0.039990000000000005,
+     "ci_high": 0.0608,
+     "fixed": 154,
+     "broken": 29,
+     "p_value": 8.877647566894766e-22,
+     "accuracy": 0.8148,
+     "accuracy_low": 0.7990934090465757,
+     "accuracy_high": 0.8295406067793455,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.0216,
+     "ci_low": 0.014,
+     "ci_high": 0.0296,
+     "fixed": 76,
+     "broken": 22,
+     "p_value": 3.896413240891271e-08,
+     "accuracy": 0.8368,
+     "accuracy_low": 0.8217988668195039,
+     "accuracy_high": 0.8507676405825617,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.0072,
+     "ci_low": 0.002,
+     "ci_high": 0.0124,
+     "fixed": 29,
+     "broken": 11,
+     "p_value": 0.006426576095691416,
+     "accuracy": 0.8776,
+     "accuracy_low": 0.8641697580679231,
+     "accuracy_high": 0.8898715518935378,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.01983143282102132,
+     "ci_low": 0.010907288051561725,
+     "ci_high": 0.029251363411006447,
+     "fixed": 67,
+     "broken": 27,
+     "p_value": 4.496432091968555e-05,
+     "accuracy": 0.888448190381755,
+     "accuracy_low": 0.873963895639199,
+     "accuracy_high": 0.9014556127478017,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.8339434695807504,
+   "vs_random": {
+    "difference": 0.018703372911631818,
+    "ci_low": 0.014605442891667542,
+    "ci_high": 0.02238100241672796,
+    "fixed": 274,
+    "broken": 96,
+    "p_value": 5.918945860849946e-21
+   }
+  },
+  {
+   "name": "best detector at a 30% budget",
+   "configuration": "T1_k0_ground_cot",
+   "detector": "token",
+   "budget": 0.3,
+   "val": {
+    "accuracy": 0.835981308411215,
+    "passes": 3.646728971962617,
+    "share": 0.3
+   },
+   "test_share": 0.29557633708101294,
+   "test_passes": 3.6180519071135864,
+   "test_calls": 2.1823053483240518,
+   "test": {
+    "pooled": {
+     "difference": 0.02868551013974992,
+     "ci_low": 0.02416465272669959,
+     "ci_high": 0.03341389093201639,
+     "fixed": 393,
+     "broken": 120,
+     "p_value": 6.926990476917201e-35,
+     "accuracy": 0.8564673741725334,
+     "accuracy_low": 0.8492792120848364,
+     "accuracy_high": 0.8633678715511313,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.0568,
+     "ci_low": 0.0456,
+     "ci_high": 0.068,
+     "fixed": 179,
+     "broken": 37,
+     "p_value": 1.5560321653622657e-23,
+     "accuracy": 0.8216,
+     "accuracy_low": 0.8061022916736351,
+     "accuracy_high": 0.8361108579121853,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.0228,
+     "ci_low": 0.0144,
+     "ci_high": 0.0316,
+     "fixed": 85,
+     "broken": 28,
+     "p_value": 7.343651912124567e-08,
+     "accuracy": 0.838,
+     "accuracy_low": 0.8230399109421183,
+     "accuracy_high": 0.8519229141822824,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.01,
+     "ci_low": 0.0032,
+     "ci_high": 0.016,
+     "fixed": 45,
+     "broken": 20,
+     "p_value": 0.0026263768106840383,
+     "accuracy": 0.8804,
+     "accuracy_low": 0.867092594344426,
+     "accuracy_high": 0.8925401236358167,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.024293505205751114,
+     "ci_low": 0.014377788795240456,
+     "ci_high": 0.035696579077838374,
+     "fixed": 84,
+     "broken": 35,
+     "p_value": 8.182182568303971e-06,
+     "accuracy": 0.8929102627664849,
+     "accuracy_low": 0.878660253229353,
+     "accuracy_high": 0.9056664352156988,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.8369002837028474,
+   "vs_random": {
+    "difference": 0.020069349584953242,
+    "ci_low": 0.016076494693706,
+    "ci_high": 0.02427235473363455,
+    "fixed": 289,
+    "broken": 98,
+    "p_value": 5.66019877228889e-23
+   }
+  },
+  {
+   "name": "best detector at a 50% budget",
+   "configuration": "T1_k0_ground_cot",
+   "detector": "token",
+   "budget": 0.5,
+   "val": {
+    "accuracy": 0.8367601246105919,
+    "passes": 5.128348909657321,
+    "share": 0.5
+   },
+   "test_share": 0.4971104339602816,
+   "test_passes": 5.106336030261637,
+   "test_calls": 2.9884417358411266,
+   "test": {
+    "pooled": {
+     "difference": 0.030787012714090574,
+     "ci_low": 0.025953556793107072,
+     "ci_high": 0.035830618892508145,
+     "fixed": 438,
+     "broken": 145,
+     "p_value": 3.771450062648716e-35,
+     "accuracy": 0.858568876746874,
+     "accuracy_low": 0.8514230168378489,
+     "accuracy_high": 0.8654253760605266,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.06,
+     "ci_low": 0.048,
+     "ci_high": 0.072,
+     "fixed": 193,
+     "broken": 43,
+     "p_value": 7.051958737405224e-24,
+     "accuracy": 0.8248,
+     "accuracy_low": 0.8094033514668428,
+     "accuracy_high": 0.8391999787118712,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.0224,
+     "ci_low": 0.0136,
+     "ci_high": 0.0316,
+     "fixed": 92,
+     "broken": 36,
+     "p_value": 7.881599522005472e-07,
+     "accuracy": 0.8376,
+     "accuracy_low": 0.8226261984760563,
+     "accuracy_high": 0.8515378540742328,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.0132,
+     "ci_low": 0.0064,
+     "ci_high": 0.02,
+     "fixed": 54,
+     "broken": 21,
+     "p_value": 0.00017630923003028782,
+     "accuracy": 0.8836,
+     "accuracy_low": 0.8704357215399,
+     "accuracy_high": 0.8955871770332366,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.026772434308378782,
+     "ci_low": 0.015369360436291522,
+     "ci_high": 0.03867129400099157,
+     "fixed": 99,
+     "broken": 45,
+     "p_value": 7.952538678129076e-06,
+     "accuracy": 0.8953891918691126,
+     "accuracy_low": 0.8812724671840665,
+     "accuracy_high": 0.9080026546265694,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.843078701271409,
+   "vs_random": {
+    "difference": 0.01660187033729116,
+    "ci_low": 0.013026689082694127,
+    "ci_high": 0.02038457497110434,
+    "fixed": 229,
+    "broken": 71,
+    "p_value": 1.5097390586727435e-20
+   }
+  },
+  {
+   "name": "smallest budget keeping 90% of the full validation gain",
+   "configuration": "T1_k0_ground_cot",
+   "detector": "token",
+   "budget": 0.3,
+   "val": {
+    "accuracy": 0.835981308411215,
+    "passes": 3.646728971962617,
+    "share": 0.3
+   },
+   "test_share": 0.29557633708101294,
+   "test_passes": 3.6180519071135864,
+   "test_calls": 2.1823053483240518,
+   "test": {
+    "pooled": {
+     "difference": 0.02868551013974992,
+     "ci_low": 0.02416465272669959,
+     "ci_high": 0.03341389093201639,
+     "fixed": 393,
+     "broken": 120,
+     "p_value": 6.926990476917201e-35,
+     "accuracy": 0.8564673741725334,
+     "accuracy_low": 0.8492792120848364,
+     "accuracy_high": 0.8633678715511313,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.0568,
+     "ci_low": 0.0456,
+     "ci_high": 0.068,
+     "fixed": 179,
+     "broken": 37,
+     "p_value": 1.5560321653622657e-23,
+     "accuracy": 0.8216,
+     "accuracy_low": 0.8061022916736351,
+     "accuracy_high": 0.8361108579121853,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.0228,
+     "ci_low": 0.0144,
+     "ci_high": 0.0316,
+     "fixed": 85,
+     "broken": 28,
+     "p_value": 7.343651912124567e-08,
+     "accuracy": 0.838,
+     "accuracy_low": 0.8230399109421183,
+     "accuracy_high": 0.8519229141822824,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.01,
+     "ci_low": 0.0032,
+     "ci_high": 0.016,
+     "fixed": 45,
+     "broken": 20,
+     "p_value": 0.0026263768106840383,
+     "accuracy": 0.8804,
+     "accuracy_low": 0.867092594344426,
+     "accuracy_high": 0.8925401236358167,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.024293505205751114,
+     "ci_low": 0.014377788795240456,
+     "ci_high": 0.035696579077838374,
+     "fixed": 84,
+     "broken": 35,
+     "p_value": 8.182182568303971e-06,
+     "accuracy": 0.8929102627664849,
+     "accuracy_low": 0.878660253229353,
+     "accuracy_high": 0.9056664352156988,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.8369002837028474,
+   "vs_random": {
+    "difference": 0.020069349584953242,
+    "ci_low": 0.016076494693706,
+    "ci_high": 0.02427235473363455,
+    "fixed": 289,
+    "broken": 98,
+    "p_value": 5.66019877228889e-23
+   }
+  },
+  {
+   "name": "correct every question (no gate)",
+   "configuration": "T1_k0_cot",
+   "detector": "token",
+   "budget": 1.0,
+   "val": {
+    "accuracy": 0.8320872274143302,
+    "passes": 4.515576323987539,
+    "share": 1.0
+   },
+   "test_share": 1.0,
+   "test_passes": 4.523904591783125,
+   "test_calls": 2.0,
+   "test": {
+    "pooled": {
+     "difference": 0.025638331406955973,
+     "ci_low": 0.02038457497110434,
+     "ci_high": 0.030471787327939478,
+     "fixed": 410,
+     "broken": 166,
+     "p_value": 8.303169928641008e-25,
+     "accuracy": 0.8534201954397395,
+     "accuracy_low": 0.8461716058003136,
+     "accuracy_high": 0.8603835794051624,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.064,
+     "ci_low": 0.0516,
+     "ci_high": 0.0764,
+     "fixed": 204,
+     "broken": 44,
+     "p_value": 8.278142087207331e-26,
+     "accuracy": 0.8288,
+     "accuracy_low": 0.8135322398658646,
+     "accuracy_high": 0.8430588160539666,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.0084,
+     "ci_low": 0.0,
+     "ci_high": 0.016809999999999943,
+     "fixed": 64,
+     "broken": 43,
+     "p_value": 0.05266778129862428,
+     "accuracy": 0.8236,
+     "accuracy_low": 0.8081652428888311,
+     "accuracy_high": 0.8380417695675478,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.006,
+     "ci_low": -0.0008,
+     "ci_high": 0.0124,
+     "fixed": 44,
+     "broken": 29,
+     "p_value": 0.1006436775202357,
+     "accuracy": 0.8764,
+     "accuracy_low": 0.8629177822434702,
+     "accuracy_high": 0.8887272099956554,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.023797719385225583,
+     "ci_low": 0.012394645513138325,
+     "ci_high": 0.035696579077838374,
+     "fixed": 98,
+     "broken": 50,
+     "p_value": 9.826760299248357e-05,
+     "accuracy": 0.8924144769459593,
+     "accuracy_low": 0.8781380827358564,
+     "accuracy_high": 0.9051989190360786,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.8534201954397395,
+   "vs_random": {
+    "difference": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0,
+    "fixed": 0,
+    "broken": 0,
+    "p_value": 1.0
+   }
+  },
+  {
+   "name": "best detector at a 20% budget",
+   "configuration": "T1_k0_cot",
+   "detector": "token",
+   "budget": 0.2,
+   "val": {
+    "accuracy": 0.8261682242990654,
+    "passes": 1.8370716510903426,
+    "share": 0.2
+   },
+   "test_share": 0.1944940632552275,
+   "test_passes": 1.8289376904486707,
+   "test_calls": 1.1944940632552274,
+   "test": {
+    "pooled": {
+     "difference": 0.021750551644425766,
+     "ci_low": 0.017757696753178523,
+     "ci_high": 0.025743406535673006,
+     "fixed": 296,
+     "broken": 89,
+     "p_value": 4.418048319840625e-27,
+     "accuracy": 0.8495324156772092,
+     "accuracy_low": 0.8422082539707796,
+     "accuracy_high": 0.8565745090992414,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.0516,
+     "ci_low": 0.0416,
+     "ci_high": 0.06200999999999995,
+     "fixed": 155,
+     "broken": 26,
+     "p_value": 1.471631390942319e-23,
+     "accuracy": 0.8164,
+     "accuracy_low": 0.8007418526628539,
+     "accuracy_high": 0.8310872534595142,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.012,
+     "ci_low": 0.0048,
+     "ci_high": 0.0192,
+     "fixed": 54,
+     "broken": 24,
+     "p_value": 0.0009010035205219422,
+     "accuracy": 0.8272,
+     "accuracy_low": 0.8118803383520791,
+     "accuracy_high": 0.8415156272713055,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.004,
+     "ci_low": -0.0008,
+     "ci_high": 0.0088,
+     "fixed": 24,
+     "broken": 14,
+     "p_value": 0.14330665429588407,
+     "accuracy": 0.8744,
+     "accuracy_low": 0.8608320284521352,
+     "accuracy_high": 0.8868191009164317,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.018839861179970253,
+     "ci_low": 0.010411502231036193,
+     "ci_high": 0.02825979176995538,
+     "fixed": 63,
+     "broken": 25,
+     "p_value": 6.27038277122379e-05,
+     "accuracy": 0.887456618740704,
+     "accuracy_low": 0.8729212123948255,
+     "accuracy_high": 0.9005189226459418,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.8328969212987286,
+   "vs_random": {
+    "difference": 0.015866344436271933,
+    "ci_low": 0.012083639802458758,
+    "ci_high": 0.019543973941368076,
+    "fixed": 248,
+    "broken": 97,
+    "p_value": 2.2034823465082836e-16
+   }
+  },
+  {
+   "name": "best detector at a 30% budget",
+   "configuration": "T1_k0_cot",
+   "detector": "token",
+   "budget": 0.3,
+   "val": {
+    "accuracy": 0.8314641744548287,
+    "passes": 2.222118380062305,
+    "share": 0.3
+   },
+   "test_share": 0.29557633708101294,
+   "test_passes": 2.2156141641273512,
+   "test_calls": 1.295576337081013,
+   "test": {
+    "pooled": {
+     "difference": 0.024587580119785648,
+     "ci_low": 0.019754124198802143,
+     "ci_high": 0.02900073552590102,
+     "fixed": 357,
+     "broken": 123,
+     "p_value": 1.749904160609691e-27,
+     "accuracy": 0.8523694441525691,
+     "accuracy_low": 0.845100262941319,
+     "accuracy_high": 0.8593542676329529,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.0584,
+     "ci_low": 0.0476,
+     "ci_high": 0.06960999999999994,
+     "fixed": 181,
+     "broken": 35,
+     "p_value": 6.258835545141599e-25,
+     "accuracy": 0.8232,
+     "accuracy_low": 0.8077525965372919,
+     "accuracy_high": 0.8376556433449754,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.0108,
+     "ci_low": 0.0032,
+     "ci_high": 0.0184,
+     "fixed": 58,
+     "broken": 31,
+     "p_value": 0.005544959035344678,
+     "accuracy": 0.826,
+     "accuracy_low": 0.8106417159269586,
+     "accuracy_high": 0.8403579319740906,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.0048,
+     "ci_low": -0.0012,
+     "ci_high": 0.0108,
+     "fixed": 36,
+     "broken": 24,
+     "p_value": 0.1550019040032606,
+     "accuracy": 0.8752,
+     "accuracy_low": 0.8616662001611725,
+     "accuracy_high": 0.8875824743556179,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.024293505205751114,
+     "ci_low": 0.014377788795240456,
+     "ci_high": 0.03520079325731284,
+     "fixed": 82,
+     "broken": 33,
+     "p_value": 5.57142320848034e-06,
+     "accuracy": 0.8929102627664849,
+     "accuracy_low": 0.878660253229353,
+     "accuracy_high": 0.9056664352156988,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.8354586529368498,
+   "vs_random": {
+    "difference": 0.017127245980876327,
+    "ci_low": 0.013134391089629084,
+    "ci_high": 0.021015025743406537,
+    "fixed": 264,
+    "broken": 101,
+    "p_value": 6.266279752836221e-18
+   }
+  },
+  {
+   "name": "best detector at a 50% budget",
+   "configuration": "T1_k0_cot",
+   "detector": "token",
+   "budget": 0.5,
+   "val": {
+    "accuracy": 0.8325545171339563,
+    "passes": 2.9271028037383178,
+    "share": 0.5
+   },
+   "test_share": 0.4971104339602816,
+   "test_passes": 2.929494588630871,
+   "test_calls": 1.4971104339602817,
+   "test": {
+    "pooled": {
+     "difference": 0.02616370705054114,
+     "ci_low": 0.021120100872123567,
+     "ci_high": 0.031102238100241673,
+     "fixed": 406,
+     "broken": 157,
+     "p_value": 2.1058579464678613e-26,
+     "accuracy": 0.8539455710833246,
+     "accuracy_low": 0.8467073241063983,
+     "accuracy_high": 0.8608981884146797,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.0628,
+     "ci_low": 0.0508,
+     "ci_high": 0.0748,
+     "fixed": 201,
+     "broken": 44,
+     "p_value": 3.691031954167359e-25,
+     "accuracy": 0.8276,
+     "accuracy_low": 0.8122932701845549,
+     "accuracy_high": 0.8419014680129413,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.0096,
+     "ci_low": 0.0016,
+     "ci_high": 0.0184,
+     "fixed": 64,
+     "broken": 40,
+     "p_value": 0.02364563574976815,
+     "accuracy": 0.8248,
+     "accuracy_low": 0.8094033514668428,
+     "accuracy_high": 0.8391999787118712,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.006,
+     "ci_low": -0.0008,
+     "ci_high": 0.0124,
+     "fixed": 44,
+     "broken": 29,
+     "p_value": 0.1006436775202357,
+     "accuracy": 0.8764,
+     "accuracy_low": 0.8629177822434702,
+     "accuracy_high": 0.8887272099956554,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.026276648487853247,
+     "ci_low": 0.014873574615765989,
+     "ci_high": 0.03817550818046604,
+     "fixed": 97,
+     "broken": 44,
+     "p_value": 9.479339374881515e-06,
+     "accuracy": 0.894893406048587,
+     "accuracy_low": 0.8807498409941064,
+     "accuracy_high": 0.9075355941434127,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.840634653777451,
+   "vs_random": {
+    "difference": 0.014710518020384575,
+    "ci_low": 0.011032888515288431,
+    "ci_high": 0.018177997268046652,
+    "fixed": 216,
+    "broken": 76,
+    "p_value": 1.0441308604446798e-16
+   }
+  },
+  {
+   "name": "smallest budget keeping 90% of the full validation gain",
+   "configuration": "T1_k0_cot",
+   "detector": "token",
+   "budget": 0.3,
+   "val": {
+    "accuracy": 0.8314641744548287,
+    "passes": 2.222118380062305,
+    "share": 0.3
+   },
+   "test_share": 0.29557633708101294,
+   "test_passes": 2.2156141641273512,
+   "test_calls": 1.295576337081013,
+   "test": {
+    "pooled": {
+     "difference": 0.024587580119785648,
+     "ci_low": 0.019754124198802143,
+     "ci_high": 0.02900073552590102,
+     "fixed": 357,
+     "broken": 123,
+     "p_value": 1.749904160609691e-27,
+     "accuracy": 0.8523694441525691,
+     "accuracy_low": 0.845100262941319,
+     "accuracy_high": 0.8593542676329529,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.0584,
+     "ci_low": 0.0476,
+     "ci_high": 0.06960999999999994,
+     "fixed": 181,
+     "broken": 35,
+     "p_value": 6.258835545141599e-25,
+     "accuracy": 0.8232,
+     "accuracy_low": 0.8077525965372919,
+     "accuracy_high": 0.8376556433449754,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.0108,
+     "ci_low": 0.0032,
+     "ci_high": 0.0184,
+     "fixed": 58,
+     "broken": 31,
+     "p_value": 0.005544959035344678,
+     "accuracy": 0.826,
+     "accuracy_low": 0.8106417159269586,
+     "accuracy_high": 0.8403579319740906,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.0048,
+     "ci_low": -0.0012,
+     "ci_high": 0.0108,
+     "fixed": 36,
+     "broken": 24,
+     "p_value": 0.1550019040032606,
+     "accuracy": 0.8752,
+     "accuracy_low": 0.8616662001611725,
+     "accuracy_high": 0.8875824743556179,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.024293505205751114,
+     "ci_low": 0.014377788795240456,
+     "ci_high": 0.03520079325731284,
+     "fixed": 82,
+     "broken": 33,
+     "p_value": 5.57142320848034e-06,
+     "accuracy": 0.8929102627664849,
+     "accuracy_low": 0.878660253229353,
+     "accuracy_high": 0.9056664352156988,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.8354586529368498,
+   "vs_random": {
+    "difference": 0.017127245980876327,
+    "ci_low": 0.013134391089629084,
+    "ci_high": 0.021015025743406537,
+    "fixed": 264,
+    "broken": 101,
+    "p_value": 6.266279752836221e-18
+   }
+  },
+  {
+   "name": "correct every question (no gate)",
+   "configuration": "T1_k0_zoom_cot",
+   "detector": "token",
+   "budget": 1.0,
+   "val": {
+    "accuracy": 0.8355140186915888,
+    "passes": 12.465732087227414,
+    "share": 1.0
+   },
+   "test_share": 1.0,
+   "test_passes": 12.571608700220658,
+   "test_calls": 6.0,
+   "test": {
+    "pooled": {
+     "difference": 0.027949984238730692,
+     "ci_low": 0.022591152674162025,
+     "ci_high": 0.0330986655458653,
+     "fixed": 443,
+     "broken": 177,
+     "p_value": 2.9258349896408464e-27,
+     "accuracy": 0.8557318482715142,
+     "accuracy_low": 0.8485290023441224,
+     "accuracy_high": 0.8626476230500024,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.0584,
+     "ci_low": 0.046,
+     "ci_high": 0.07040999999999994,
+     "fixed": 194,
+     "broken": 48,
+     "p_value": 5.383094333284054e-22,
+     "accuracy": 0.8232,
+     "accuracy_low": 0.8077525965372919,
+     "accuracy_high": 0.8376556433449754,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.0196,
+     "ci_low": 0.01039,
+     "ci_high": 0.0292,
+     "fixed": 98,
+     "broken": 49,
+     "p_value": 6.51752575962746e-05,
+     "accuracy": 0.8348,
+     "accuracy_low": 0.8197310775245135,
+     "accuracy_high": 0.8488415670069935,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.01,
+     "ci_low": 0.0028,
+     "ci_high": 0.0172,
+     "fixed": 52,
+     "broken": 27,
+     "p_value": 0.006553297670283774,
+     "accuracy": 0.8804,
+     "accuracy_low": 0.867092594344426,
+     "accuracy_high": 0.8925401236358167,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.022806147744174516,
+     "ci_low": 0.011403073872087258,
+     "ci_high": 0.035696579077838374,
+     "fixed": 99,
+     "broken": 53,
+     "p_value": 0.00023742692017977312,
+     "accuracy": 0.8914229053049083,
+     "accuracy_low": 0.8770940096533699,
+     "accuracy_high": 0.9042636187723315,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.8557318482715143,
+   "vs_random": {
+    "difference": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0,
+    "fixed": 0,
+    "broken": 0,
+    "p_value": 1.0
+   }
+  },
+  {
+   "name": "best detector at a 20% budget",
+   "configuration": "T1_k0_zoom_cot",
+   "detector": "after_head",
+   "budget": 0.2,
+   "val": {
+    "accuracy": 0.8286604361370716,
+    "passes": 4.321495327102804,
+    "share": 0.2
+   },
+   "test_share": 0.19207733529473572,
+   "test_passes": 4.266050225911527,
+   "test_calls": 1.9603866764736786,
+   "test": {
+    "pooled": {
+     "difference": 0.02511295576337081,
+     "ci_low": 0.020697173479037514,
+     "ci_high": 0.02942103604076915,
+     "fixed": 354,
+     "broken": 115,
+     "p_value": 2.3486579613832953e-29,
+     "accuracy": 0.8528948197961542,
+     "accuracy_low": 0.845635918791499,
+     "accuracy_high": 0.8598689390983748,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.056,
+     "ci_low": 0.0444,
+     "ci_high": 0.0672,
+     "fixed": 178,
+     "broken": 38,
+     "p_value": 7.391438369015865e-23,
+     "accuracy": 0.8208,
+     "accuracy_low": 0.8052773065338642,
+     "accuracy_high": 0.8353382979037327,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.0124,
+     "ci_low": 0.004390000000000001,
+     "ci_high": 0.0204,
+     "fixed": 67,
+     "broken": 36,
+     "p_value": 0.0029291945870261915,
+     "accuracy": 0.8276,
+     "accuracy_low": 0.8122932701845549,
+     "accuracy_high": 0.8419014680129413,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.0072,
+     "ci_low": 0.0028,
+     "ci_high": 0.012,
+     "fixed": 26,
+     "broken": 8,
+     "p_value": 0.0029350556433200836,
+     "accuracy": 0.8776,
+     "accuracy_low": 0.8641697580679231,
+     "accuracy_high": 0.8898715518935378,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.02478929102627665,
+     "ci_low": 0.014377788795240456,
+     "ci_high": 0.035696579077838374,
+     "fixed": 83,
+     "broken": 33,
+     "p_value": 3.865427244352971e-06,
+     "accuracy": 0.8934060485870104,
+     "accuracy_low": 0.8791825137481338,
+     "accuracy_high": 0.9061338613700349,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.8333781653882526,
+   "vs_random": {
+    "difference": 0.01838814752548072,
+    "ci_low": 0.014395292634233477,
+    "ci_high": 0.022486077545444995,
+    "fixed": 293,
+    "broken": 118,
+    "p_value": 2.8256113709063048e-18
+   }
+  },
+  {
+   "name": "best detector at a 30% budget",
+   "configuration": "T1_k0_zoom_cot",
+   "detector": "token",
+   "budget": 0.3,
+   "val": {
+    "accuracy": 0.8345794392523365,
+    "passes": 4.763551401869159,
+    "share": 0.3
+   },
+   "test_share": 0.29557633708101294,
+   "test_passes": 4.763055584743091,
+   "test_calls": 2.4778816854050647,
+   "test": {
+    "pooled": {
+     "difference": 0.02710938320899443,
+     "ci_low": 0.022378375538510038,
+     "ci_high": 0.031522538615109806,
+     "fixed": 393,
+     "broken": 135,
+     "p_value": 3.14190311139068e-30,
+     "accuracy": 0.8548912472417779,
+     "accuracy_low": 0.8476716963737541,
+     "accuracy_high": 0.8618244053154075,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.0548,
+     "ci_low": 0.0436,
+     "ci_high": 0.066,
+     "fixed": 177,
+     "broken": 40,
+     "p_value": 9.29512115075856e-22,
+     "accuracy": 0.8196,
+     "accuracy_low": 0.8040400363015725,
+     "accuracy_high": 0.8341792504136893,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.022,
+     "ci_low": 0.0128,
+     "ci_high": 0.0308,
+     "fixed": 91,
+     "broken": 36,
+     "p_value": 1.1402294032528228e-06,
+     "accuracy": 0.8372,
+     "accuracy_low": 0.8222125171325674,
+     "accuracy_high": 0.8511527628436101,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.008,
+     "ci_low": 0.002,
+     "ci_high": 0.0144,
+     "fixed": 42,
+     "broken": 22,
+     "p_value": 0.01685819004428113,
+     "accuracy": 0.8784,
+     "accuracy_low": 0.8650046298114212,
+     "accuracy_high": 0.8906342252982629,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.022806147744174516,
+     "ci_low": 0.012890431333663858,
+     "ci_high": 0.034209221616261776,
+     "fixed": 83,
+     "broken": 37,
+     "p_value": 3.243159445418542e-05,
+     "accuracy": 0.8914229053049083,
+     "accuracy_low": 0.8770940096533699,
+     "accuracy_high": 0.9042636187723315,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.8361479457812335,
+   "vs_random": {
+    "difference": 0.018177997268046652,
+    "ci_low": 0.01408006724808238,
+    "ci_high": 0.02227592728801093,
+    "fixed": 285,
+    "broken": 112,
+    "p_value": 1.6995065753745118e-18
+   }
+  },
+  {
+   "name": "best detector at a 50% budget",
+   "configuration": "T1_k0_zoom_cot",
+   "detector": "token",
+   "budget": 0.5,
+   "val": {
+    "accuracy": 0.835981308411215,
+    "passes": 6.999376947040498,
+    "share": 0.5
+   },
+   "test_share": 0.4971104339602816,
+   "test_passes": 7.038352421981717,
+   "test_calls": 3.485552169801408,
+   "test": {
+    "pooled": {
+     "difference": 0.02826520962488179,
+     "ci_low": 0.023113901439529266,
+     "ci_high": 0.033308815803299356,
+     "fixed": 439,
+     "broken": 170,
+     "p_value": 2.2630570355910516e-28,
+     "accuracy": 0.8560470736576652,
+     "accuracy_low": 0.8488505131198651,
+     "accuracy_high": 0.8629563086636208,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.0572,
+     "ci_low": 0.0448,
+     "ci_high": 0.0692,
+     "fixed": 191,
+     "broken": 48,
+     "p_value": 2.222840482481218e-21,
+     "accuracy": 0.822,
+     "accuracy_low": 0.8065148259564328,
+     "accuracy_high": 0.8364970962034992,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.02,
+     "ci_low": 0.010790000000000001,
+     "ci_high": 0.029209999999999944,
+     "fixed": 98,
+     "broken": 48,
+     "p_value": 4.26634580070168e-05,
+     "accuracy": 0.8352,
+     "accuracy_low": 0.8201445740481426,
+     "accuracy_high": 0.8492268430574763,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.0104,
+     "ci_low": 0.0032,
+     "ci_high": 0.0176,
+     "fixed": 52,
+     "broken": 26,
+     "p_value": 0.004334880883507413,
+     "accuracy": 0.8808,
+     "accuracy_low": 0.867510323394426,
+     "accuracy_high": 0.8929211671599285,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.02478929102627665,
+     "ci_low": 0.013373822508676253,
+     "ci_high": 0.03718393653941497,
+     "fixed": 98,
+     "broken": 48,
+     "p_value": 4.26634580070168e-05,
+     "accuracy": 0.8934060485870104,
+     "accuracy_low": 0.8791825137481338,
+     "accuracy_high": 0.9061338613700349,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.8417190291058106,
+   "vs_random": {
+    "difference": 0.015551119050120837,
+    "ci_low": 0.011558264158873595,
+    "ci_high": 0.01922874855521698,
+    "fixed": 230,
+    "broken": 82,
+    "p_value": 2.1078207622141162e-17
+   }
+  },
+  {
+   "name": "smallest budget keeping 90% of the full validation gain",
+   "configuration": "T1_k0_zoom_cot",
+   "detector": "token",
+   "budget": 0.3,
+   "val": {
+    "accuracy": 0.8345794392523365,
+    "passes": 4.763551401869159,
+    "share": 0.3
+   },
+   "test_share": 0.29557633708101294,
+   "test_passes": 4.763055584743091,
+   "test_calls": 2.4778816854050647,
+   "test": {
+    "pooled": {
+     "difference": 0.02710938320899443,
+     "ci_low": 0.022378375538510038,
+     "ci_high": 0.031522538615109806,
+     "fixed": 393,
+     "broken": 135,
+     "p_value": 3.14190311139068e-30,
+     "accuracy": 0.8548912472417779,
+     "accuracy_low": 0.8476716963737541,
+     "accuracy_high": 0.8618244053154075,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.0548,
+     "ci_low": 0.0436,
+     "ci_high": 0.066,
+     "fixed": 177,
+     "broken": 40,
+     "p_value": 9.29512115075856e-22,
+     "accuracy": 0.8196,
+     "accuracy_low": 0.8040400363015725,
+     "accuracy_high": 0.8341792504136893,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.022,
+     "ci_low": 0.0128,
+     "ci_high": 0.0308,
+     "fixed": 91,
+     "broken": 36,
+     "p_value": 1.1402294032528228e-06,
+     "accuracy": 0.8372,
+     "accuracy_low": 0.8222125171325674,
+     "accuracy_high": 0.8511527628436101,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.008,
+     "ci_low": 0.002,
+     "ci_high": 0.0144,
+     "fixed": 42,
+     "broken": 22,
+     "p_value": 0.01685819004428113,
+     "accuracy": 0.8784,
+     "accuracy_low": 0.8650046298114212,
+     "accuracy_high": 0.8906342252982629,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.022806147744174516,
+     "ci_low": 0.012890431333663858,
+     "ci_high": 0.034209221616261776,
+     "fixed": 83,
+     "broken": 37,
+     "p_value": 3.243159445418542e-05,
+     "accuracy": 0.8914229053049083,
+     "accuracy_low": 0.8770940096533699,
+     "accuracy_high": 0.9042636187723315,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.8361479457812335,
+   "vs_random": {
+    "difference": 0.018177997268046652,
+    "ci_low": 0.01408006724808238,
+    "ci_high": 0.02227592728801093,
+    "fixed": 285,
+    "broken": 112,
+    "p_value": 1.6995065753745118e-18
+   }
+  },
+  {
+   "name": "best under 2 passes per question (any configuration)",
+   "configuration": "T1_k0_cot",
+   "detector": "token",
+   "budget": 0.2,
+   "val": {
+    "accuracy": 0.8261682242990654,
+    "passes": 1.8370716510903426,
+    "share": 0.2
+   },
+   "test_share": 0.1944940632552275,
+   "test_passes": 1.8289376904486707,
+   "test_calls": 1.1944940632552274,
+   "test": {
+    "pooled": {
+     "difference": 0.021750551644425766,
+     "ci_low": 0.017757696753178523,
+     "ci_high": 0.025743406535673006,
+     "fixed": 296,
+     "broken": 89,
+     "p_value": 4.418048319840625e-27,
+     "accuracy": 0.8495324156772092,
+     "accuracy_low": 0.8422082539707796,
+     "accuracy_high": 0.8565745090992414,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.0516,
+     "ci_low": 0.0416,
+     "ci_high": 0.06200999999999995,
+     "fixed": 155,
+     "broken": 26,
+     "p_value": 1.471631390942319e-23,
+     "accuracy": 0.8164,
+     "accuracy_low": 0.8007418526628539,
+     "accuracy_high": 0.8310872534595142,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.012,
+     "ci_low": 0.0048,
+     "ci_high": 0.0192,
+     "fixed": 54,
+     "broken": 24,
+     "p_value": 0.0009010035205219422,
+     "accuracy": 0.8272,
+     "accuracy_low": 0.8118803383520791,
+     "accuracy_high": 0.8415156272713055,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.004,
+     "ci_low": -0.0008,
+     "ci_high": 0.0088,
+     "fixed": 24,
+     "broken": 14,
+     "p_value": 0.14330665429588407,
+     "accuracy": 0.8744,
+     "accuracy_low": 0.8608320284521352,
+     "accuracy_high": 0.8868191009164317,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.018839861179970253,
+     "ci_low": 0.010411502231036193,
+     "ci_high": 0.02825979176995538,
+     "fixed": 63,
+     "broken": 25,
+     "p_value": 6.27038277122379e-05,
+     "accuracy": 0.887456618740704,
+     "accuracy_low": 0.8729212123948255,
+     "accuracy_high": 0.9005189226459418,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.8328969212987286,
+   "vs_random": {
+    "difference": 0.015866344436271933,
+    "ci_low": 0.012083639802458758,
+    "ci_high": 0.019543973941368076,
+    "fixed": 248,
+    "broken": 97,
+    "p_value": 2.2034823465082836e-16
+   }
+  },
+  {
+   "name": "best under 3 passes per question (any configuration)",
+   "configuration": "T1_k0_cot",
+   "detector": "token",
+   "budget": 0.5,
+   "val": {
+    "accuracy": 0.8325545171339563,
+    "passes": 2.9271028037383178,
+    "share": 0.5
+   },
+   "test_share": 0.4971104339602816,
+   "test_passes": 2.929494588630871,
+   "test_calls": 1.4971104339602817,
+   "test": {
+    "pooled": {
+     "difference": 0.02616370705054114,
+     "ci_low": 0.021120100872123567,
+     "ci_high": 0.031102238100241673,
+     "fixed": 406,
+     "broken": 157,
+     "p_value": 2.1058579464678613e-26,
+     "accuracy": 0.8539455710833246,
+     "accuracy_low": 0.8467073241063983,
+     "accuracy_high": 0.8608981884146797,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.0628,
+     "ci_low": 0.0508,
+     "ci_high": 0.0748,
+     "fixed": 201,
+     "broken": 44,
+     "p_value": 3.691031954167359e-25,
+     "accuracy": 0.8276,
+     "accuracy_low": 0.8122932701845549,
+     "accuracy_high": 0.8419014680129413,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.0096,
+     "ci_low": 0.0016,
+     "ci_high": 0.0184,
+     "fixed": 64,
+     "broken": 40,
+     "p_value": 0.02364563574976815,
+     "accuracy": 0.8248,
+     "accuracy_low": 0.8094033514668428,
+     "accuracy_high": 0.8391999787118712,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.006,
+     "ci_low": -0.0008,
+     "ci_high": 0.0124,
+     "fixed": 44,
+     "broken": 29,
+     "p_value": 0.1006436775202357,
+     "accuracy": 0.8764,
+     "accuracy_low": 0.8629177822434702,
+     "accuracy_high": 0.8887272099956554,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.026276648487853247,
+     "ci_low": 0.014873574615765989,
+     "ci_high": 0.03817550818046604,
+     "fixed": 97,
+     "broken": 44,
+     "p_value": 9.479339374881515e-06,
+     "accuracy": 0.894893406048587,
+     "accuracy_low": 0.8807498409941064,
+     "accuracy_high": 0.9075355941434127,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.840634653777451,
+   "vs_random": {
+    "difference": 0.014710518020384575,
+    "ci_low": 0.011032888515288431,
+    "ci_high": 0.018177997268046652,
+    "fixed": 216,
+    "broken": 76,
+    "p_value": 1.0441308604446798e-16
+   }
+  },
+  {
+   "name": "best under 5 passes per question (any configuration)",
+   "configuration": "T1_k0_ground_cot",
+   "detector": "token",
+   "budget": 0.45,
+   "val": {
+    "accuracy": 0.8361370716510903,
+    "passes": 4.773208722741433,
+    "share": 0.45
+   },
+   "test_share": 0.4510875275822213,
+   "test_passes": 4.781443732268572,
+   "test_calls": 2.804350110328885,
+   "test": {
+    "pooled": {
+     "difference": 0.03099716297152464,
+     "ci_low": 0.026161080172323214,
+     "ci_high": 0.03604076914994221,
+     "fixed": 434,
+     "broken": 139,
+     "p_value": 2.751695282973847e-36,
+     "accuracy": 0.8587790270043081,
+     "accuracy_low": 0.851637425950933,
+     "accuracy_high": 0.8656310978736835,
+     "examples": 9517
+    },
+    "chartqa_full": {
+     "difference": 0.0604,
+     "ci_low": 0.0484,
+     "ci_high": 0.0724,
+     "fixed": 193,
+     "broken": 42,
+     "p_value": 2.553101880245241e-24,
+     "accuracy": 0.8252,
+     "accuracy_low": 0.8098161110867471,
+     "accuracy_high": 0.8395859916660788,
+     "examples": 2500
+    },
+    "textvqa": {
+     "difference": 0.0232,
+     "ci_low": 0.0144,
+     "ci_high": 0.032,
+     "fixed": 92,
+     "broken": 34,
+     "p_value": 2.364920722052492e-07,
+     "accuracy": 0.8384,
+     "accuracy_low": 0.8234536546234676,
+     "accuracy_high": 0.8523079430750449,
+     "examples": 2500
+    },
+    "docvqa": {
+     "difference": 0.0132,
+     "ci_low": 0.0064,
+     "ci_high": 0.02,
+     "fixed": 54,
+     "broken": 21,
+     "p_value": 0.00017630923003028782,
+     "accuracy": 0.8836,
+     "accuracy_low": 0.8704357215399,
+     "accuracy_high": 0.8955871770332366,
+     "examples": 2500
+    },
+    "scienceqa_img": {
+     "difference": 0.026276648487853247,
+     "ci_low": 0.015369360436291522,
+     "ci_high": 0.03817550818046604,
+     "fixed": 95,
+     "broken": 42,
+     "p_value": 6.919784329991297e-06,
+     "accuracy": 0.894893406048587,
+     "accuracy_low": 0.8807498409941064,
+     "accuracy_high": 0.9075355941434127,
+     "examples": 2017
+    }
+   },
+   "test_random_accuracy": 0.8414710518020385,
+   "vs_random": {
+    "difference": 0.01765262162446149,
+    "ci_low": 0.013869916990648313,
+    "ci_high": 0.0215404013869917,
+    "fixed": 248,
+    "broken": 80,
+    "p_value": 3.757852682845796e-21
+   }
+  }
+ ],
+ "curves": {
+  "val": {
+   "T1_k5_everything": {
+    "token": [
+     {
+      "accuracy": 0.8077881619937695,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8160436137071652,
+      "share": 0.05,
+      "passes": 2.619158878504673,
+      "calls": 1.65
+     },
+     {
+      "accuracy": 0.8228971962616822,
+      "share": 0.1,
+      "passes": 3.863551401869159,
+      "calls": 2.3
+     },
+     {
+      "accuracy": 0.8272585669781931,
+      "share": 0.15,
+      "passes": 5.031619937694704,
+      "calls": 2.95
+     },
+     {
+      "accuracy": 0.8316199376947041,
+      "share": 0.2,
+      "passes": 6.168535825545171,
+      "calls": 3.6
+     },
+     {
+      "accuracy": 0.8342679127725857,
+      "share": 0.25,
+      "passes": 7.266510903426791,
+      "calls": 4.25
+     },
+     {
+      "accuracy": 0.8370716510903426,
+      "share": 0.3,
+      "passes": 8.353894080996884,
+      "calls": 4.9
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 0.35,
+      "passes": 9.40607476635514,
+      "calls": 5.55
+     },
+     {
+      "accuracy": 0.8370716510903426,
+      "share": 0.4,
+      "passes": 10.416510903426792,
+      "calls": 6.2
+     },
+     {
+      "accuracy": 0.8372274143302181,
+      "share": 0.45,
+      "passes": 11.404828660436136,
+      "calls": 6.85
+     },
+     {
+      "accuracy": 0.838006230529595,
+      "share": 0.5,
+      "passes": 12.380996884735202,
+      "calls": 7.5
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 0.55,
+      "passes": 13.324766355140186,
+      "calls": 8.15
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 0.6,
+      "passes": 14.282242990654206,
+      "calls": 8.8
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 0.65,
+      "passes": 15.219781931464174,
+      "calls": 9.45
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 0.7,
+      "passes": 16.166666666666668,
+      "calls": 10.1
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 0.75,
+      "passes": 17.121028037383176,
+      "calls": 10.75
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 0.8,
+      "passes": 18.085046728971964,
+      "calls": 11.4
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 0.85,
+      "passes": 19.05498442367601,
+      "calls": 12.05
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 0.9,
+      "passes": 20.03208722741433,
+      "calls": 12.7
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 0.9501557632398754,
+      "passes": 21.033644859813084,
+      "calls": 13.35202492211838
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 1.0,
+      "passes": 22.10747663551402,
+      "calls": 14.0
+     }
+    ],
+    "pre_head": [
+     {
+      "accuracy": 0.8077881619937695,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8135514018691589,
+      "share": 0.05,
+      "passes": 2.4942367601246107,
+      "calls": 1.65
+     },
+     {
+      "accuracy": 0.8194704049844237,
+      "share": 0.1,
+      "passes": 3.709657320872274,
+      "calls": 2.3
+     },
+     {
+      "accuracy": 0.8250778816199377,
+      "share": 0.15,
+      "passes": 4.797352024922119,
+      "calls": 2.95
+     },
+     {
+      "accuracy": 0.8277258566978193,
+      "share": 0.2,
+      "passes": 5.915264797507788,
+      "calls": 3.6
+     },
+     {
+      "accuracy": 0.8308411214953271,
+      "share": 0.25,
+      "passes": 7.020404984423676,
+      "calls": 4.25
+     },
+     {
+      "accuracy": 0.8330218068535825,
+      "share": 0.3,
+      "passes": 8.091277258566977,
+      "calls": 4.9
+     },
+     {
+      "accuracy": 0.8342679127725857,
+      "share": 0.35,
+      "passes": 9.161214953271028,
+      "calls": 5.55
+     },
+     {
+      "accuracy": 0.8350467289719626,
+      "share": 0.4,
+      "passes": 10.231775700934579,
+      "calls": 6.2
+     },
+     {
+      "accuracy": 0.8347352024922119,
+      "share": 0.45,
+      "passes": 11.296417445482867,
+      "calls": 6.85
+     },
+     {
+      "accuracy": 0.8356697819314641,
+      "share": 0.5,
+      "passes": 12.331464174454828,
+      "calls": 7.5
+     },
+     {
+      "accuracy": 0.8362928348909657,
+      "share": 0.55,
+      "passes": 13.378971962616822,
+      "calls": 8.15
+     },
+     {
+      "accuracy": 0.8367601246105919,
+      "share": 0.6,
+      "passes": 14.433333333333334,
+      "calls": 8.8
+     },
+     {
+      "accuracy": 0.8372274143302181,
+      "share": 0.65,
+      "passes": 15.465264797507789,
+      "calls": 9.45
+     },
+     {
+      "accuracy": 0.8370716510903426,
+      "share": 0.7,
+      "passes": 16.493146417445484,
+      "calls": 10.1
+     },
+     {
+      "accuracy": 0.8370716510903426,
+      "share": 0.75,
+      "passes": 17.519781931464173,
+      "calls": 10.75
+     },
+     {
+      "accuracy": 0.8372274143302181,
+      "share": 0.8,
+      "passes": 18.54517133956386,
+      "calls": 11.4
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 0.85,
+      "passes": 19.516666666666666,
+      "calls": 12.05
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 0.9,
+      "passes": 20.445482866043612,
+      "calls": 12.7
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 0.95,
+      "passes": 21.311370716510904,
+      "calls": 13.35
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 1.0,
+      "passes": 22.10747663551402,
+      "calls": 14.0
+     }
+    ],
+    "after_head": [
+     {
+      "accuracy": 0.8077881619937695,
+      "share": 0.0,
+      "passes": 2.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8154205607476636,
+      "share": 0.05,
+      "passes": 3.4763239875389407,
+      "calls": 1.65
+     },
+     {
+      "accuracy": 0.8222741433021807,
+      "share": 0.1,
+      "passes": 4.639563862928349,
+      "calls": 2.3
+     },
+     {
+      "accuracy": 0.8269470404984424,
+      "share": 0.15,
+      "passes": 5.700934579439252,
+      "calls": 2.95
+     },
+     {
+      "accuracy": 0.8305295950155763,
+      "share": 0.2,
+      "passes": 6.760436137071651,
+      "calls": 3.6
+     },
+     {
+      "accuracy": 0.8333333333333334,
+      "share": 0.25,
+      "passes": 7.809034267912772,
+      "calls": 4.25
+     },
+     {
+      "accuracy": 0.8353582554517134,
+      "share": 0.3,
+      "passes": 8.833956386292835,
+      "calls": 4.9
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.35,
+      "passes": 9.841744548286604,
+      "calls": 5.55
+     },
+     {
+      "accuracy": 0.8361370716510903,
+      "share": 0.4,
+      "passes": 10.849844236760125,
+      "calls": 6.2
+     },
+     {
+      "accuracy": 0.8362928348909657,
+      "share": 0.45,
+      "passes": 11.867601246105918,
+      "calls": 6.85
+     },
+     {
+      "accuracy": 0.8370716510903426,
+      "share": 0.5,
+      "passes": 12.868224299065421,
+      "calls": 7.5
+     },
+     {
+      "accuracy": 0.8369158878504673,
+      "share": 0.55,
+      "passes": 13.857009345794392,
+      "calls": 8.15
+     },
+     {
+      "accuracy": 0.8370716510903426,
+      "share": 0.6,
+      "passes": 14.841433021806854,
+      "calls": 8.8
+     },
+     {
+      "accuracy": 0.8372274143302181,
+      "share": 0.65,
+      "passes": 15.837694704049845,
+      "calls": 9.45
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 0.7,
+      "passes": 16.802492211838008,
+      "calls": 10.1
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 0.75,
+      "passes": 17.770716510903426,
+      "calls": 10.75
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 0.8,
+      "passes": 18.739252336448597,
+      "calls": 11.4
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 0.85,
+      "passes": 19.674766355140186,
+      "calls": 12.05
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 0.9,
+      "passes": 20.553894080996884,
+      "calls": 12.7
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 0.95,
+      "passes": 21.357320872274144,
+      "calls": 13.35
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 1.0,
+      "passes": 22.10747663551402,
+      "calls": 14.0
+     }
+    ],
+    "judge": [
+     {
+      "accuracy": 0.8077881619937695,
+      "share": 0.0,
+      "passes": 2.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8105919003115265,
+      "share": 0.05046728971962617,
+      "passes": 2.9635514018691587,
+      "calls": 1.6560747663551403
+     },
+     {
+      "accuracy": 0.8160436137071652,
+      "share": 0.1015576323987539,
+      "passes": 4.047663551401869,
+      "calls": 2.3202492211838006
+     },
+     {
+      "accuracy": 0.8207165109034268,
+      "share": 0.15638629283489097,
+      "passes": 5.229906542056074,
+      "calls": 3.0330218068535824
+     },
+     {
+      "accuracy": 0.8261682242990654,
+      "share": 0.20841121495327103,
+      "passes": 6.354828660436137,
+      "calls": 3.709345794392523
+     },
+     {
+      "accuracy": 0.8300623052959502,
+      "share": 0.2565420560747664,
+      "passes": 7.305607476635514,
+      "calls": 4.335046728971963
+     },
+     {
+      "accuracy": 0.8314641744548287,
+      "share": 0.31012461059190033,
+      "passes": 8.316510903426792,
+      "calls": 5.031619937694704
+     },
+     {
+      "accuracy": 0.8319314641744548,
+      "share": 0.3585669781931464,
+      "passes": 9.19563862928349,
+      "calls": 5.661370716510904
+     },
+     {
+      "accuracy": 0.8330218068535825,
+      "share": 0.4024922118380062,
+      "passes": 10.03613707165109,
+      "calls": 6.232398753894081
+     },
+     {
+      "accuracy": 0.8330218068535825,
+      "share": 0.4570093457943925,
+      "passes": 11.132710280373832,
+      "calls": 6.941121495327103
+     },
+     {
+      "accuracy": 0.8338006230529595,
+      "share": 0.5006230529595016,
+      "passes": 12.020560747663552,
+      "calls": 7.5080996884735205
+     },
+     {
+      "accuracy": 0.8345794392523365,
+      "share": 0.5501557632398754,
+      "passes": 13.045171339563863,
+      "calls": 8.15202492211838
+     },
+     {
+      "accuracy": 0.8345794392523365,
+      "share": 0.6118380062305296,
+      "passes": 14.314330218068536,
+      "calls": 8.953894080996884
+     },
+     {
+      "accuracy": 0.8353582554517134,
+      "share": 0.6595015576323987,
+      "passes": 15.30747663551402,
+      "calls": 9.573520249221184
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 0.7133956386292835,
+      "passes": 16.385358255451713,
+      "calls": 10.274143302180685
+     },
+     {
+      "accuracy": 0.8361370716510903,
+      "share": 0.7665109034267913,
+      "passes": 17.450155763239877,
+      "calls": 10.964641744548286
+     },
+     {
+      "accuracy": 0.8373831775700935,
+      "share": 0.8219626168224299,
+      "passes": 18.552647975077882,
+      "calls": 11.685514018691588
+     },
+     {
+      "accuracy": 0.8373831775700935,
+      "share": 0.8506230529595016,
+      "passes": 19.12772585669782,
+      "calls": 12.05809968847352
+     },
+     {
+      "accuracy": 0.8376947040498443,
+      "share": 0.9177570093457944,
+      "passes": 20.464797507788163,
+      "calls": 12.930841121495327
+     },
+     {
+      "accuracy": 0.8376947040498443,
+      "share": 0.9643302180685358,
+      "passes": 21.4,
+      "calls": 13.536292834890967
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 1.0,
+      "passes": 22.10747663551402,
+      "calls": 14.0
+     }
+    ],
+    "random": [
+     {
+      "accuracy": 0.8077881619937696,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8092274143302179,
+      "share": 0.04957320872274143,
+      "passes": 2.048084112149533,
+      "calls": 1.6444517133956387
+     },
+     {
+      "accuracy": 0.8108193146417445,
+      "share": 0.10021495327102806,
+      "passes": 3.1164392523364484,
+      "calls": 2.3027943925233645
+     },
+     {
+      "accuracy": 0.8122523364485982,
+      "share": 0.15106230529595016,
+      "passes": 4.187641744548286,
+      "calls": 2.963809968847352
+     },
+     {
+      "accuracy": 0.813853582554517,
+      "share": 0.20092523364485984,
+      "passes": 5.242657320872274,
+      "calls": 3.612028037383177
+     },
+     {
+      "accuracy": 0.8151090342679127,
+      "share": 0.2503208722741433,
+      "passes": 6.284127725856698,
+      "calls": 4.254171339563864
+     },
+     {
+      "accuracy": 0.8164766355140187,
+      "share": 0.30031775700934576,
+      "passes": 7.3384049844236765,
+      "calls": 4.904130841121496
+     },
+     {
+      "accuracy": 0.8179781931464176,
+      "share": 0.3505358255451714,
+      "passes": 8.402604361370715,
+      "calls": 5.556965732087228
+     },
+     {
+      "accuracy": 0.8195919003115264,
+      "share": 0.3995514018691589,
+      "passes": 9.437626168224298,
+      "calls": 6.194168224299065
+     },
+     {
+      "accuracy": 0.8212990654205609,
+      "share": 0.4490218068535825,
+      "passes": 10.480928348909659,
+      "calls": 6.837283489096572
+     },
+     {
+      "accuracy": 0.8226822429906541,
+      "share": 0.4994143302180685,
+      "passes": 11.544186915887849,
+      "calls": 7.492386292834892
+     },
+     {
+      "accuracy": 0.8240778816199377,
+      "share": 0.5493489096573209,
+      "passes": 12.59848909657321,
+      "calls": 8.141535825545173
+     },
+     {
+      "accuracy": 0.8257445482866045,
+      "share": 0.5987289719626168,
+      "passes": 13.64011214953271,
+      "calls": 8.783476635514019
+     },
+     {
+      "accuracy": 0.8271962616822429,
+      "share": 0.64897507788162,
+      "passes": 14.700408099688472,
+      "calls": 9.436676012461058
+     },
+     {
+      "accuracy": 0.8285514018691588,
+      "share": 0.6992492211838006,
+      "passes": 15.759834890965731,
+      "calls": 10.090239875389408
+     },
+     {
+      "accuracy": 0.8300498442367602,
+      "share": 0.7497663551401869,
+      "passes": 16.822246105919003,
+      "calls": 10.74696261682243
+     },
+     {
+      "accuracy": 0.831423676012461,
+      "share": 0.799613707165109,
+      "passes": 17.87590031152648,
+      "calls": 11.394978193146416
+     },
+     {
+      "accuracy": 0.8329314641744547,
+      "share": 0.8499345794392523,
+      "passes": 18.940146417445483,
+      "calls": 12.049149532710281
+     },
+     {
+      "accuracy": 0.8344922118380061,
+      "share": 0.9003052959501556,
+      "passes": 20.004242990654205,
+      "calls": 12.703968847352025
+     },
+     {
+      "accuracy": 0.8359532710280375,
+      "share": 0.9501246105919003,
+      "passes": 21.057887850467292,
+      "calls": 13.351619937694704
+     },
+     {
+      "accuracy": 0.8375389408099688,
+      "share": 1.0,
+      "passes": 22.107476635514022,
+      "calls": 14.0
+     }
+    ]
+   },
+   "T1_k0_ground_cot": {
+    "token": [
+     {
+      "accuracy": 0.8077881619937695,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8146417445482866,
+      "share": 0.05,
+      "passes": 1.5218068535825544,
+      "calls": 1.2
+     },
+     {
+      "accuracy": 0.8205607476635514,
+      "share": 0.1,
+      "passes": 1.9797507788161994,
+      "calls": 1.4
+     },
+     {
+      "accuracy": 0.8257009345794393,
+      "share": 0.15,
+      "passes": 2.41214953271028,
+      "calls": 1.6
+     },
+     {
+      "accuracy": 0.8289719626168224,
+      "share": 0.2,
+      "passes": 2.838006230529595,
+      "calls": 1.8
+     },
+     {
+      "accuracy": 0.832398753894081,
+      "share": 0.25,
+      "passes": 3.2461059190031154,
+      "calls": 2.0
+     },
+     {
+      "accuracy": 0.835981308411215,
+      "share": 0.3,
+      "passes": 3.646728971962617,
+      "calls": 2.2
+     },
+     {
+      "accuracy": 0.8353582554517134,
+      "share": 0.35,
+      "passes": 4.038940809968848,
+      "calls": 2.4
+     },
+     {
+      "accuracy": 0.835981308411215,
+      "share": 0.4,
+      "passes": 4.411838006230529,
+      "calls": 2.6
+     },
+     {
+      "accuracy": 0.8361370716510903,
+      "share": 0.45,
+      "passes": 4.773208722741433,
+      "calls": 2.8
+     },
+     {
+      "accuracy": 0.8367601246105919,
+      "share": 0.5,
+      "passes": 5.128348909657321,
+      "calls": 3.0
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 0.55,
+      "passes": 5.475077881619938,
+      "calls": 3.2
+     },
+     {
+      "accuracy": 0.8367601246105919,
+      "share": 0.6,
+      "passes": 5.818691588785047,
+      "calls": 3.4
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 0.65,
+      "passes": 6.159501557632399,
+      "calls": 3.6
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 0.7,
+      "passes": 6.491277258566978,
+      "calls": 3.8
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 0.75,
+      "passes": 6.831775700934579,
+      "calls": 4.0
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 0.8,
+      "passes": 7.165732087227414,
+      "calls": 4.2
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 0.85,
+      "passes": 7.5071651090342675,
+      "calls": 4.4
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 0.9,
+      "passes": 7.845171339563863,
+      "calls": 4.6
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 0.9501557632398754,
+      "passes": 8.182866043613707,
+      "calls": 4.8006230529595015
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 1.0,
+      "passes": 8.52803738317757,
+      "calls": 5.0
+     }
+    ],
+    "pre_head": [
+     {
+      "accuracy": 0.8077881619937695,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8143302180685358,
+      "share": 0.05,
+      "passes": 1.5003115264797509,
+      "calls": 1.2
+     },
+     {
+      "accuracy": 0.8188473520249221,
+      "share": 0.1,
+      "passes": 1.9457943925233645,
+      "calls": 1.4
+     },
+     {
+      "accuracy": 0.82398753894081,
+      "share": 0.15,
+      "passes": 2.365109034267913,
+      "calls": 1.6
+     },
+     {
+      "accuracy": 0.8271028037383178,
+      "share": 0.2,
+      "passes": 2.7791277258566978,
+      "calls": 1.8
+     },
+     {
+      "accuracy": 0.8288161993769471,
+      "share": 0.25,
+      "passes": 3.1940809968847352,
+      "calls": 2.0
+     },
+     {
+      "accuracy": 0.8314641744548287,
+      "share": 0.3,
+      "passes": 3.5847352024922117,
+      "calls": 2.2
+     },
+     {
+      "accuracy": 0.8322429906542056,
+      "share": 0.35,
+      "passes": 3.974766355140187,
+      "calls": 2.4
+     },
+     {
+      "accuracy": 0.8328660436137072,
+      "share": 0.4,
+      "passes": 4.359190031152648,
+      "calls": 2.6
+     },
+     {
+      "accuracy": 0.8330218068535825,
+      "share": 0.45,
+      "passes": 4.733956386292835,
+      "calls": 2.8
+     },
+     {
+      "accuracy": 0.8341121495327103,
+      "share": 0.5,
+      "passes": 5.096884735202492,
+      "calls": 3.0
+     },
+     {
+      "accuracy": 0.8347352024922119,
+      "share": 0.55,
+      "passes": 5.470716510903427,
+      "calls": 3.2
+     },
+     {
+      "accuracy": 0.835202492211838,
+      "share": 0.6,
+      "passes": 5.84018691588785,
+      "calls": 3.4
+     },
+     {
+      "accuracy": 0.8353582554517134,
+      "share": 0.65,
+      "passes": 6.187227414330218,
+      "calls": 3.6
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.7,
+      "passes": 6.535825545171339,
+      "calls": 3.8
+     },
+     {
+      "accuracy": 0.8358255451713396,
+      "share": 0.75,
+      "passes": 6.881308411214953,
+      "calls": 4.0
+     },
+     {
+      "accuracy": 0.8361370716510903,
+      "share": 0.8,
+      "passes": 7.2342679127725855,
+      "calls": 4.2
+     },
+     {
+      "accuracy": 0.8364485981308412,
+      "share": 0.85,
+      "passes": 7.566978193146418,
+      "calls": 4.4
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 0.9,
+      "passes": 7.897196261682243,
+      "calls": 4.6
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 0.95,
+      "passes": 8.219626168224298,
+      "calls": 4.8
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 1.0,
+      "passes": 8.52803738317757,
+      "calls": 5.0
+     }
+    ],
+    "after_head": [
+     {
+      "accuracy": 0.8077881619937695,
+      "share": 0.0,
+      "passes": 2.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8152647975077881,
+      "share": 0.05,
+      "passes": 2.458722741433022,
+      "calls": 1.2
+     },
+     {
+      "accuracy": 0.8208722741433022,
+      "share": 0.1,
+      "passes": 2.858878504672897,
+      "calls": 1.4
+     },
+     {
+      "accuracy": 0.8257009345794393,
+      "share": 0.15,
+      "passes": 3.2319314641744548,
+      "calls": 1.6
+     },
+     {
+      "accuracy": 0.8285046728971963,
+      "share": 0.2,
+      "passes": 3.5962616822429907,
+      "calls": 1.8
+     },
+     {
+      "accuracy": 0.8314641744548287,
+      "share": 0.25,
+      "passes": 3.959657320872274,
+      "calls": 2.0
+     },
+     {
+      "accuracy": 0.8334890965732087,
+      "share": 0.3,
+      "passes": 4.311214953271028,
+      "calls": 2.2
+     },
+     {
+      "accuracy": 0.8338006230529595,
+      "share": 0.35,
+      "passes": 4.644704049844237,
+      "calls": 2.4
+     },
+     {
+      "accuracy": 0.8342679127725857,
+      "share": 0.4,
+      "passes": 4.9766355140186915,
+      "calls": 2.6
+     },
+     {
+      "accuracy": 0.835202492211838,
+      "share": 0.45,
+      "passes": 5.302647975077882,
+      "calls": 2.8
+     },
+     {
+      "accuracy": 0.835981308411215,
+      "share": 0.5,
+      "passes": 5.623052959501558,
+      "calls": 3.0
+     },
+     {
+      "accuracy": 0.8361370716510903,
+      "share": 0.55,
+      "passes": 5.93006230529595,
+      "calls": 3.2
+     },
+     {
+      "accuracy": 0.8361370716510903,
+      "share": 0.6,
+      "passes": 6.2376947040498445,
+      "calls": 3.4
+     },
+     {
+      "accuracy": 0.8364485981308412,
+      "share": 0.65,
+      "passes": 6.545638629283489,
+      "calls": 3.6
+     },
+     {
+      "accuracy": 0.8367601246105919,
+      "share": 0.7,
+      "passes": 6.840809968847352,
+      "calls": 3.8
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 0.75,
+      "passes": 7.135981308411215,
+      "calls": 4.0
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 0.8,
+      "passes": 7.433021806853582,
+      "calls": 4.2
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 0.85,
+      "passes": 7.725077881619938,
+      "calls": 4.4
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 0.9,
+      "passes": 8.0,
+      "calls": 4.6
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 0.95,
+      "passes": 8.269314641744549,
+      "calls": 4.8
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 1.0,
+      "passes": 8.52803738317757,
+      "calls": 5.0
+     }
+    ],
+    "judge": [
+     {
+      "accuracy": 0.8077881619937695,
+      "share": 0.0,
+      "passes": 2.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8110591900311527,
+      "share": 0.05046728971962617,
+      "passes": 2.342367601246106,
+      "calls": 1.2018691588785047
+     },
+     {
+      "accuracy": 0.8166666666666667,
+      "share": 0.1015576323987539,
+      "passes": 2.708722741433022,
+      "calls": 1.4062305295950155
+     },
+     {
+      "accuracy": 0.8216510903426791,
+      "share": 0.15638629283489097,
+      "passes": 3.1049844236760125,
+      "calls": 1.6255451713395639
+     },
+     {
+      "accuracy": 0.8263239875389408,
+      "share": 0.20841121495327103,
+      "passes": 3.4825545171339565,
+      "calls": 1.8336448598130841
+     },
+     {
+      "accuracy": 0.8297507788161994,
+      "share": 0.2565420560747664,
+      "passes": 3.8070093457943925,
+      "calls": 2.0261682242990653
+     },
+     {
+      "accuracy": 0.8309968847352025,
+      "share": 0.31012461059190033,
+      "passes": 4.15809968847352,
+      "calls": 2.2404984423676013
+     },
+     {
+      "accuracy": 0.8311526479750779,
+      "share": 0.3585669781931464,
+      "passes": 4.458878504672898,
+      "calls": 2.4342679127725857
+     },
+     {
+      "accuracy": 0.8317757009345794,
+      "share": 0.4024922118380062,
+      "passes": 4.746417445482866,
+      "calls": 2.609968847352025
+     },
+     {
+      "accuracy": 0.8316199376947041,
+      "share": 0.4570093457943925,
+      "passes": 5.109345794392524,
+      "calls": 2.8280373831775703
+     },
+     {
+      "accuracy": 0.8325545171339563,
+      "share": 0.5006230529595016,
+      "passes": 5.404672897196262,
+      "calls": 3.0024922118380064
+     },
+     {
+      "accuracy": 0.8336448598130841,
+      "share": 0.5501557632398754,
+      "passes": 5.728971962616822,
+      "calls": 3.2006230529595014
+     },
+     {
+      "accuracy": 0.8338006230529595,
+      "share": 0.6118380062305296,
+      "passes": 6.140186915887851,
+      "calls": 3.4473520249221186
+     },
+     {
+      "accuracy": 0.8345794392523365,
+      "share": 0.6595015576323987,
+      "passes": 6.45202492211838,
+      "calls": 3.638006230529595
+     },
+     {
+      "accuracy": 0.8353582554517134,
+      "share": 0.7133956386292835,
+      "passes": 6.789408099688473,
+      "calls": 3.853582554517134
+     },
+     {
+      "accuracy": 0.8348909657320872,
+      "share": 0.7665109034267913,
+      "passes": 7.124143302180685,
+      "calls": 4.066043613707165
+     },
+     {
+      "accuracy": 0.835981308411215,
+      "share": 0.8219626168224299,
+      "passes": 7.463395638629284,
+      "calls": 4.2878504672897195
+     },
+     {
+      "accuracy": 0.835981308411215,
+      "share": 0.8506230529595016,
+      "passes": 7.640031152647975,
+      "calls": 4.402492211838006
+     },
+     {
+      "accuracy": 0.835981308411215,
+      "share": 0.9177570093457944,
+      "passes": 8.042990654205607,
+      "calls": 4.671028037383177
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 0.9643302180685358,
+      "passes": 8.322585669781931,
+      "calls": 4.857320872274143
+     },
+     {
+      "accuracy": 0.8366043613707165,
+      "share": 1.0,
+      "passes": 8.52803738317757,
+      "calls": 5.0
+     }
+    ],
+    "random": [
+     {
+      "accuracy": 0.8077881619937696,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8092118380062305,
+      "share": 0.04957320872274143,
+      "passes": 1.3739875389408098,
+      "calls": 1.1982928348909658
+     },
+     {
+      "accuracy": 0.8107570093457944,
+      "share": 0.10021495327102806,
+      "passes": 1.7558380062305299,
+      "calls": 1.400859813084112
+     },
+     {
+      "accuracy": 0.8121713395638628,
+      "share": 0.15106230529595016,
+      "passes": 2.1378380062305298,
+      "calls": 1.6042492211838006
+     },
+     {
+      "accuracy": 0.813601246105919,
+      "share": 0.20092523364485984,
+      "passes": 2.51396261682243,
+      "calls": 1.8037009345794395
+     },
+     {
+      "accuracy": 0.8149283489096575,
+      "share": 0.2503208722741433,
+      "passes": 2.8856822429906543,
+      "calls": 2.0012834890965734
+     },
+     {
+      "accuracy": 0.8163084112149532,
+      "share": 0.30031775700934576,
+      "passes": 3.2613084112149533,
+      "calls": 2.2012710280373833
+     },
+     {
+      "accuracy": 0.817785046728972,
+      "share": 0.3505358255451714,
+      "passes": 3.6411775700934577,
+      "calls": 2.4021433021806855
+     },
+     {
+      "accuracy": 0.8193520249221184,
+      "share": 0.3995514018691589,
+      "passes": 4.009601246105919,
+      "calls": 2.5982056074766353
+     },
+     {
+      "accuracy": 0.8208816199376947,
+      "share": 0.4490218068535825,
+      "passes": 4.381165109034267,
+      "calls": 2.7960872274143305
+     },
+     {
+      "accuracy": 0.8222429906542055,
+      "share": 0.4994143302180685,
+      "passes": 4.75983800623053,
+      "calls": 2.9976573208722743
+     },
+     {
+      "accuracy": 0.8236791277258568,
+      "share": 0.5493489096573209,
+      "passes": 5.135962616822429,
+      "calls": 3.197395638629284
+     },
+     {
+      "accuracy": 0.8252461059190033,
+      "share": 0.5987289719626168,
+      "passes": 5.507302180685357,
+      "calls": 3.394915887850467
+     },
+     {
+      "accuracy": 0.826669781931464,
+      "share": 0.64897507788162,
+      "passes": 5.8861308411214965,
+      "calls": 3.5959003115264796
+     },
+     {
+      "accuracy": 0.8279844236760125,
+      "share": 0.6992492211838006,
+      "passes": 6.2639439252336455,
+      "calls": 3.7969968847352025
+     },
+     {
+      "accuracy": 0.8294517133956386,
+      "share": 0.7497663551401869,
+      "passes": 6.644423676012462,
+      "calls": 3.999065420560748
+     },
+     {
+      "accuracy": 0.8307165109034268,
+      "share": 0.799613707165109,
+      "passes": 7.02016199376947,
+      "calls": 4.198454828660436
+     },
+     {
+      "accuracy": 0.8321931464174455,
+      "share": 0.8499345794392523,
+      "passes": 7.399345794392523,
+      "calls": 4.399738317757009
+     },
+     {
+      "accuracy": 0.8336012461059191,
+      "share": 0.9003052959501556,
+      "passes": 7.7782741433021805,
+      "calls": 4.601221183800623
+     },
+     {
+      "accuracy": 0.8350155763239875,
+      "share": 0.9501246105919003,
+      "passes": 8.15378816199377,
+      "calls": 4.800498442367601
+     },
+     {
+      "accuracy": 0.8366043613707166,
+      "share": 1.0,
+      "passes": 8.528037383177569,
+      "calls": 5.0
+     }
+    ]
+   },
+   "T1_k0_cot": {
+    "token": [
+     {
+      "accuracy": 0.8077881619937695,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8144859813084112,
+      "share": 0.05,
+      "passes": 1.228816199376947,
+      "calls": 1.05
+     },
+     {
+      "accuracy": 0.8194704049844237,
+      "share": 0.1,
+      "passes": 1.4383177570093457,
+      "calls": 1.1
+     },
+     {
+      "accuracy": 0.8238317757009346,
+      "share": 0.15,
+      "passes": 1.6378504672897196,
+      "calls": 1.15
+     },
+     {
+      "accuracy": 0.8261682242990654,
+      "share": 0.2,
+      "passes": 1.8370716510903426,
+      "calls": 1.2
+     },
+     {
+      "accuracy": 0.8278816199376947,
+      "share": 0.25,
+      "passes": 2.0294392523364486,
+      "calls": 1.25
+     },
+     {
+      "accuracy": 0.8314641744548287,
+      "share": 0.3,
+      "passes": 2.222118380062305,
+      "calls": 1.3
+     },
+     {
+      "accuracy": 0.8311526479750779,
+      "share": 0.35,
+      "passes": 2.4073208722741435,
+      "calls": 1.35
+     },
+     {
+      "accuracy": 0.8320872274143302,
+      "share": 0.4,
+      "passes": 2.5834890965732087,
+      "calls": 1.4
+     },
+     {
+      "accuracy": 0.8319314641744548,
+      "share": 0.45,
+      "passes": 2.7552959501557632,
+      "calls": 1.45
+     },
+     {
+      "accuracy": 0.8325545171339563,
+      "share": 0.5,
+      "passes": 2.9271028037383178,
+      "calls": 1.5
+     },
+     {
+      "accuracy": 0.8320872274143302,
+      "share": 0.55,
+      "passes": 3.094236760124611,
+      "calls": 1.55
+     },
+     {
+      "accuracy": 0.8320872274143302,
+      "share": 0.6,
+      "passes": 3.2588785046728974,
+      "calls": 1.6
+     },
+     {
+      "accuracy": 0.8320872274143302,
+      "share": 0.65,
+      "passes": 3.4219626168224297,
+      "calls": 1.65
+     },
+     {
+      "accuracy": 0.8320872274143302,
+      "share": 0.7,
+      "passes": 3.5781931464174455,
+      "calls": 1.7
+     },
+     {
+      "accuracy": 0.8320872274143302,
+      "share": 0.75,
+      "passes": 3.737227414330218,
+      "calls": 1.75
+     },
+     {
+      "accuracy": 0.8320872274143302,
+      "share": 0.8,
+      "passes": 3.8953271028037384,
+      "calls": 1.8
+     },
+     {
+      "accuracy": 0.8320872274143302,
+      "share": 0.85,
+      "passes": 4.051246105919003,
+      "calls": 1.85
+     },
+     {
+      "accuracy": 0.8320872274143302,
+      "share": 0.9,
+      "passes": 4.208099688473521,
+      "calls": 1.9
+     },
+     {
+      "accuracy": 0.8320872274143302,
+      "share": 0.9501557632398754,
+      "passes": 4.36386292834891,
+      "calls": 1.9501557632398754
+     },
+     {
+      "accuracy": 0.8320872274143302,
+      "share": 1.0,
+      "passes": 4.515576323987539,
+      "calls": 2.0
+     }
+    ],
+    "pre_head": [
+     {
+      "accuracy": 0.8077881619937695,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8141744548286605,
+      "share": 0.05,
+      "passes": 1.2225856697819315,
+      "calls": 1.05
+     },
+     {
+      "accuracy": 0.8185358255451713,
+      "share": 0.1,
+      "passes": 1.4246105919003116,
+      "calls": 1.1
+     },
+     {
+      "accuracy": 0.8227414330218068,
+      "share": 0.15,
+      "passes": 1.621651090342679,
+      "calls": 1.15
+     },
+     {
+      "accuracy": 0.8250778816199377,
+      "share": 0.2,
+      "passes": 1.8124610591900312,
+      "calls": 1.2
+     },
+     {
+      "accuracy": 0.8264797507788162,
+      "share": 0.25,
+      "passes": 2.00607476635514,
+      "calls": 1.25
+     },
+     {
+      "accuracy": 0.8286604361370716,
+      "share": 0.3,
+      "passes": 2.1881619937694703,
+      "calls": 1.3
+     },
+     {
+      "accuracy": 0.8289719626168224,
+      "share": 0.35,
+      "passes": 2.366822429906542,
+      "calls": 1.35
+     },
+     {
+      "accuracy": 0.8292834890965732,
+      "share": 0.4,
+      "passes": 2.5461059190031152,
+      "calls": 1.4
+     },
+     {
+      "accuracy": 0.8288161993769471,
+      "share": 0.45,
+      "passes": 2.7210280373831774,
+      "calls": 1.45
+     },
+     {
+      "accuracy": 0.829595015576324,
+      "share": 0.5,
+      "passes": 2.893146417445483,
+      "calls": 1.5
+     },
+     {
+      "accuracy": 0.8299065420560747,
+      "share": 0.55,
+      "passes": 3.0640186915887853,
+      "calls": 1.55
+     },
+     {
+      "accuracy": 0.8303738317757009,
+      "share": 0.6,
+      "passes": 3.236448598130841,
+      "calls": 1.6
+     },
+     {
+      "accuracy": 0.8305295950155763,
+      "share": 0.65,
+      "passes": 3.3998442367601247,
+      "calls": 1.65
+     },
+     {
+      "accuracy": 0.8308411214953271,
+      "share": 0.7,
+      "passes": 3.563239875389408,
+      "calls": 1.7
+     },
+     {
+      "accuracy": 0.8311526479750779,
+      "share": 0.75,
+      "passes": 3.7269470404984424,
+      "calls": 1.75
+     },
+     {
+      "accuracy": 0.8313084112149532,
+      "share": 0.8,
+      "passes": 3.8909657320872273,
+      "calls": 1.8
+     },
+     {
+      "accuracy": 0.8316199376947041,
+      "share": 0.85,
+      "passes": 4.049376947040498,
+      "calls": 1.85
+     },
+     {
+      "accuracy": 0.8320872274143302,
+      "share": 0.9,
+      "passes": 4.2087227414330215,
+      "calls": 1.9
+     },
+     {
+      "accuracy": 0.8320872274143302,
+      "share": 0.95,
+      "passes": 4.364018691588785,
+      "calls": 1.95
+     },
+     {
+      "accuracy": 0.8320872274143302,
+      "share": 1.0,
+      "passes": 4.515576323987539,
+      "calls": 2.0
+     }
+    ],
+    "after_head": [
+     {
+      "accuracy": 0.8077881619937695,
+      "share": 0.0,
+      "passes": 2.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8141744548286605,
+      "share": 0.05,
+      "passes": 2.1738317757009344,
+      "calls": 1.05
+     },
+     {
+      "accuracy": 0.8185358255451713,
+      "share": 0.1,
+      "passes": 2.3302180685358254,
+      "calls": 1.1
+     },
+     {
+      "accuracy": 0.822429906542056,
+      "share": 0.15,
+      "passes": 2.4785046728971962,
+      "calls": 1.15
+     },
+     {
+      "accuracy": 0.8247663551401869,
+      "share": 0.2,
+      "passes": 2.623676012461059,
+      "calls": 1.2
+     },
+     {
+      "accuracy": 0.8274143302180685,
+      "share": 0.25,
+      "passes": 2.7679127725856696,
+      "calls": 1.25
+     },
+     {
+      "accuracy": 0.8294392523364486,
+      "share": 0.3,
+      "passes": 2.9024922118380063,
+      "calls": 1.3
+     },
+     {
+      "accuracy": 0.8288161993769471,
+      "share": 0.35,
+      "passes": 3.0292834890965734,
+      "calls": 1.35
+     },
+     {
+      "accuracy": 0.8292834890965732,
+      "share": 0.4,
+      "passes": 3.1566978193146418,
+      "calls": 1.4
+     },
+     {
+      "accuracy": 0.8300623052959502,
+      "share": 0.45,
+      "passes": 3.281931464174455,
+      "calls": 1.45
+     },
+     {
+      "accuracy": 0.8308411214953271,
+      "share": 0.5,
+      "passes": 3.407165109034268,
+      "calls": 1.5
+     },
+     {
+      "accuracy": 0.8311526479750779,
+      "share": 0.55,
+      "passes": 3.5230529595015576,
+      "calls": 1.55
+     },
+     {
+      "accuracy": 0.8311526479750779,
+      "share": 0.6,
+      "passes": 3.641121495327103,
+      "calls": 1.6
+     },
+     {
+      "accuracy": 0.8314641744548287,
+      "share": 0.65,
+      "passes": 3.75607476635514,
+      "calls": 1.65
+     },
+     {
+      "accuracy": 0.8319314641744548,
+      "share": 0.7,
+      "passes": 3.8688473520249222,
+      "calls": 1.7
+     },
+     {
+      "accuracy": 0.8319314641744548,
+      "share": 0.75,
+      "passes": 3.980373831775701,
+      "calls": 1.75
+     },
+     {
+      "accuracy": 0.8319314641744548,
+      "share": 0.8,
+      "passes": 4.09190031152648,
+      "calls": 1.8
+     },
+     {
+      "accuracy": 0.8320872274143302,
+      "share": 0.85,
+      "passes": 4.202803738317757,
+      "calls": 1.85
+     },
+     {
+      "accuracy": 0.8320872274143302,
+      "share": 0.9,
+      "passes": 4.309657320872274,
+      "calls": 1.9
+     },
+     {
+      "accuracy": 0.8320872274143302,
+      "share": 0.95,
+      "passes": 4.414641744548287,
+      "calls": 1.95
+     },
+     {
+      "accuracy": 0.8320872274143302,
+      "share": 1.0,
+      "passes": 4.515576323987539,
+      "calls": 2.0
+     }
+    ],
+    "judge": [
+     {
+      "accuracy": 0.8077881619937695,
+      "share": 0.0,
+      "passes": 2.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8107476635514018,
+      "share": 0.05046728971962617,
+      "passes": 2.1404984423676012,
+      "calls": 1.050467289719626
+     },
+     {
+      "accuracy": 0.815576323987539,
+      "share": 0.1015576323987539,
+      "passes": 2.285981308411215,
+      "calls": 1.101557632398754
+     },
+     {
+      "accuracy": 0.8199376947040499,
+      "share": 0.15638629283489097,
+      "passes": 2.4429906542056075,
+      "calls": 1.156386292834891
+     },
+     {
+      "accuracy": 0.8246105919003115,
+      "share": 0.20841121495327103,
+      "passes": 2.5894080996884736,
+      "calls": 1.208411214953271
+     },
+     {
+      "accuracy": 0.8278816199376947,
+      "share": 0.2565420560747664,
+      "passes": 2.715264797507788,
+      "calls": 1.2565420560747664
+     },
+     {
+      "accuracy": 0.8288161993769471,
+      "share": 0.31012461059190033,
+      "passes": 2.850467289719626,
+      "calls": 1.3101246105919002
+     },
+     {
+      "accuracy": 0.8288161993769471,
+      "share": 0.3585669781931464,
+      "passes": 2.966043613707165,
+      "calls": 1.3585669781931464
+     },
+     {
+      "accuracy": 0.8294392523364486,
+      "share": 0.4024922118380062,
+      "passes": 3.075077881619938,
+      "calls": 1.4024922118380063
+     },
+     {
+      "accuracy": 0.8294392523364486,
+      "share": 0.4570093457943925,
+      "passes": 3.2121495327102805,
+      "calls": 1.4570093457943925
+     },
+     {
+      "accuracy": 0.8302180685358256,
+      "share": 0.5006230529595016,
+      "passes": 3.32398753894081,
+      "calls": 1.5006230529595015
+     },
+     {
+      "accuracy": 0.8306853582554518,
+      "share": 0.5501557632398754,
+      "passes": 3.445482866043614,
+      "calls": 1.5501557632398755
+     },
+     {
+      "accuracy": 0.8306853582554518,
+      "share": 0.6118380062305296,
+      "passes": 3.600311526479751,
+      "calls": 1.6118380062305295
+     },
+     {
+      "accuracy": 0.8309968847352025,
+      "share": 0.6595015576323987,
+      "passes": 3.7177570093457946,
+      "calls": 1.6595015576323988
+     },
+     {
+      "accuracy": 0.8314641744548287,
+      "share": 0.7133956386292835,
+      "passes": 3.8479750778816197,
+      "calls": 1.7133956386292835
+     },
+     {
+      "accuracy": 0.8308411214953271,
+      "share": 0.7665109034267913,
+      "passes": 3.9750778816199377,
+      "calls": 1.7665109034267912
+     },
+     {
+      "accuracy": 0.8316199376947041,
+      "share": 0.8219626168224299,
+      "passes": 4.10809968847352,
+      "calls": 1.8219626168224299
+     },
+     {
+      "accuracy": 0.8316199376947041,
+      "share": 0.8506230529595016,
+      "passes": 4.174454828660436,
+      "calls": 1.8506230529595016
+     },
+     {
+      "accuracy": 0.8314641744548287,
+      "share": 0.9177570093457944,
+      "passes": 4.330218068535825,
+      "calls": 1.9177570093457943
+     },
+     {
+      "accuracy": 0.8322429906542056,
+      "share": 0.9643302180685358,
+      "passes": 4.438006230529595,
+      "calls": 1.9643302180685358
+     },
+     {
+      "accuracy": 0.8320872274143302,
+      "share": 1.0,
+      "passes": 4.515576323987539,
+      "calls": 2.0
+     }
+    ],
+    "random": [
+     {
+      "accuracy": 0.8077881619937696,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.80897507788162,
+      "share": 0.04957320872274143,
+      "passes": 1.1743146417445482,
+      "calls": 1.0495732087227414
+     },
+     {
+      "accuracy": 0.8102679127725857,
+      "share": 0.10021495327102806,
+      "passes": 1.3526012461059187,
+      "calls": 1.100214953271028
+     },
+     {
+      "accuracy": 0.8114143302180686,
+      "share": 0.15106230529595016,
+      "passes": 1.5310062305295948,
+      "calls": 1.1510623052959503
+     },
+     {
+      "accuracy": 0.8126199376947042,
+      "share": 0.20092523364485984,
+      "passes": 1.7063021806853584,
+      "calls": 1.20092523364486
+     },
+     {
+      "accuracy": 0.8137819314641744,
+      "share": 0.2503208722741433,
+      "passes": 1.8797788161993774,
+      "calls": 1.2503208722741432
+     },
+     {
+      "accuracy": 0.8150685358255452,
+      "share": 0.30031775700934576,
+      "passes": 2.0555576323987537,
+      "calls": 1.3003177570093458
+     },
+     {
+      "accuracy": 0.8163613707165109,
+      "share": 0.3505358255451714,
+      "passes": 2.232766355140187,
+      "calls": 1.3505358255451712
+     },
+     {
+      "accuracy": 0.8176915887850469,
+      "share": 0.3995514018691589,
+      "passes": 2.405258566978193,
+      "calls": 1.399551401869159
+     },
+     {
+      "accuracy": 0.8189781931464174,
+      "share": 0.4490218068535825,
+      "passes": 2.578660436137072,
+      "calls": 1.4490218068535825
+     },
+     {
+      "accuracy": 0.8200903426791278,
+      "share": 0.4994143302180685,
+      "passes": 2.755956386292835,
+      "calls": 1.4994143302180682
+     },
+     {
+      "accuracy": 0.8212429906542056,
+      "share": 0.5493489096573209,
+      "passes": 2.931666666666666,
+      "calls": 1.5493489096573212
+     },
+     {
+      "accuracy": 0.8225451713395638,
+      "share": 0.5987289719626168,
+      "passes": 3.105077881619938,
+      "calls": 1.598728971962617
+     },
+     {
+      "accuracy": 0.8236791277258565,
+      "share": 0.64897507788162,
+      "passes": 3.2821651090342683,
+      "calls": 1.6489750778816201
+     },
+     {
+      "accuracy": 0.8247912772585668,
+      "share": 0.6992492211838006,
+      "passes": 3.4584392523364484,
+      "calls": 1.6992492211838004
+     },
+     {
+      "accuracy": 0.8260778816199377,
+      "share": 0.7497663551401869,
+      "passes": 3.636258566978193,
+      "calls": 1.7497663551401872
+     },
+     {
+      "accuracy": 0.8271308411214953,
+      "share": 0.799613707165109,
+      "passes": 3.811320872274143,
+      "calls": 1.799613707165109
+     },
+     {
+      "accuracy": 0.8283333333333335,
+      "share": 0.8499345794392523,
+      "passes": 3.988127725856698,
+      "calls": 1.8499345794392523
+     },
+     {
+      "accuracy": 0.8294890965732087,
+      "share": 0.9003052959501556,
+      "passes": 4.165102803738318,
+      "calls": 1.9003052959501556
+     },
+     {
+      "accuracy": 0.830728971962617,
+      "share": 0.9501246105919003,
+      "passes": 4.340361370716511,
+      "calls": 1.9501246105919003
+     },
+     {
+      "accuracy": 0.83208722741433,
+      "share": 1.0,
+      "passes": 4.515576323987539,
+      "calls": 2.0
+     }
+    ]
+   },
+   "T1_k0_zoom_cot": {
+    "token": [
+     {
+      "accuracy": 0.8077881619937695,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8149532710280374,
+      "share": 0.05,
+      "passes": 1.7247663551401868,
+      "calls": 1.25
+     },
+     {
+      "accuracy": 0.8208722741433022,
+      "share": 0.1,
+      "passes": 2.345171339563863,
+      "calls": 1.5
+     },
+     {
+      "accuracy": 0.8249221183800624,
+      "share": 0.15,
+      "passes": 2.9624610591900313,
+      "calls": 1.75
+     },
+     {
+      "accuracy": 0.8285046728971963,
+      "share": 0.2,
+      "passes": 3.5725856697819314,
+      "calls": 2.0
+     },
+     {
+      "accuracy": 0.8317757009345794,
+      "share": 0.25,
+      "passes": 4.166510903426791,
+      "calls": 2.25
+     },
+     {
+      "accuracy": 0.8345794392523365,
+      "share": 0.3,
+      "passes": 4.763551401869159,
+      "calls": 2.5
+     },
+     {
+      "accuracy": 0.834423676012461,
+      "share": 0.35,
+      "passes": 5.340965732087227,
+      "calls": 2.75
+     },
+     {
+      "accuracy": 0.8353582554517134,
+      "share": 0.4,
+      "passes": 5.9009345794392525,
+      "calls": 3.0
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.45,
+      "passes": 6.452180685358256,
+      "calls": 3.25
+     },
+     {
+      "accuracy": 0.835981308411215,
+      "share": 0.5,
+      "passes": 6.999376947040498,
+      "calls": 3.5
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.55,
+      "passes": 7.519781931464174,
+      "calls": 3.75
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.6,
+      "passes": 8.053894080996885,
+      "calls": 4.0
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.65,
+      "passes": 8.569003115264797,
+      "calls": 4.25
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.7,
+      "passes": 9.09252336448598,
+      "calls": 4.5
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.75,
+      "passes": 9.620716510903426,
+      "calls": 4.75
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.8,
+      "passes": 10.163862928348909,
+      "calls": 5.0
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.85,
+      "passes": 10.704517133956386,
+      "calls": 5.25
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.9,
+      "passes": 11.253894080996885,
+      "calls": 5.5
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.9501557632398754,
+      "passes": 11.82803738317757,
+      "calls": 5.750778816199377
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 1.0,
+      "passes": 12.465732087227414,
+      "calls": 6.0
+     }
+    ],
+    "pre_head": [
+     {
+      "accuracy": 0.8077881619937695,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8135514018691589,
+      "share": 0.05,
+      "passes": 1.7042056074766354,
+      "calls": 1.25
+     },
+     {
+      "accuracy": 0.819158878504673,
+      "share": 0.1,
+      "passes": 2.3271028037383177,
+      "calls": 1.5
+     },
+     {
+      "accuracy": 0.8244548286604362,
+      "share": 0.15,
+      "passes": 2.8985981308411213,
+      "calls": 1.75
+     },
+     {
+      "accuracy": 0.8272585669781931,
+      "share": 0.2,
+      "passes": 3.4981308411214953,
+      "calls": 2.0
+     },
+     {
+      "accuracy": 0.8297507788161994,
+      "share": 0.25,
+      "passes": 4.109501557632399,
+      "calls": 2.25
+     },
+     {
+      "accuracy": 0.8311526479750779,
+      "share": 0.3,
+      "passes": 4.694392523364486,
+      "calls": 2.5
+     },
+     {
+      "accuracy": 0.8319314641744548,
+      "share": 0.35,
+      "passes": 5.284579439252337,
+      "calls": 2.75
+     },
+     {
+      "accuracy": 0.8319314641744548,
+      "share": 0.4,
+      "passes": 5.8822429906542055,
+      "calls": 3.0
+     },
+     {
+      "accuracy": 0.8319314641744548,
+      "share": 0.45,
+      "passes": 6.483021806853583,
+      "calls": 3.25
+     },
+     {
+      "accuracy": 0.8328660436137072,
+      "share": 0.5,
+      "passes": 7.065732087227414,
+      "calls": 3.5
+     },
+     {
+      "accuracy": 0.8334890965732087,
+      "share": 0.55,
+      "passes": 7.649376947040499,
+      "calls": 3.75
+     },
+     {
+      "accuracy": 0.8339563862928349,
+      "share": 0.6,
+      "passes": 8.244236760124611,
+      "calls": 4.0
+     },
+     {
+      "accuracy": 0.8342679127725857,
+      "share": 0.65,
+      "passes": 8.835669781931465,
+      "calls": 4.25
+     },
+     {
+      "accuracy": 0.834423676012461,
+      "share": 0.7,
+      "passes": 9.426479750778816,
+      "calls": 4.5
+     },
+     {
+      "accuracy": 0.8347352024922119,
+      "share": 0.75,
+      "passes": 10.011682242990654,
+      "calls": 4.75
+     },
+     {
+      "accuracy": 0.8350467289719626,
+      "share": 0.8,
+      "passes": 10.58411214953271,
+      "calls": 5.0
+     },
+     {
+      "accuracy": 0.8353582554517134,
+      "share": 0.85,
+      "passes": 11.12601246105919,
+      "calls": 5.25
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.9,
+      "passes": 11.628348909657321,
+      "calls": 5.5
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.95,
+      "passes": 12.077102803738319,
+      "calls": 5.75
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 1.0,
+      "passes": 12.465732087227414,
+      "calls": 6.0
+     }
+    ],
+    "after_head": [
+     {
+      "accuracy": 0.8077881619937695,
+      "share": 0.0,
+      "passes": 2.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8149532710280374,
+      "share": 0.05,
+      "passes": 2.663239875389408,
+      "calls": 1.25
+     },
+     {
+      "accuracy": 0.821183800623053,
+      "share": 0.1,
+      "passes": 3.2398753894080996,
+      "calls": 1.5
+     },
+     {
+      "accuracy": 0.8250778816199377,
+      "share": 0.15,
+      "passes": 3.774766355140187,
+      "calls": 1.75
+     },
+     {
+      "accuracy": 0.8286604361370716,
+      "share": 0.2,
+      "passes": 4.321495327102804,
+      "calls": 2.0
+     },
+     {
+      "accuracy": 0.8308411214953271,
+      "share": 0.25,
+      "passes": 4.874454828660436,
+      "calls": 2.25
+     },
+     {
+      "accuracy": 0.8328660436137072,
+      "share": 0.3,
+      "passes": 5.412772585669782,
+      "calls": 2.5
+     },
+     {
+      "accuracy": 0.8325545171339563,
+      "share": 0.35,
+      "passes": 5.947663551401869,
+      "calls": 2.75
+     },
+     {
+      "accuracy": 0.8334890965732087,
+      "share": 0.4,
+      "passes": 6.491277258566978,
+      "calls": 3.0
+     },
+     {
+      "accuracy": 0.8339563862928349,
+      "share": 0.45,
+      "passes": 7.044236760124611,
+      "calls": 3.25
+     },
+     {
+      "accuracy": 0.8347352024922119,
+      "share": 0.5,
+      "passes": 7.584735202492212,
+      "calls": 3.5
+     },
+     {
+      "accuracy": 0.8347352024922119,
+      "share": 0.55,
+      "passes": 8.11619937694704,
+      "calls": 3.75
+     },
+     {
+      "accuracy": 0.8347352024922119,
+      "share": 0.6,
+      "passes": 8.653271028037382,
+      "calls": 4.0
+     },
+     {
+      "accuracy": 0.8350467289719626,
+      "share": 0.65,
+      "passes": 9.195015576323987,
+      "calls": 4.25
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.7,
+      "passes": 9.722741433021806,
+      "calls": 4.5
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.75,
+      "passes": 10.251090342679127,
+      "calls": 4.75
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.8,
+      "passes": 10.775077881619938,
+      "calls": 5.0
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.85,
+      "passes": 11.277570093457944,
+      "calls": 5.25
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.9,
+      "passes": 11.736448598130842,
+      "calls": 5.5
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.95,
+      "passes": 12.122429906542056,
+      "calls": 5.75
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 1.0,
+      "passes": 12.465732087227414,
+      "calls": 6.0
+     }
+    ],
+    "judge": [
+     {
+      "accuracy": 0.8077881619937695,
+      "share": 0.0,
+      "passes": 2.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8102803738317756,
+      "share": 0.05046728971962617,
+      "passes": 2.4566978193146416,
+      "calls": 1.2523364485981308
+     },
+     {
+      "accuracy": 0.8154205607476636,
+      "share": 0.1015576323987539,
+      "passes": 2.965109034267913,
+      "calls": 1.5077881619937694
+     },
+     {
+      "accuracy": 0.8197819314641744,
+      "share": 0.15638629283489097,
+      "passes": 3.520872274143302,
+      "calls": 1.7819314641744548
+     },
+     {
+      "accuracy": 0.8247663551401869,
+      "share": 0.20841121495327103,
+      "passes": 4.066043613707165,
+      "calls": 2.042056074766355
+     },
+     {
+      "accuracy": 0.8283489096573209,
+      "share": 0.2565420560747664,
+      "passes": 4.52772585669782,
+      "calls": 2.282710280373832
+     },
+     {
+      "accuracy": 0.8297507788161994,
+      "share": 0.31012461059190033,
+      "passes": 5.019314641744549,
+      "calls": 2.5506230529595015
+     },
+     {
+      "accuracy": 0.8300623052959502,
+      "share": 0.3585669781931464,
+      "passes": 5.452336448598131,
+      "calls": 2.792834890965732
+     },
+     {
+      "accuracy": 0.8309968847352025,
+      "share": 0.4024922118380062,
+      "passes": 5.872274143302181,
+      "calls": 3.012461059190031
+     },
+     {
+      "accuracy": 0.8309968847352025,
+      "share": 0.4570093457943925,
+      "passes": 6.440809968847352,
+      "calls": 3.2850467289719627
+     },
+     {
+      "accuracy": 0.8319314641744548,
+      "share": 0.5006230529595016,
+      "passes": 6.9102803738317755,
+      "calls": 3.5031152647975077
+     },
+     {
+      "accuracy": 0.8328660436137072,
+      "share": 0.5501557632398754,
+      "passes": 7.466978193146417,
+      "calls": 3.750778816199377
+     },
+     {
+      "accuracy": 0.8325545171339563,
+      "share": 0.6118380062305296,
+      "passes": 8.162616822429907,
+      "calls": 4.059190031152648
+     },
+     {
+      "accuracy": 0.8331775700934579,
+      "share": 0.6595015576323987,
+      "passes": 8.708722741433021,
+      "calls": 4.297507788161994
+     },
+     {
+      "accuracy": 0.8338006230529595,
+      "share": 0.7133956386292835,
+      "passes": 9.302803738317756,
+      "calls": 4.566978193146418
+     },
+     {
+      "accuracy": 0.8333333333333334,
+      "share": 0.7665109034267913,
+      "passes": 9.883489096573209,
+      "calls": 4.832554517133956
+     },
+     {
+      "accuracy": 0.8345794392523365,
+      "share": 0.8219626168224299,
+      "passes": 10.490965732087227,
+      "calls": 5.109813084112149
+     },
+     {
+      "accuracy": 0.8347352024922119,
+      "share": 0.8506230529595016,
+      "passes": 10.805607476635513,
+      "calls": 5.253115264797508
+     },
+     {
+      "accuracy": 0.8348909657320872,
+      "share": 0.9177570093457944,
+      "passes": 11.548909657320872,
+      "calls": 5.588785046728972
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 0.9643302180685358,
+      "passes": 12.06853582554517,
+      "calls": 5.821651090342679
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 1.0,
+      "passes": 12.465732087227414,
+      "calls": 6.0
+     }
+    ],
+    "random": [
+     {
+      "accuracy": 0.8077881619937696,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8091308411214954,
+      "share": 0.04957320872274143,
+      "passes": 1.5700031152647977,
+      "calls": 1.2478660436137072
+     },
+     {
+      "accuracy": 0.8105607476635516,
+      "share": 0.10021495327102806,
+      "passes": 2.1504704049844237,
+      "calls": 1.5010747663551405
+     },
+     {
+      "accuracy": 0.8118660436137073,
+      "share": 0.15106230529595016,
+      "passes": 2.732495327102804,
+      "calls": 1.7553115264797505
+     },
+     {
+      "accuracy": 0.8132928348909658,
+      "share": 0.20092523364485984,
+      "passes": 3.3049439252336446,
+      "calls": 2.0046261682242994
+     },
+     {
+      "accuracy": 0.8145669781931466,
+      "share": 0.2503208722741433,
+      "passes": 3.8707196261682246,
+      "calls": 2.2516043613707164
+     },
+     {
+      "accuracy": 0.8159937694704049,
+      "share": 0.30031775700934576,
+      "passes": 4.4425856697819315,
+      "calls": 2.501588785046729
+     },
+     {
+      "accuracy": 0.817423676012461,
+      "share": 0.3505358255451714,
+      "passes": 5.020436137071651,
+      "calls": 2.7526791277258567
+     },
+     {
+      "accuracy": 0.818931464174455,
+      "share": 0.3995514018691589,
+      "passes": 5.583171339563863,
+      "calls": 2.9977570093457953
+     },
+     {
+      "accuracy": 0.8204797507788161,
+      "share": 0.4490218068535825,
+      "passes": 6.14993769470405,
+      "calls": 3.2451090342679123
+     },
+     {
+      "accuracy": 0.8217570093457944,
+      "share": 0.4994143302180685,
+      "passes": 6.728155763239876,
+      "calls": 3.4970716510903426
+     },
+     {
+      "accuracy": 0.8231152647975079,
+      "share": 0.5493489096573209,
+      "passes": 7.299679127725857,
+      "calls": 3.746744548286605
+     },
+     {
+      "accuracy": 0.824619937694704,
+      "share": 0.5987289719626168,
+      "passes": 7.86582554517134,
+      "calls": 3.993644859813084
+     },
+     {
+      "accuracy": 0.8259345794392523,
+      "share": 0.64897507788162,
+      "passes": 8.441866043613707,
+      "calls": 4.2448753894081
+     },
+     {
+      "accuracy": 0.8272087227414331,
+      "share": 0.6992492211838006,
+      "passes": 9.01744859813084,
+      "calls": 4.496246105919003
+     },
+     {
+      "accuracy": 0.8286728971962617,
+      "share": 0.7497663551401869,
+      "passes": 9.594140186915888,
+      "calls": 4.748831775700935
+     },
+     {
+      "accuracy": 0.8299501557632398,
+      "share": 0.799613707165109,
+      "passes": 10.166629283489096,
+      "calls": 4.998068535825545
+     },
+     {
+      "accuracy": 0.8313333333333334,
+      "share": 0.8499345794392523,
+      "passes": 10.745199376947038,
+      "calls": 5.24967289719626
+     },
+     {
+      "accuracy": 0.832588785046729,
+      "share": 0.9003052959501556,
+      "passes": 11.322498442367603,
+      "calls": 5.501526479750779
+     },
+     {
+      "accuracy": 0.8340280373831775,
+      "share": 0.9501246105919003,
+      "passes": 11.895520249221184,
+      "calls": 5.750623052959502
+     },
+     {
+      "accuracy": 0.8355140186915888,
+      "share": 1.0,
+      "passes": 12.465732087227412,
+      "calls": 6.0
+     }
+    ]
+   }
+  },
+  "test": {
+   "T1_k5_everything": {
+    "token": [
+     {
+      "accuracy": 0.8277818640327834,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8374487758747504,
+      "share": 0.04150467584322791,
+      "passes": 2.3164862876957026,
+      "calls": 1.5395607859619629
+     },
+     {
+      "accuracy": 0.8468004623305664,
+      "share": 0.09414731533046128,
+      "passes": 3.6180519071135864,
+      "calls": 2.2239150992959966
+     },
+     {
+      "accuracy": 0.8498476410633603,
+      "share": 0.14395292634233478,
+      "passes": 4.8075023641903964,
+      "calls": 2.871388042450352
+     },
+     {
+      "accuracy": 0.8529998949248713,
+      "share": 0.1944940632552275,
+      "passes": 6.004203005148681,
+      "calls": 3.5284228223179572
+     },
+     {
+      "accuracy": 0.8556267731427971,
+      "share": 0.24377429862351582,
+      "passes": 7.119155195965115,
+      "calls": 4.169065882105706
+     },
+     {
+      "accuracy": 0.8569927498161185,
+      "share": 0.29557633708101294,
+      "passes": 8.245875801197856,
+      "calls": 4.842492382053168
+     },
+     {
+      "accuracy": 0.858673951875591,
+      "share": 0.3487443522118315,
+      "passes": 9.364085321004518,
+      "calls": 5.533676578753809
+     },
+     {
+      "accuracy": 0.8591993275191762,
+      "share": 0.3984448880949879,
+      "passes": 10.38173794262898,
+      "calls": 6.179783545234843
+     },
+     {
+      "accuracy": 0.8594094777766103,
+      "share": 0.4510875275822213,
+      "passes": 11.427550698749606,
+      "calls": 6.864137858568877
+     },
+     {
+      "accuracy": 0.8589891772617422,
+      "share": 0.4971104339602816,
+      "passes": 12.31480508563623,
+      "calls": 7.462435641483661
+     },
+     {
+      "accuracy": 0.8590942523904592,
+      "share": 0.5471261952295892,
+      "passes": 13.268256803614584,
+      "calls": 8.112640537984658
+     },
+     {
+      "accuracy": 0.8588841021330251,
+      "share": 0.594935378795839,
+      "passes": 14.185457602185563,
+      "calls": 8.734159924345906
+     },
+     {
+      "accuracy": 0.8587790270043081,
+      "share": 0.6461069664810339,
+      "passes": 15.161710623095514,
+      "calls": 9.39939056425344
+     },
+     {
+      "accuracy": 0.8587790270043081,
+      "share": 0.6953872018493222,
+      "passes": 16.09887569612273,
+      "calls": 10.04003362404119
+     },
+     {
+      "accuracy": 0.8587790270043081,
+      "share": 0.7451928128611958,
+      "passes": 17.041189450457075,
+      "calls": 10.687506567195545
+     },
+     {
+      "accuracy": 0.8587790270043081,
+      "share": 0.7944730482294841,
+      "passes": 17.978144373226858,
+      "calls": 11.328149626983294
+     },
+     {
+      "accuracy": 0.8587790270043081,
+      "share": 0.8442786592413576,
+      "passes": 18.943994956393823,
+      "calls": 11.975622570137649
+     },
+     {
+      "accuracy": 0.8587790270043081,
+      "share": 0.8967111484711568,
+      "passes": 19.96963328780078,
+      "calls": 12.657244930125039
+     },
+     {
+      "accuracy": 0.8587790270043081,
+      "share": 0.9437848061363875,
+      "passes": 20.927498161185248,
+      "calls": 13.269202479773037
+     },
+     {
+      "accuracy": 0.8587790270043081,
+      "share": 1.0,
+      "passes": 22.132184511926027,
+      "calls": 14.0
+     }
+    ],
+    "pre_head": [
+     {
+      "accuracy": 0.8277818640327834,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8363980245875802,
+      "share": 0.04076914994220868,
+      "passes": 2.2287485552169803,
+      "calls": 1.529998949248713
+     },
+     {
+      "accuracy": 0.8444888094987917,
+      "share": 0.09025953556793107,
+      "passes": 3.4386886623936115,
+      "calls": 2.173373962383104
+     },
+     {
+      "accuracy": 0.8494273405484922,
+      "share": 0.1379636440054639,
+      "passes": 4.50814332247557,
+      "calls": 2.793527372071031
+     },
+     {
+      "accuracy": 0.8511085426079646,
+      "share": 0.18409162551224126,
+      "passes": 5.529788798991278,
+      "calls": 3.3931911316591363
+     },
+     {
+      "accuracy": 0.8523694441525691,
+      "share": 0.2317957339497741,
+      "passes": 6.569612272775034,
+      "calls": 4.013344541347063
+     },
+     {
+      "accuracy": 0.8533151203110224,
+      "share": 0.28065566880319426,
+      "passes": 7.641483660817484,
+      "calls": 4.648523694441526
+     },
+     {
+      "accuracy": 0.8547861721130608,
+      "share": 0.32583797415151833,
+      "passes": 8.611957549647999,
+      "calls": 5.235893663969739
+     },
+     {
+      "accuracy": 0.8559419985289481,
+      "share": 0.37038982872754017,
+      "passes": 9.55700325732899,
+      "calls": 5.815067773458022
+     },
+     {
+      "accuracy": 0.8562572239150993,
+      "share": 0.4215614164127351,
+      "passes": 10.649889671114847,
+      "calls": 6.480298413365556
+     },
+     {
+      "accuracy": 0.8562572239150993,
+      "share": 0.4729431543553641,
+      "passes": 11.725123463276242,
+      "calls": 7.148261006619733
+     },
+     {
+      "accuracy": 0.8566775244299675,
+      "share": 0.5221183145949354,
+      "passes": 12.765997688347168,
+      "calls": 7.78753808973416
+     },
+     {
+      "accuracy": 0.8572029000735526,
+      "share": 0.5752863297257539,
+      "passes": 13.870127140905748,
+      "calls": 8.4787222864348
+     },
+     {
+      "accuracy": 0.8578333508458548,
+      "share": 0.6251970158663445,
+      "passes": 14.919092150887884,
+      "calls": 9.127561206262477
+     },
+     {
+      "accuracy": 0.8580435011032889,
+      "share": 0.6764736786802564,
+      "passes": 15.992749816118526,
+      "calls": 9.794157822843333
+     },
+     {
+      "accuracy": 0.858253651360723,
+      "share": 0.7286960176526216,
+      "passes": 17.071346012398866,
+      "calls": 10.473048229484082
+     },
+     {
+      "accuracy": 0.8584638016181569,
+      "share": 0.7827046338131765,
+      "passes": 18.163707050541138,
+      "calls": 11.175160239571294
+     },
+     {
+      "accuracy": 0.858568876746874,
+      "share": 0.8439634338552064,
+      "passes": 19.378060313123882,
+      "calls": 11.971524640117684
+     },
+     {
+      "accuracy": 0.8587790270043081,
+      "share": 0.8929284438373437,
+      "passes": 20.325207523379216,
+      "calls": 12.608069769885468
+     },
+     {
+      "accuracy": 0.8587790270043081,
+      "share": 0.9459913838394453,
+      "passes": 21.256698539455712,
+      "calls": 13.297887989912788
+     },
+     {
+      "accuracy": 0.8587790270043081,
+      "share": 1.0,
+      "passes": 22.132184511926027,
+      "calls": 14.0
+     }
+    ],
+    "after_head": [
+     {
+      "accuracy": 0.8277818640327834,
+      "share": 0.0,
+      "passes": 2.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8374487758747504,
+      "share": 0.046022906378060315,
+      "passes": 3.353787958390249,
+      "calls": 1.598297782914784
+     },
+     {
+      "accuracy": 0.8452243353998109,
+      "share": 0.09635389303351896,
+      "passes": 4.534622254912263,
+      "calls": 2.2526006094357465
+     },
+     {
+      "accuracy": 0.8519491436377009,
+      "share": 0.14426815172848587,
+      "passes": 5.554061153724914,
+      "calls": 2.875485972470316
+     },
+     {
+      "accuracy": 0.8548912472417779,
+      "share": 0.19207733529473572,
+      "passes": 6.571818850478092,
+      "calls": 3.4970053588315646
+     },
+     {
+      "accuracy": 0.8556267731427971,
+      "share": 0.23841546705894714,
+      "passes": 7.531364925922034,
+      "calls": 4.099401071766313
+     },
+     {
+      "accuracy": 0.8560470736576652,
+      "share": 0.28181149521908166,
+      "passes": 8.438793737522328,
+      "calls": 4.6635494378480615
+     },
+     {
+      "accuracy": 0.8562572239150993,
+      "share": 0.33203740674582327,
+      "passes": 9.466218346117474,
+      "calls": 5.316486287695702
+     },
+     {
+      "accuracy": 0.8564673741725334,
+      "share": 0.37795523799516656,
+      "passes": 10.392770831144269,
+      "calls": 5.913418093937165
+     },
+     {
+      "accuracy": 0.8580435011032889,
+      "share": 0.43175370389828727,
+      "passes": 11.476725858989177,
+      "calls": 6.612798150677735
+     },
+     {
+      "accuracy": 0.858673951875591,
+      "share": 0.47662078386046025,
+      "passes": 12.366291898707576,
+      "calls": 7.196070190185983
+     },
+     {
+      "accuracy": 0.8584638016181569,
+      "share": 0.5214878638226332,
+      "passes": 13.268677104129452,
+      "calls": 7.779342229694231
+     },
+     {
+      "accuracy": 0.8584638016181569,
+      "share": 0.5713985499632237,
+      "passes": 14.256593464326993,
+      "calls": 8.428181149521908
+     },
+     {
+      "accuracy": 0.858673951875591,
+      "share": 0.6250919407376274,
+      "passes": 15.317221813596722,
+      "calls": 9.126195229589156
+     },
+     {
+      "accuracy": 0.858673951875591,
+      "share": 0.6747924766207839,
+      "passes": 16.295891562467165,
+      "calls": 9.772302196070191
+     },
+     {
+      "accuracy": 0.858673951875591,
+      "share": 0.7278554166228853,
+      "passes": 17.332772932646844,
+      "calls": 10.462120416097509
+     },
+     {
+      "accuracy": 0.858673951875591,
+      "share": 0.7828097089418935,
+      "passes": 18.386886623936114,
+      "calls": 11.176526216244614
+     },
+     {
+      "accuracy": 0.858673951875591,
+      "share": 0.8398655038352422,
+      "passes": 19.457602185562678,
+      "calls": 11.918251549858148
+     },
+     {
+      "accuracy": 0.8587790270043081,
+      "share": 0.8968162235998739,
+      "passes": 20.491331301880845,
+      "calls": 12.65861090679836
+     },
+     {
+      "accuracy": 0.8587790270043081,
+      "share": 0.94830303667122,
+      "passes": 21.344961647578018,
+      "calls": 13.32793947672586
+     },
+     {
+      "accuracy": 0.8587790270043081,
+      "share": 1.0,
+      "passes": 22.132184511926027,
+      "calls": 14.0
+     }
+    ],
+    "judge": [
+     {
+      "accuracy": 0.8277818640327834,
+      "share": 0.0,
+      "passes": 2.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8312493432804455,
+      "share": 0.04907008511085426,
+      "passes": 2.95786487338447,
+      "calls": 1.6379111064411054
+     },
+     {
+      "accuracy": 0.8357675738152779,
+      "share": 0.09582851738993381,
+      "passes": 3.9396868761164234,
+      "calls": 2.2457707260691393
+     },
+     {
+      "accuracy": 0.8410213302511296,
+      "share": 0.14458337711463695,
+      "passes": 4.991699064831354,
+      "calls": 2.8795839024902805
+     },
+     {
+      "accuracy": 0.8439634338552064,
+      "share": 0.1826205737102028,
+      "passes": 5.808342965220133,
+      "calls": 3.3740674582326364
+     },
+     {
+      "accuracy": 0.8464852369444152,
+      "share": 0.22790795418724388,
+      "passes": 6.717873279394767,
+      "calls": 3.9628034044341702
+     },
+     {
+      "accuracy": 0.8486918146474729,
+      "share": 0.27697803929809817,
+      "passes": 7.623620888935589,
+      "calls": 4.600714510875275
+     },
+     {
+      "accuracy": 0.8501628664495114,
+      "share": 0.3251024482504991,
+      "passes": 8.524745192812862,
+      "calls": 5.226331827256488
+     },
+     {
+      "accuracy": 0.8514237679941158,
+      "share": 0.3688137017967847,
+      "passes": 9.356309761479459,
+      "calls": 5.794578123358201
+     },
+     {
+      "accuracy": 0.8524745192812861,
+      "share": 0.421246191026584,
+      "passes": 10.390669328569928,
+      "calls": 6.476200483345592
+     },
+     {
+      "accuracy": 0.8535252705684564,
+      "share": 0.46548282021645476,
+      "passes": 11.286329725753914,
+      "calls": 7.051276662813912
+     },
+     {
+      "accuracy": 0.8540506462120416,
+      "share": 0.5146579804560261,
+      "passes": 12.296522013239466,
+      "calls": 7.690553745928339
+     },
+     {
+      "accuracy": 0.8552064726279289,
+      "share": 0.5794893348744352,
+      "passes": 13.634758852579594,
+      "calls": 8.533361353367658
+     },
+     {
+      "accuracy": 0.8564673741725334,
+      "share": 0.6278238940842703,
+      "passes": 14.638016181569823,
+      "calls": 9.161710623095514
+     },
+     {
+      "accuracy": 0.8563622990438163,
+      "share": 0.6828832615319954,
+      "passes": 15.762109908584637,
+      "calls": 9.87748239991594
+     },
+     {
+      "accuracy": 0.8572029000735526,
+      "share": 0.7421456341284018,
+      "passes": 16.973415992434592,
+      "calls": 10.647893243669223
+     },
+     {
+      "accuracy": 0.8576232005884207,
+      "share": 0.7999369549227697,
+      "passes": 18.15193863612483,
+      "calls": 11.399180413996007
+     },
+     {
+      "accuracy": 0.8573079752022696,
+      "share": 0.8304087422507093,
+      "passes": 18.763686035515395,
+      "calls": 11.79531364925922
+     },
+     {
+      "accuracy": 0.8578333508458548,
+      "share": 0.903541031837764,
+      "passes": 20.214353262582748,
+      "calls": 12.746033413890933
+     },
+     {
+      "accuracy": 0.8584638016181569,
+      "share": 0.9570242723547336,
+      "passes": 21.272459808763266,
+      "calls": 13.441315540611537
+     },
+     {
+      "accuracy": 0.8587790270043081,
+      "share": 1.0,
+      "passes": 22.132184511926027,
+      "calls": 14.0
+     }
+    ],
+    "random": [
+     {
+      "accuracy": 0.8277818640327834,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8292655248502679,
+      "share": 0.049635389303351894,
+      "passes": 2.0485468109698437,
+      "calls": 1.6452600609435748
+     },
+     {
+      "accuracy": 0.8307954187243881,
+      "share": 0.10034254491961753,
+      "passes": 3.1200714510875276,
+      "calls": 2.304453083955028
+     },
+     {
+      "accuracy": 0.8323547336345487,
+      "share": 0.15072186613428604,
+      "passes": 4.185674056950719,
+      "calls": 2.9593842597457183
+     },
+     {
+      "accuracy": 0.8341010822738256,
+      "share": 0.20056740569507198,
+      "passes": 5.240247977303772,
+      "calls": 3.607376274035935
+     },
+     {
+      "accuracy": 0.8355994536093307,
+      "share": 0.24994431018177996,
+      "passes": 6.2824293369759365,
+      "calls": 4.24927603236314
+     },
+     {
+      "accuracy": 0.8371860880529579,
+      "share": 0.2999453609330671,
+      "passes": 7.340226962278029,
+      "calls": 4.899289692129873
+     },
+     {
+      "accuracy": 0.8386865608910371,
+      "share": 0.3498959756225702,
+      "passes": 8.397297467689398,
+      "calls": 5.548647683093412
+     },
+     {
+      "accuracy": 0.8402206577703057,
+      "share": 0.3995040453924556,
+      "passes": 9.444127351056006,
+      "calls": 6.1935525901019215
+     },
+     {
+      "accuracy": 0.8417379426289798,
+      "share": 0.44908059262372596,
+      "passes": 10.492754019123675,
+      "calls": 6.838047704108439
+     },
+     {
+      "accuracy": 0.8433813176421141,
+      "share": 0.49942839129977934,
+      "passes": 11.556971734790375,
+      "calls": 7.492569086897131
+     },
+     {
+      "accuracy": 0.8449931701166333,
+      "share": 0.5494210360407691,
+      "passes": 12.614950089313858,
+      "calls": 8.14247346853
+     },
+     {
+      "accuracy": 0.8465041504675844,
+      "share": 0.5990606283492698,
+      "passes": 13.66359356940212,
+      "calls": 8.787788168540507
+     },
+     {
+      "accuracy": 0.8480067248082379,
+      "share": 0.6491583482189764,
+      "passes": 14.721332352632132,
+      "calls": 9.439058526846695
+     },
+     {
+      "accuracy": 0.8497194494063255,
+      "share": 0.6994115792791846,
+      "passes": 15.78385415572134,
+      "calls": 10.092350530629401
+     },
+     {
+      "accuracy": 0.8513102868551015,
+      "share": 0.7499590206998004,
+      "passes": 16.848624566565093,
+      "calls": 10.749467269097407
+     },
+     {
+      "accuracy": 0.8527855416622886,
+      "share": 0.7999726804665336,
+      "passes": 17.905094042240204,
+      "calls": 11.399644846064938
+     },
+     {
+      "accuracy": 0.8543322475570032,
+      "share": 0.8501502574340652,
+      "passes": 18.96445098245245,
+      "calls": 12.051953346642849
+     },
+     {
+      "accuracy": 0.8558243143847852,
+      "share": 0.9002605863192181,
+      "passes": 20.024476200483342,
+      "calls": 12.70338762214984
+     },
+     {
+      "accuracy": 0.8572764526636544,
+      "share": 0.9502238100241672,
+      "passes": 21.07853735420826,
+      "calls": 13.352909530314173
+     },
+     {
+      "accuracy": 0.8587790270043082,
+      "share": 1.0,
+      "passes": 22.132184511926024,
+      "calls": 14.0
+     }
+    ]
+   },
+   "T1_k0_ground_cot": {
+    "token": [
+     {
+      "accuracy": 0.8277818640327834,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8361878743301461,
+      "share": 0.04150467584322791,
+      "passes": 1.4255542713039824,
+      "calls": 1.1660187033729117
+     },
+     {
+      "accuracy": 0.8458547861721131,
+      "share": 0.09414731533046128,
+      "passes": 1.9118419670064095,
+      "calls": 1.3765892613218451
+     },
+     {
+      "accuracy": 0.8493222654197752,
+      "share": 0.14395292634233478,
+      "passes": 2.361983818430178,
+      "calls": 1.575811705369339
+     },
+     {
+      "accuracy": 0.8526846695387201,
+      "share": 0.1944940632552275,
+      "passes": 2.8016181569822423,
+      "calls": 1.77797625302091
+     },
+     {
+      "accuracy": 0.8545760218556268,
+      "share": 0.24377429862351582,
+      "passes": 3.203635599453609,
+      "calls": 1.9750971944940632
+     },
+     {
+      "accuracy": 0.8564673741725334,
+      "share": 0.29557633708101294,
+      "passes": 3.6180519071135864,
+      "calls": 2.1823053483240518
+     },
+     {
+      "accuracy": 0.8578333508458548,
+      "share": 0.3487443522118315,
+      "passes": 4.026373857307975,
+      "calls": 2.3949774088473257
+     },
+     {
+      "accuracy": 0.8584638016181569,
+      "share": 0.3984448880949879,
+      "passes": 4.400441315540611,
+      "calls": 2.5937795523799516
+     },
+     {
+      "accuracy": 0.8587790270043081,
+      "share": 0.4510875275822213,
+      "passes": 4.781443732268572,
+      "calls": 2.804350110328885
+     },
+     {
+      "accuracy": 0.858568876746874,
+      "share": 0.4971104339602816,
+      "passes": 5.106336030261637,
+      "calls": 2.9884417358411266
+     },
+     {
+      "accuracy": 0.858568876746874,
+      "share": 0.5471261952295892,
+      "passes": 5.455605758117054,
+      "calls": 3.1885047809183567
+     },
+     {
+      "accuracy": 0.8584638016181569,
+      "share": 0.594935378795839,
+      "passes": 5.785331512031102,
+      "calls": 3.379741515183356
+     },
+     {
+      "accuracy": 0.85835872648944,
+      "share": 0.6461069664810339,
+      "passes": 6.133970789114216,
+      "calls": 3.5844278659241358
+     },
+     {
+      "accuracy": 0.85835872648944,
+      "share": 0.6953872018493222,
+      "passes": 6.467269097404644,
+      "calls": 3.781548807397289
+     },
+     {
+      "accuracy": 0.85835872648944,
+      "share": 0.7451928128611958,
+      "passes": 6.803509509299149,
+      "calls": 3.980771251444783
+     },
+     {
+      "accuracy": 0.85835872648944,
+      "share": 0.7944730482294841,
+      "passes": 7.130503309866555,
+      "calls": 4.177892192917937
+     },
+     {
+      "accuracy": 0.85835872648944,
+      "share": 0.8442786592413576,
+      "passes": 7.469265524850268,
+      "calls": 4.37711463696543
+     },
+     {
+      "accuracy": 0.85835872648944,
+      "share": 0.8967111484711568,
+      "passes": 7.819586003992855,
+      "calls": 4.586844593884628
+     },
+     {
+      "accuracy": 0.85835872648944,
+      "share": 0.9437848061363875,
+      "passes": 8.136702742460859,
+      "calls": 4.77513922454555
+     },
+     {
+      "accuracy": 0.85835872648944,
+      "share": 1.0,
+      "passes": 8.525690868971315,
+      "calls": 5.0
+     }
+    ],
+    "pre_head": [
+     {
+      "accuracy": 0.8277818640327834,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8363980245875802,
+      "share": 0.04076914994220868,
+      "passes": 1.4160975097194495,
+      "calls": 1.1630765997688348
+     },
+     {
+      "accuracy": 0.8443837343700746,
+      "share": 0.09025953556793107,
+      "passes": 1.8637175580540086,
+      "calls": 1.3610381422717244
+     },
+     {
+      "accuracy": 0.8503730167069454,
+      "share": 0.1379636440054639,
+      "passes": 2.271198907218661,
+      "calls": 1.5518545760218556
+     },
+     {
+      "accuracy": 0.8517389933802669,
+      "share": 0.18409162551224126,
+      "passes": 2.6580855311547755,
+      "calls": 1.736366502048965
+     },
+     {
+      "accuracy": 0.8525795944100032,
+      "share": 0.2317957339497741,
+      "passes": 3.048544709467269,
+      "calls": 1.9271829357990964
+     },
+     {
+      "accuracy": 0.8536303456971734,
+      "share": 0.28065566880319426,
+      "passes": 3.4446779447304823,
+      "calls": 2.122622675212777
+     },
+     {
+      "accuracy": 0.8548912472417779,
+      "share": 0.32583797415151833,
+      "passes": 3.7989912787643165,
+      "calls": 2.3033518966060735
+     },
+     {
+      "accuracy": 0.8557318482715142,
+      "share": 0.37038982872754017,
+      "passes": 4.137963644005464,
+      "calls": 2.481559314910161
+     },
+     {
+      "accuracy": 0.8561521487863822,
+      "share": 0.4215614164127351,
+      "passes": 4.519806661763161,
+      "calls": 2.6862456656509406
+     },
+     {
+      "accuracy": 0.8562572239150993,
+      "share": 0.4729431543553641,
+      "passes": 4.893663969738363,
+      "calls": 2.891772617421456
+     },
+     {
+      "accuracy": 0.8565724493012504,
+      "share": 0.5221183145949354,
+      "passes": 5.255963013554692,
+      "calls": 3.0884732583797416
+     },
+     {
+      "accuracy": 0.8569927498161185,
+      "share": 0.5752863297257539,
+      "passes": 5.640327834401597,
+      "calls": 3.3011453189030155
+     },
+     {
+      "accuracy": 0.8574130503309867,
+      "share": 0.6251970158663445,
+      "passes": 5.99821372281181,
+      "calls": 3.500788063465378
+     },
+     {
+      "accuracy": 0.8577282757171377,
+      "share": 0.6764736786802564,
+      "passes": 6.3624041189450455,
+      "calls": 3.7058947147210257
+     },
+     {
+      "accuracy": 0.8579384259745718,
+      "share": 0.7286960176526216,
+      "passes": 6.72554376379111,
+      "calls": 3.9147840706104864
+     },
+     {
+      "accuracy": 0.8581485762320059,
+      "share": 0.7827046338131765,
+      "passes": 7.10024167279605,
+      "calls": 4.130818535252706
+     },
+     {
+      "accuracy": 0.8581485762320059,
+      "share": 0.8439634338552064,
+      "passes": 7.513607229168856,
+      "calls": 4.375853735420826
+     },
+     {
+      "accuracy": 0.85835872648944,
+      "share": 0.8929284438373437,
+      "passes": 7.8418619312808655,
+      "calls": 4.571713775349375
+     },
+     {
+      "accuracy": 0.85835872648944,
+      "share": 0.9459913838394453,
+      "passes": 8.189240306819375,
+      "calls": 4.783965535357781
+     },
+     {
+      "accuracy": 0.85835872648944,
+      "share": 1.0,
+      "passes": 8.525690868971315,
+      "calls": 5.0
+     }
+    ],
+    "after_head": [
+     {
+      "accuracy": 0.8277818640327834,
+      "share": 0.0,
+      "passes": 2.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8371335504885994,
+      "share": 0.046022906378060315,
+      "passes": 2.4289166754229274,
+      "calls": 1.1840916255122413
+     },
+     {
+      "accuracy": 0.8452243353998109,
+      "share": 0.09635389303351896,
+      "passes": 2.835032047914259,
+      "calls": 1.385415572134076
+     },
+     {
+      "accuracy": 0.8515288431228328,
+      "share": 0.14426815172848587,
+      "passes": 3.1948092886413786,
+      "calls": 1.5770726069139436
+     },
+     {
+      "accuracy": 0.8549963223704949,
+      "share": 0.19207733529473572,
+      "passes": 3.5500682988336663,
+      "calls": 1.768309341178943
+     },
+     {
+      "accuracy": 0.855311547756646,
+      "share": 0.23841546705894714,
+      "passes": 3.880529578648734,
+      "calls": 1.9536618682357887
+     },
+     {
+      "accuracy": 0.8557318482715142,
+      "share": 0.28181149521908166,
+      "passes": 4.191867185037301,
+      "calls": 2.1272459808763267
+     },
+     {
+      "accuracy": 0.8561521487863822,
+      "share": 0.33203740674582327,
+      "passes": 4.5344121046548285,
+      "calls": 2.328149626983293
+     },
+     {
+      "accuracy": 0.8562572239150993,
+      "share": 0.37795523799516656,
+      "passes": 4.834401597141957,
+      "calls": 2.511820951980666
+     },
+     {
+      "accuracy": 0.8574130503309867,
+      "share": 0.43175370389828727,
+      "passes": 5.1859829778291475,
+      "calls": 2.727014815593149
+     },
+     {
+      "accuracy": 0.8579384259745718,
+      "share": 0.47662078386046025,
+      "passes": 5.466218346117474,
+      "calls": 2.906483135441841
+     },
+     {
+      "accuracy": 0.8579384259745718,
+      "share": 0.5214878638226332,
+      "passes": 5.750026268782179,
+      "calls": 3.085951455290533
+     },
+     {
+      "accuracy": 0.8580435011032889,
+      "share": 0.5713985499632237,
+      "passes": 6.0550593674477255,
+      "calls": 3.285594199852895
+     },
+     {
+      "accuracy": 0.8581485762320059,
+      "share": 0.6250919407376274,
+      "passes": 6.385730797520227,
+      "calls": 3.5003677629505097
+     },
+     {
+      "accuracy": 0.858253651360723,
+      "share": 0.6747924766207839,
+      "passes": 6.686350740779657,
+      "calls": 3.6991699064831356
+     },
+     {
+      "accuracy": 0.858253651360723,
+      "share": 0.7278554166228853,
+      "passes": 7.001681202059473,
+      "calls": 3.9114216664915413
+     },
+     {
+      "accuracy": 0.858253651360723,
+      "share": 0.7828097089418935,
+      "passes": 7.322265419775139,
+      "calls": 4.131238835767574
+     },
+     {
+      "accuracy": 0.858253651360723,
+      "share": 0.8398655038352422,
+      "passes": 7.646842492382053,
+      "calls": 4.359462015340969
+     },
+     {
+      "accuracy": 0.85835872648944,
+      "share": 0.8968162235998739,
+      "passes": 7.97131448986025,
+      "calls": 4.587264894399496
+     },
+     {
+      "accuracy": 0.85835872648944,
+      "share": 0.94830303667122,
+      "passes": 8.256068088683408,
+      "calls": 4.79321214668488
+     },
+     {
+      "accuracy": 0.85835872648944,
+      "share": 1.0,
+      "passes": 8.525690868971315,
+      "calls": 5.0
+     }
+    ],
+    "judge": [
+     {
+      "accuracy": 0.8277818640327834,
+      "share": 0.0,
+      "passes": 2.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8312493432804455,
+      "share": 0.04907008511085426,
+      "passes": 2.3386571398549965,
+      "calls": 1.196280340443417
+     },
+     {
+      "accuracy": 0.836082799201429,
+      "share": 0.09582851738993381,
+      "passes": 2.672480823789009,
+      "calls": 1.3833140695597352
+     },
+     {
+      "accuracy": 0.8417568561521488,
+      "share": 0.14458337711463695,
+      "passes": 3.0303667121992226,
+      "calls": 1.578333508458548
+     },
+     {
+      "accuracy": 0.8448040348849427,
+      "share": 0.1826205737102028,
+      "passes": 3.305663549437848,
+      "calls": 1.7304822948408112
+     },
+     {
+      "accuracy": 0.8475359882315856,
+      "share": 0.22790795418724388,
+      "passes": 3.6188925081433223,
+      "calls": 1.9116318167489754
+     },
+     {
+      "accuracy": 0.8499527161920774,
+      "share": 0.27697803929809817,
+      "passes": 3.928969212987286,
+      "calls": 2.1079121571923927
+     },
+     {
+      "accuracy": 0.851844068508984,
+      "share": 0.3251024482504991,
+      "passes": 4.234947987811285,
+      "calls": 2.300409793001996
+     },
+     {
+      "accuracy": 0.8527897446674372,
+      "share": 0.3688137017967847,
+      "passes": 4.517600084060103,
+      "calls": 2.475254807187139
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 0.421246191026584,
+      "passes": 4.87075759167805,
+      "calls": 2.684984764106336
+     },
+     {
+      "accuracy": 0.8543658715981927,
+      "share": 0.46548282021645476,
+      "passes": 5.164232426184722,
+      "calls": 2.8619312808658193
+     },
+     {
+      "accuracy": 0.8546810969843438,
+      "share": 0.5146579804560261,
+      "passes": 5.495429231900809,
+      "calls": 3.0586319218241043
+     },
+     {
+      "accuracy": 0.855311547756646,
+      "share": 0.5794893348744352,
+      "passes": 5.9280235368288325,
+      "calls": 3.317957339497741
+     },
+     {
+      "accuracy": 0.8564673741725334,
+      "share": 0.6278238940842703,
+      "passes": 6.247241777871178,
+      "calls": 3.5112955763370812
+     },
+     {
+      "accuracy": 0.8566775244299675,
+      "share": 0.6828832615319954,
+      "passes": 6.600294210360408,
+      "calls": 3.7315330461279816
+     },
+     {
+      "accuracy": 0.8576232005884207,
+      "share": 0.7421456341284018,
+      "passes": 6.974992119365346,
+      "calls": 3.9685825365136074
+     },
+     {
+      "accuracy": 0.8578333508458548,
+      "share": 0.7999369549227697,
+      "passes": 7.340443417043186,
+      "calls": 4.199747819691079
+     },
+     {
+      "accuracy": 0.8575181254597037,
+      "share": 0.8304087422507093,
+      "passes": 7.529578648733844,
+      "calls": 4.321634969002837
+     },
+     {
+      "accuracy": 0.8577282757171377,
+      "share": 0.903541031837764,
+      "passes": 7.960806976988547,
+      "calls": 4.614164127351056
+     },
+     {
+      "accuracy": 0.858253651360723,
+      "share": 0.9570242723547336,
+      "passes": 8.279289692129872,
+      "calls": 4.828097089418934
+     },
+     {
+      "accuracy": 0.85835872648944,
+      "share": 1.0,
+      "passes": 8.525690868971315,
+      "calls": 5.0
+     }
+    ],
+    "random": [
+     {
+      "accuracy": 0.8277818640327834,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8292361038142272,
+      "share": 0.049635389303351894,
+      "passes": 1.3736555637280656,
+      "calls": 1.1985415572134077
+     },
+     {
+      "accuracy": 0.8306819375853735,
+      "share": 0.10034254491961753,
+      "passes": 1.755044656929705,
+      "calls": 1.4013701796784703
+     },
+     {
+      "accuracy": 0.8322097299569192,
+      "share": 0.15072186613428604,
+      "passes": 2.1343028265209623,
+      "calls": 1.602887464537144
+     },
+     {
+      "accuracy": 0.8339434695807504,
+      "share": 0.20056740569507198,
+      "passes": 2.509370599978985,
+      "calls": 1.802269622780288
+     },
+     {
+      "accuracy": 0.8353829988441734,
+      "share": 0.24994431018177996,
+      "passes": 2.881214668487969,
+      "calls": 1.99977724072712
+     },
+     {
+      "accuracy": 0.8369002837028474,
+      "share": 0.2999453609330671,
+      "passes": 3.258220027319534,
+      "calls": 2.1997814437322685
+     },
+     {
+      "accuracy": 0.8384406850898393,
+      "share": 0.3498959756225702,
+      "passes": 3.63477566460019,
+      "calls": 2.3995839024902805
+     },
+     {
+      "accuracy": 0.8399768834716822,
+      "share": 0.3995040453924556,
+      "passes": 4.007586424293369,
+      "calls": 2.5980161815698226
+     },
+     {
+      "accuracy": 0.8414710518020385,
+      "share": 0.44908059262372596,
+      "passes": 4.38046443206893,
+      "calls": 2.796322370494904
+     },
+     {
+      "accuracy": 0.843078701271409,
+      "share": 0.49942839129977934,
+      "passes": 4.7587559104759904,
+      "calls": 2.997713565199117
+     },
+     {
+      "accuracy": 0.8446275086686981,
+      "share": 0.5494210360407691,
+      "passes": 5.1351098035095095,
+      "calls": 3.1976841441630763
+     },
+     {
+      "accuracy": 0.846106966481034,
+      "share": 0.5990606283492698,
+      "passes": 5.508466953872019,
+      "calls": 3.3962425133970786
+     },
+     {
+      "accuracy": 0.847569612272775,
+      "share": 0.6491583482189764,
+      "passes": 5.885510139749921,
+      "calls": 3.5966333928759058
+     },
+     {
+      "accuracy": 0.8492319008090784,
+      "share": 0.6994115792791846,
+      "passes": 6.263763791110644,
+      "calls": 3.7976463171167385
+     },
+     {
+      "accuracy": 0.8508038247346852,
+      "share": 0.7499590206998004,
+      "passes": 6.643286750026269,
+      "calls": 3.9998360827992014
+     },
+     {
+      "accuracy": 0.8523169065882107,
+      "share": 0.7999726804665336,
+      "passes": 7.01937585373542,
+      "calls": 4.199890721866135
+     },
+     {
+      "accuracy": 0.8538678154880739,
+      "share": 0.8501502574340652,
+      "passes": 7.396965430282652,
+      "calls": 4.400601029736261
+     },
+     {
+      "accuracy": 0.8553682883261531,
+      "share": 0.9002605863192181,
+      "passes": 7.774466743721761,
+      "calls": 4.6010423452768725
+     },
+     {
+      "accuracy": 0.8568708626668069,
+      "share": 0.9502238100241672,
+      "passes": 8.150299464116843,
+      "calls": 4.8008952400966685
+     },
+     {
+      "accuracy": 0.85835872648944,
+      "share": 1.0,
+      "passes": 8.525690868971315,
+      "calls": 5.0
+     }
+    ]
+   },
+   "T1_k0_cot": {
+    "token": [
+     {
+      "accuracy": 0.8277818640327834,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8352421981716928,
+      "share": 0.04150467584322791,
+      "passes": 1.1886098560470737,
+      "calls": 1.0415046758432278
+     },
+     {
+      "accuracy": 0.8441735841126405,
+      "share": 0.09414731533046128,
+      "passes": 1.4142061574025429,
+      "calls": 1.0941473153304613
+     },
+     {
+      "accuracy": 0.8473258379741515,
+      "share": 0.14395292634233478,
+      "passes": 1.6222549122622676,
+      "calls": 1.1439529263423347
+     },
+     {
+      "accuracy": 0.8495324156772092,
+      "share": 0.1944940632552275,
+      "passes": 1.8289376904486707,
+      "calls": 1.1944940632552274
+     },
+     {
+      "accuracy": 0.8512136177366817,
+      "share": 0.24377429862351582,
+      "passes": 2.016496795208574,
+      "calls": 1.2437742986235159
+     },
+     {
+      "accuracy": 0.8523694441525691,
+      "share": 0.29557633708101294,
+      "passes": 2.2156141641273512,
+      "calls": 1.295576337081013
+     },
+     {
+      "accuracy": 0.8539455710833246,
+      "share": 0.3487443522118315,
+      "passes": 2.4114742040559,
+      "calls": 1.3487443522118314
+     },
+     {
+      "accuracy": 0.8541557213407587,
+      "share": 0.3984448880949879,
+      "passes": 2.5902069980035725,
+      "calls": 1.398444888094988
+     },
+     {
+      "accuracy": 0.8544709467269097,
+      "share": 0.4510875275822213,
+      "passes": 2.7731427970999265,
+      "calls": 1.4510875275822213
+     },
+     {
+      "accuracy": 0.8539455710833246,
+      "share": 0.4971104339602816,
+      "passes": 2.929494588630871,
+      "calls": 1.4971104339602817
+     },
+     {
+      "accuracy": 0.8537354208258905,
+      "share": 0.5471261952295892,
+      "passes": 3.0950929914889147,
+      "calls": 1.5471261952295892
+     },
+     {
+      "accuracy": 0.8533151203110224,
+      "share": 0.594935378795839,
+      "passes": 3.2521803089208783,
+      "calls": 1.5949353787958391
+     },
+     {
+      "accuracy": 0.8533151203110224,
+      "share": 0.6461069664810339,
+      "passes": 3.4197751392245457,
+      "calls": 1.646106966481034
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 0.6953872018493222,
+      "passes": 3.5762320058842074,
+      "calls": 1.6953872018493223
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 0.7451928128611958,
+      "passes": 3.7340548492171903,
+      "calls": 1.7451928128611958
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 0.7944730482294841,
+      "passes": 3.88988126510455,
+      "calls": 1.7944730482294842
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 0.8442786592413576,
+      "passes": 4.04602290637806,
+      "calls": 1.8442786592413576
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 0.8967111484711568,
+      "passes": 4.208153829988442,
+      "calls": 1.896711148471157
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 0.9437848061363875,
+      "passes": 4.352947357360513,
+      "calls": 1.9437848061363876
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 1.0,
+      "passes": 4.523904591783125,
+      "calls": 2.0
+     }
+    ],
+    "pre_head": [
+     {
+      "accuracy": 0.8277818640327834,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8356624986865608,
+      "share": 0.04076914994220868,
+      "passes": 1.1874540296311864,
+      "calls": 1.0407691499422087
+     },
+     {
+      "accuracy": 0.842492382053168,
+      "share": 0.09025953556793107,
+      "passes": 1.3943469580750236,
+      "calls": 1.090259535567931
+     },
+     {
+      "accuracy": 0.8482715141326048,
+      "share": 0.1379636440054639,
+      "passes": 1.584743091310287,
+      "calls": 1.137963644005464
+     },
+     {
+      "accuracy": 0.8499527161920774,
+      "share": 0.18409162551224126,
+      "passes": 1.7626352842282231,
+      "calls": 1.1840916255122413
+     },
+     {
+      "accuracy": 0.8501628664495114,
+      "share": 0.2317957339497741,
+      "passes": 1.9412630030471787,
+      "calls": 1.231795733949774
+     },
+     {
+      "accuracy": 0.8505831669643795,
+      "share": 0.28065566880319426,
+      "passes": 2.1237785016286646,
+      "calls": 1.2806556688031943
+     },
+     {
+      "accuracy": 0.8513186928653987,
+      "share": 0.32583797415151833,
+      "passes": 2.2902175055164444,
+      "calls": 1.3258379741515183
+     },
+     {
+      "accuracy": 0.851844068508984,
+      "share": 0.37038982872754017,
+      "passes": 2.446148996532521,
+      "calls": 1.3703898287275402
+     },
+     {
+      "accuracy": 0.852159293895135,
+      "share": 0.4215614164127351,
+      "passes": 2.6261426920247977,
+      "calls": 1.421561416412735
+     },
+     {
+      "accuracy": 0.8523694441525691,
+      "share": 0.4729431543553641,
+      "passes": 2.8048754859724703,
+      "calls": 1.4729431543553642
+     },
+     {
+      "accuracy": 0.852264369023852,
+      "share": 0.5221183145949354,
+      "passes": 2.9765682462961016,
+      "calls": 1.5221183145949353
+     },
+     {
+      "accuracy": 0.852264369023852,
+      "share": 0.5752863297257539,
+      "passes": 3.157087317431964,
+      "calls": 1.575286329725754
+     },
+     {
+      "accuracy": 0.8526846695387201,
+      "share": 0.6251970158663445,
+      "passes": 3.3269938005674056,
+      "calls": 1.6251970158663445
+     },
+     {
+      "accuracy": 0.8531049700535883,
+      "share": 0.6764736786802564,
+      "passes": 3.498266260376169,
+      "calls": 1.6764736786802563
+     },
+     {
+      "accuracy": 0.8533151203110224,
+      "share": 0.7286960176526216,
+      "passes": 3.6681727435116107,
+      "calls": 1.7286960176526216
+     },
+     {
+      "accuracy": 0.8532100451823054,
+      "share": 0.7827046338131765,
+      "passes": 3.842177156667017,
+      "calls": 1.7827046338131765
+     },
+     {
+      "accuracy": 0.8532100451823054,
+      "share": 0.8439634338552064,
+      "passes": 4.037932121466849,
+      "calls": 1.8439634338552064
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 0.8929284438373437,
+      "passes": 4.19512451402753,
+      "calls": 1.8929284438373437
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 0.9459913838394453,
+      "passes": 4.360407691499422,
+      "calls": 1.9459913838394451
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 1.0,
+      "passes": 4.523904591783125,
+      "calls": 2.0
+     }
+    ],
+    "after_head": [
+     {
+      "accuracy": 0.8277818640327834,
+      "share": 0.0,
+      "passes": 2.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8354523484291269,
+      "share": 0.046022906378060315,
+      "passes": 2.1660187033729117,
+      "calls": 1.0460229063780604
+     },
+     {
+      "accuracy": 0.8415467058947147,
+      "share": 0.09635389303351896,
+      "passes": 2.3290953031417465,
+      "calls": 1.096353893033519
+     },
+     {
+      "accuracy": 0.8472207628454345,
+      "share": 0.14426815172848587,
+      "passes": 2.472627928969213,
+      "calls": 1.1442681517284858
+     },
+     {
+      "accuracy": 0.8508983923505307,
+      "share": 0.19207733529473572,
+      "passes": 2.6113270988756963,
+      "calls": 1.1920773352947358
+     },
+     {
+      "accuracy": 0.8515288431228328,
+      "share": 0.23841546705894714,
+      "passes": 2.739518755910476,
+      "calls": 1.2384154670589471
+     },
+     {
+      "accuracy": 0.8514237679941158,
+      "share": 0.28181149521908166,
+      "passes": 2.8611957549648,
+      "calls": 1.2818114952190816
+     },
+     {
+      "accuracy": 0.8515288431228328,
+      "share": 0.33203740674582327,
+      "passes": 2.994010717663129,
+      "calls": 1.3320374067458232
+     },
+     {
+      "accuracy": 0.852054218766418,
+      "share": 0.37795523799516656,
+      "passes": 3.1106441105390354,
+      "calls": 1.3779552379951665
+     },
+     {
+      "accuracy": 0.8531049700535883,
+      "share": 0.43175370389828727,
+      "passes": 3.247662078386046,
+      "calls": 1.4317537038982873
+     },
+     {
+      "accuracy": 0.8533151203110224,
+      "share": 0.47662078386046025,
+      "passes": 3.3558894609645895,
+      "calls": 1.4766207838604601
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 0.5214878638226332,
+      "passes": 3.4660081958600397,
+      "calls": 1.5214878638226332
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 0.5713985499632237,
+      "passes": 3.5843227907954187,
+      "calls": 1.5713985499632237
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 0.6250919407376274,
+      "passes": 3.710623095513292,
+      "calls": 1.6250919407376274
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 0.6747924766207839,
+      "passes": 3.823894084270253,
+      "calls": 1.6747924766207838
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 0.7278554166228853,
+      "passes": 3.945150782809709,
+      "calls": 1.7278554166228854
+     },
+     {
+      "accuracy": 0.8533151203110224,
+      "share": 0.7828097089418935,
+      "passes": 4.066407481349165,
+      "calls": 1.7828097089418935
+     },
+     {
+      "accuracy": 0.8533151203110224,
+      "share": 0.8398655038352422,
+      "passes": 4.188294630660923,
+      "calls": 1.8398655038352423
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 0.8968162235998739,
+      "passes": 4.311232531259851,
+      "calls": 1.896816223599874
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 0.94830303667122,
+      "passes": 4.4203005148681305,
+      "calls": 1.94830303667122
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 1.0,
+      "passes": 4.523904591783125,
+      "calls": 2.0
+     }
+    ],
+    "judge": [
+     {
+      "accuracy": 0.8277818640327834,
+      "share": 0.0,
+      "passes": 2.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8301985919932752,
+      "share": 0.04907008511085426,
+      "passes": 2.134496164757802,
+      "calls": 1.0490700851108543
+     },
+     {
+      "accuracy": 0.8347168225281076,
+      "share": 0.09582851738993381,
+      "passes": 2.269622780287906,
+      "calls": 1.0958285173899338
+     },
+     {
+      "accuracy": 0.8403908794788274,
+      "share": 0.14458337711463695,
+      "passes": 2.411894504570768,
+      "calls": 1.144583377114637
+     },
+     {
+      "accuracy": 0.8431228328254702,
+      "share": 0.1826205737102028,
+      "passes": 2.5192812861195755,
+      "calls": 1.182620573710203
+     },
+     {
+      "accuracy": 0.8462750866869811,
+      "share": 0.22790795418724388,
+      "passes": 2.6409582851738995,
+      "calls": 1.227907954187244
+     },
+     {
+      "accuracy": 0.848586739518756,
+      "share": 0.27697803929809817,
+      "passes": 2.760954082168751,
+      "calls": 1.276978039298098
+     },
+     {
+      "accuracy": 0.8499527161920774,
+      "share": 0.3251024482504991,
+      "passes": 2.8796889776189976,
+      "calls": 1.3251024482504992
+     },
+     {
+      "accuracy": 0.8508983923505307,
+      "share": 0.3688137017967847,
+      "passes": 2.987496059682673,
+      "calls": 1.3688137017967847
+     },
+     {
+      "accuracy": 0.8515288431228328,
+      "share": 0.421246191026584,
+      "passes": 3.121151623410739,
+      "calls": 1.4212461910265841
+     },
+     {
+      "accuracy": 0.8516339182515499,
+      "share": 0.46548282021645476,
+      "passes": 3.231690658821057,
+      "calls": 1.4654828202164547
+     },
+     {
+      "accuracy": 0.8517389933802669,
+      "share": 0.5146579804560261,
+      "passes": 3.357150362509194,
+      "calls": 1.514657980456026
+     },
+     {
+      "accuracy": 0.852264369023852,
+      "share": 0.5794893348744352,
+      "passes": 3.5229589156246717,
+      "calls": 1.5794893348744352
+     },
+     {
+      "accuracy": 0.8524745192812861,
+      "share": 0.6278238940842703,
+      "passes": 3.6444257644215616,
+      "calls": 1.6278238940842702
+     },
+     {
+      "accuracy": 0.8525795944100032,
+      "share": 0.6828832615319954,
+      "passes": 3.778921929179363,
+      "calls": 1.6828832615319953
+     },
+     {
+      "accuracy": 0.8533151203110224,
+      "share": 0.7421456341284018,
+      "passes": 3.923715456551434,
+      "calls": 1.7421456341284018
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 0.7999369549227697,
+      "passes": 4.06409582851739,
+      "calls": 1.7999369549227697
+     },
+     {
+      "accuracy": 0.8529998949248713,
+      "share": 0.8304087422507093,
+      "passes": 4.135757066302406,
+      "calls": 1.8304087422507092
+     },
+     {
+      "accuracy": 0.8529998949248713,
+      "share": 0.903541031837764,
+      "passes": 4.302616370705054,
+      "calls": 1.903541031837764
+     },
+     {
+      "accuracy": 0.8532100451823054,
+      "share": 0.9570242723547336,
+      "passes": 4.42597457181885,
+      "calls": 1.9570242723547335
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 1.0,
+      "passes": 4.523904591783125,
+      "calls": 2.0
+     }
+    ],
+    "random": [
+     {
+      "accuracy": 0.8277818640327834,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.828981822002732,
+      "share": 0.049635389303351894,
+      "passes": 1.1751245140275295,
+      "calls": 1.049635389303352
+     },
+     {
+      "accuracy": 0.8301628664495113,
+      "share": 0.10034254491961753,
+      "passes": 1.353775349374803,
+      "calls": 1.1003425449196176
+     },
+     {
+      "accuracy": 0.8313985499632236,
+      "share": 0.15072186613428604,
+      "passes": 1.5310013659766737,
+      "calls": 1.1507218661342862
+     },
+     {
+      "accuracy": 0.8328969212987286,
+      "share": 0.20056740569507198,
+      "passes": 1.7067605337816538,
+      "calls": 1.2005674056950721
+     },
+     {
+      "accuracy": 0.8341431123253126,
+      "share": 0.24994431018177996,
+      "passes": 1.8810297362614268,
+      "calls": 1.24994431018178
+     },
+     {
+      "accuracy": 0.8354586529368498,
+      "share": 0.2999453609330671,
+      "passes": 2.0573983398129663,
+      "calls": 1.299945360933067
+     },
+     {
+      "accuracy": 0.8367657875380897,
+      "share": 0.3498959756225702,
+      "passes": 2.233712304297573,
+      "calls": 1.3498959756225701
+     },
+     {
+      "accuracy": 0.8379930650415048,
+      "share": 0.3995040453924556,
+      "passes": 2.4083219501943893,
+      "calls": 1.3995040453924557
+     },
+     {
+      "accuracy": 0.8392728801092781,
+      "share": 0.44908059262372596,
+      "passes": 2.5830808027739836,
+      "calls": 1.449080592623726
+     },
+     {
+      "accuracy": 0.840634653777451,
+      "share": 0.49942839129977934,
+      "passes": 2.76049385310497,
+      "calls": 1.4994283912997792
+     },
+     {
+      "accuracy": 0.8419354838709677,
+      "share": 0.5494210360407691,
+      "passes": 2.9366396973836295,
+      "calls": 1.5494210360407692
+     },
+     {
+      "accuracy": 0.8431039193023011,
+      "share": 0.5990606283492698,
+      "passes": 3.111259850793317,
+      "calls": 1.5990606283492699
+     },
+     {
+      "accuracy": 0.8443837343700745,
+      "share": 0.6491583482189764,
+      "passes": 3.2877587475044656,
+      "calls": 1.6491583482189767
+     },
+     {
+      "accuracy": 0.8458421771566671,
+      "share": 0.6994115792791846,
+      "passes": 3.4649259220342543,
+      "calls": 1.6994115792791846
+     },
+     {
+      "accuracy": 0.8471451087527584,
+      "share": 0.7499590206998004,
+      "passes": 3.6427781864032784,
+      "calls": 1.7499590206998006
+     },
+     {
+      "accuracy": 0.8484711568771672,
+      "share": 0.7999726804665336,
+      "passes": 3.8189870757591677,
+      "calls": 1.7999726804665337
+     },
+     {
+      "accuracy": 0.8497467689397918,
+      "share": 0.8501502574340652,
+      "passes": 3.995628874645372,
+      "calls": 1.8501502574340651
+     },
+     {
+      "accuracy": 0.8509677419354839,
+      "share": 0.9002605863192181,
+      "passes": 4.172207628454345,
+      "calls": 1.9002605863192183
+     },
+     {
+      "accuracy": 0.8522118314594935,
+      "share": 0.9502238100241672,
+      "passes": 4.34836608174845,
+      "calls": 1.9502238100241676
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 1.0,
+      "passes": 4.523904591783125,
+      "calls": 2.0
+     }
+    ]
+   },
+   "T1_k0_zoom_cot": {
+    "token": [
+     {
+      "accuracy": 0.8277818640327834,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8365030997162971,
+      "share": 0.04150467584322791,
+      "passes": 1.5996637595881056,
+      "calls": 1.2075233792161395
+     },
+     {
+      "accuracy": 0.8450141851423768,
+      "share": 0.09414731533046128,
+      "passes": 2.253966586109068,
+      "calls": 1.4707365766523064
+     },
+     {
+      "accuracy": 0.8482715141326048,
+      "share": 0.14395292634233478,
+      "passes": 2.8844173584112642,
+      "calls": 1.719764631711674
+     },
+     {
+      "accuracy": 0.8515288431228328,
+      "share": 0.1944940632552275,
+      "passes": 3.534727330040979,
+      "calls": 1.9724703162761374
+     },
+     {
+      "accuracy": 0.8537354208258905,
+      "share": 0.24377429862351582,
+      "passes": 4.143637700956184,
+      "calls": 2.2188714931175793
+     },
+     {
+      "accuracy": 0.8548912472417779,
+      "share": 0.29557633708101294,
+      "passes": 4.763055584743091,
+      "calls": 2.4778816854050647
+     },
+     {
+      "accuracy": 0.8561521487863822,
+      "share": 0.3487443522118315,
+      "passes": 5.38636124829253,
+      "calls": 2.7437217610591573
+     },
+     {
+      "accuracy": 0.8563622990438163,
+      "share": 0.3984448880949879,
+      "passes": 5.957234422612168,
+      "calls": 2.9922244404749394
+     },
+     {
+      "accuracy": 0.8564673741725334,
+      "share": 0.4510875275822213,
+      "passes": 6.544079016496795,
+      "calls": 3.2554376379111063
+     },
+     {
+      "accuracy": 0.8560470736576652,
+      "share": 0.4971104339602816,
+      "passes": 7.038352421981717,
+      "calls": 3.485552169801408
+     },
+     {
+      "accuracy": 0.8560470736576652,
+      "share": 0.5471261952295892,
+      "passes": 7.565619417883787,
+      "calls": 3.7356309761479456
+     },
+     {
+      "accuracy": 0.8557318482715142,
+      "share": 0.594935378795839,
+      "passes": 8.076599768834717,
+      "calls": 3.974676893979195
+     },
+     {
+      "accuracy": 0.8556267731427971,
+      "share": 0.6461069664810339,
+      "passes": 8.620783860460229,
+      "calls": 4.230534832405169
+     },
+     {
+      "accuracy": 0.8557318482715142,
+      "share": 0.6953872018493222,
+      "passes": 9.139539770936219,
+      "calls": 4.476936009246612
+     },
+     {
+      "accuracy": 0.8557318482715142,
+      "share": 0.7451928128611958,
+      "passes": 9.660502259115267,
+      "calls": 4.725964064305979
+     },
+     {
+      "accuracy": 0.8557318482715142,
+      "share": 0.7944730482294841,
+      "passes": 10.184091625512242,
+      "calls": 4.97236524114742
+     },
+     {
+      "accuracy": 0.8557318482715142,
+      "share": 0.8442786592413576,
+      "passes": 10.723127035830618,
+      "calls": 5.221393296206788
+     },
+     {
+      "accuracy": 0.8557318482715142,
+      "share": 0.8967111484711568,
+      "passes": 11.302826520962489,
+      "calls": 5.483555742355785
+     },
+     {
+      "accuracy": 0.8557318482715142,
+      "share": 0.9437848061363875,
+      "passes": 11.857413050330987,
+      "calls": 5.718924030681937
+     },
+     {
+      "accuracy": 0.8557318482715142,
+      "share": 1.0,
+      "passes": 12.571608700220658,
+      "calls": 6.0
+     }
+    ],
+    "pre_head": [
+     {
+      "accuracy": 0.8277818640327834,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8363980245875802,
+      "share": 0.04076914994220868,
+      "passes": 1.5844278659241358,
+      "calls": 1.2038457497110433
+     },
+     {
+      "accuracy": 0.8437532835977724,
+      "share": 0.09025953556793107,
+      "passes": 2.208889355889461,
+      "calls": 1.4512976778396554
+     },
+     {
+      "accuracy": 0.8486918146474729,
+      "share": 0.1379636440054639,
+      "passes": 2.7731427970999265,
+      "calls": 1.6898182200273195
+     },
+     {
+      "accuracy": 0.8500577913207944,
+      "share": 0.18409162551224126,
+      "passes": 3.3301460544289165,
+      "calls": 1.9204581275612063
+     },
+     {
+      "accuracy": 0.8508983923505307,
+      "share": 0.2317957339497741,
+      "passes": 3.8986025007880634,
+      "calls": 2.1589786697488704
+     },
+     {
+      "accuracy": 0.8514237679941158,
+      "share": 0.28065566880319426,
+      "passes": 4.490070400336241,
+      "calls": 2.4032783440159715
+     },
+     {
+      "accuracy": 0.8525795944100032,
+      "share": 0.32583797415151833,
+      "passes": 5.02868551013975,
+      "calls": 2.6291898707575916
+     },
+     {
+      "accuracy": 0.8536303456971734,
+      "share": 0.37038982872754017,
+      "passes": 5.5580540086161605,
+      "calls": 2.851949143637701
+     },
+     {
+      "accuracy": 0.8538404959546075,
+      "share": 0.4215614164127351,
+      "passes": 6.176421141115898,
+      "calls": 3.1078070820636756
+     },
+     {
+      "accuracy": 0.8538404959546075,
+      "share": 0.4729431543553641,
+      "passes": 6.782179258169592,
+      "calls": 3.3647157717768206
+     },
+     {
+      "accuracy": 0.8539455710833246,
+      "share": 0.5221183145949354,
+      "passes": 7.37606388567826,
+      "calls": 3.610591572974677
+     },
+     {
+      "accuracy": 0.8539455710833246,
+      "share": 0.5752863297257539,
+      "passes": 8.00252180308921,
+      "calls": 3.8764316486287695
+     },
+     {
+      "accuracy": 0.8546810969843438,
+      "share": 0.6251970158663445,
+      "passes": 8.601765262162447,
+      "calls": 4.1259850793317225
+     },
+     {
+      "accuracy": 0.8549963223704949,
+      "share": 0.6764736786802564,
+      "passes": 9.216454765157087,
+      "calls": 4.382368393401282
+     },
+     {
+      "accuracy": 0.8552064726279289,
+      "share": 0.7286960176526216,
+      "passes": 9.830198591993275,
+      "calls": 4.643480088263108
+     },
+     {
+      "accuracy": 0.855416622885363,
+      "share": 0.7827046338131765,
+      "passes": 10.449091100136597,
+      "calls": 4.913523169065882
+     },
+     {
+      "accuracy": 0.8555216980140801,
+      "share": 0.8439634338552064,
+      "passes": 11.133235263213198,
+      "calls": 5.219817169276032
+     },
+     {
+      "accuracy": 0.8557318482715142,
+      "share": 0.8929284438373437,
+      "passes": 11.658821057055794,
+      "calls": 5.464642219186718
+     },
+     {
+      "accuracy": 0.8557318482715142,
+      "share": 0.9459913838394453,
+      "passes": 12.139329620678785,
+      "calls": 5.729956919197226
+     },
+     {
+      "accuracy": 0.8557318482715142,
+      "share": 1.0,
+      "passes": 12.571608700220658,
+      "calls": 6.0
+     }
+    ],
+    "after_head": [
+     {
+      "accuracy": 0.8277818640327834,
+      "share": 0.0,
+      "passes": 2.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8369234002311653,
+      "share": 0.046022906378060315,
+      "passes": 2.620363559945361,
+      "calls": 1.2301145318903015
+     },
+     {
+      "accuracy": 0.8441735841126405,
+      "share": 0.09635389303351896,
+      "passes": 3.205421876641799,
+      "calls": 1.4817694651675948
+     },
+     {
+      "accuracy": 0.8502679415782284,
+      "share": 0.14426815172848587,
+      "passes": 3.73016706945466,
+      "calls": 1.7213407586424294
+     },
+     {
+      "accuracy": 0.8528948197961542,
+      "share": 0.19207733529473572,
+      "passes": 4.266050225911527,
+      "calls": 1.9603866764736786
+     },
+     {
+      "accuracy": 0.8533151203110224,
+      "share": 0.23841546705894714,
+      "passes": 4.769780392980981,
+      "calls": 2.192077335294736
+     },
+     {
+      "accuracy": 0.8534201954397395,
+      "share": 0.28181149521908166,
+      "passes": 5.259430492802354,
+      "calls": 2.409057476095408
+     },
+     {
+      "accuracy": 0.8537354208258905,
+      "share": 0.33203740674582327,
+      "passes": 5.809183566249868,
+      "calls": 2.6601870337291165
+     },
+     {
+      "accuracy": 0.8541557213407587,
+      "share": 0.37795523799516656,
+      "passes": 6.307239676368604,
+      "calls": 2.8897761899758327
+     },
+     {
+      "accuracy": 0.855101397499212,
+      "share": 0.43175370389828727,
+      "passes": 6.8933487443522115,
+      "calls": 3.1587685194914363
+     },
+     {
+      "accuracy": 0.8555216980140801,
+      "share": 0.47662078386046025,
+      "passes": 7.381527792371545,
+      "calls": 3.383103919302301
+     },
+     {
+      "accuracy": 0.8555216980140801,
+      "share": 0.5214878638226332,
+      "passes": 7.871598192707786,
+      "calls": 3.607439319113166
+     },
+     {
+      "accuracy": 0.8555216980140801,
+      "share": 0.5713985499632237,
+      "passes": 8.412735105600504,
+      "calls": 3.8569927498161185
+     },
+     {
+      "accuracy": 0.8556267731427971,
+      "share": 0.6250919407376274,
+      "passes": 8.991278764316487,
+      "calls": 4.125459703688137
+     },
+     {
+      "accuracy": 0.8556267731427971,
+      "share": 0.6747924766207839,
+      "passes": 9.524219817169277,
+      "calls": 4.373962383103919
+     },
+     {
+      "accuracy": 0.8556267731427971,
+      "share": 0.7278554166228853,
+      "passes": 10.092466113270989,
+      "calls": 4.639277083114427
+     },
+     {
+      "accuracy": 0.8556267731427971,
+      "share": 0.7828097089418935,
+      "passes": 10.670379321214668,
+      "calls": 4.914048544709467
+     },
+     {
+      "accuracy": 0.8556267731427971,
+      "share": 0.8398655038352422,
+      "passes": 11.25144478301986,
+      "calls": 5.199327519176211
+     },
+     {
+      "accuracy": 0.8557318482715142,
+      "share": 0.8968162235998739,
+      "passes": 11.791320794367973,
+      "calls": 5.484081117999369
+     },
+     {
+      "accuracy": 0.8557318482715142,
+      "share": 0.94830303667122,
+      "passes": 12.209519806661763,
+      "calls": 5.7415151833561
+     },
+     {
+      "accuracy": 0.8557318482715142,
+      "share": 1.0,
+      "passes": 12.571608700220658,
+      "calls": 6.0
+     }
+    ],
+    "judge": [
+     {
+      "accuracy": 0.8277818640327834,
+      "share": 0.0,
+      "passes": 2.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8308290427655773,
+      "share": 0.04907008511085426,
+      "passes": 2.455605758117054,
+      "calls": 1.2453504255542713
+     },
+     {
+      "accuracy": 0.8351371230429757,
+      "share": 0.09582851738993381,
+      "passes": 2.9152043711253546,
+      "calls": 1.479142586949669
+     },
+     {
+      "accuracy": 0.8407061048649784,
+      "share": 0.14458337711463695,
+      "passes": 3.4162025848481665,
+      "calls": 1.722916885573185
+     },
+     {
+      "accuracy": 0.8438583587264894,
+      "share": 0.1826205737102028,
+      "passes": 3.814017022170852,
+      "calls": 1.913102868551014
+     },
+     {
+      "accuracy": 0.8466953872018493,
+      "share": 0.22790795418724388,
+      "passes": 4.261637070505412,
+      "calls": 2.1395397709362194
+     },
+     {
+      "accuracy": 0.8491121151623411,
+      "share": 0.27697803929809817,
+      "passes": 4.705894714721025,
+      "calls": 2.3848901964904905
+     },
+     {
+      "accuracy": 0.8501628664495114,
+      "share": 0.3251024482504991,
+      "passes": 5.154985814857623,
+      "calls": 2.6255122412524954
+     },
+     {
+      "accuracy": 0.8512136177366817,
+      "share": 0.3688137017967847,
+      "passes": 5.573394977408848,
+      "calls": 2.8440685089839235
+     },
+     {
+      "accuracy": 0.851844068508984,
+      "share": 0.421246191026584,
+      "passes": 6.104654828202165,
+      "calls": 3.10623095513292
+     },
+     {
+      "accuracy": 0.8527897446674372,
+      "share": 0.46548282021645476,
+      "passes": 6.584007565409268,
+      "calls": 3.3274141010822738
+     },
+     {
+      "accuracy": 0.8529998949248713,
+      "share": 0.5146579804560261,
+      "passes": 7.128927182935799,
+      "calls": 3.57328990228013
+     },
+     {
+      "accuracy": 0.8541557213407587,
+      "share": 0.5794893348744352,
+      "passes": 7.8547861721130605,
+      "calls": 3.8974466743721763
+     },
+     {
+      "accuracy": 0.8552064726279289,
+      "share": 0.6278238940842703,
+      "passes": 8.403278344015972,
+      "calls": 4.139119470421352
+     },
+     {
+      "accuracy": 0.8552064726279289,
+      "share": 0.6828832615319954,
+      "passes": 9.020699800357255,
+      "calls": 4.414416307659977
+     },
+     {
+      "accuracy": 0.8559419985289481,
+      "share": 0.7421456341284018,
+      "passes": 9.692129872859095,
+      "calls": 4.710728170642009
+     },
+     {
+      "accuracy": 0.8556267731427971,
+      "share": 0.7999369549227697,
+      "passes": 10.343595670904698,
+      "calls": 4.999684774613849
+     },
+     {
+      "accuracy": 0.855311547756646,
+      "share": 0.8304087422507093,
+      "passes": 10.68340863717558,
+      "calls": 5.152043711253547
+     },
+     {
+      "accuracy": 0.855416622885363,
+      "share": 0.903541031837764,
+      "passes": 11.495849532415678,
+      "calls": 5.51770515918882
+     },
+     {
+      "accuracy": 0.8557318482715142,
+      "share": 0.9570242723547336,
+      "passes": 12.083639802458759,
+      "calls": 5.785121361773668
+     },
+     {
+      "accuracy": 0.8557318482715142,
+      "share": 1.0,
+      "passes": 12.571608700220658,
+      "calls": 6.0
+     }
+    ],
+    "random": [
+     {
+      "accuracy": 0.8277818640327834,
+      "share": 0.0,
+      "passes": 1.0,
+      "calls": 1.0
+     },
+     {
+      "accuracy": 0.8291583482189766,
+      "share": 0.049635389303351894,
+      "passes": 1.5740569507197648,
+      "calls": 1.2481769465167594
+     },
+     {
+      "accuracy": 0.8304486707996216,
+      "share": 0.10034254491961753,
+      "passes": 2.161706420090365,
+      "calls": 1.5017127245980877
+     },
+     {
+      "accuracy": 0.8318461700115585,
+      "share": 0.15072186613428604,
+      "passes": 2.7458800042030043,
+      "calls": 1.7536093306714304
+     },
+     {
+      "accuracy": 0.8333781653882526,
+      "share": 0.20056740569507198,
+      "passes": 3.3232447199747823,
+      "calls": 2.0028370284753603
+     },
+     {
+      "accuracy": 0.8347336345487024,
+      "share": 0.24994431018177996,
+      "passes": 3.8943658715981924,
+      "calls": 2.2497215509089
+     },
+     {
+      "accuracy": 0.8361479457812335,
+      "share": 0.2999453609330671,
+      "passes": 4.473235263213198,
+      "calls": 2.4997268046653356
+     },
+     {
+      "accuracy": 0.837532835977724,
+      "share": 0.3498959756225702,
+      "passes": 5.052163496900283,
+      "calls": 2.749479878112851
+     },
+     {
+      "accuracy": 0.8388693916150047,
+      "share": 0.3995040453924556,
+      "passes": 5.6246716402227595,
+      "calls": 2.9975202269622776
+     },
+     {
+      "accuracy": 0.8402521803089208,
+      "share": 0.44908059262372596,
+      "passes": 6.198993380266891,
+      "calls": 3.24540296311863
+     },
+     {
+      "accuracy": 0.8417190291058106,
+      "share": 0.49942839129977934,
+      "passes": 6.78203845749711,
+      "calls": 3.497141956498896
+     },
+     {
+      "accuracy": 0.8431984869181464,
+      "share": 0.5494210360407691,
+      "passes": 7.360836398024588,
+      "calls": 3.7471051802038455
+     },
+     {
+      "accuracy": 0.8445329410528528,
+      "share": 0.5990606283492698,
+      "passes": 7.93419564988967,
+      "calls": 3.9953031417463483
+     },
+     {
+      "accuracy": 0.8458968162235998,
+      "share": 0.6491583482189764,
+      "passes": 8.51359041714826,
+      "calls": 4.245791741094883
+     },
+     {
+      "accuracy": 0.8474918566775242,
+      "share": 0.6994115792791846,
+      "passes": 9.095032047914259,
+      "calls": 4.497057896395924
+     },
+     {
+      "accuracy": 0.848901964904907,
+      "share": 0.7499590206998004,
+      "passes": 9.679239256068088,
+      "calls": 4.749795103499002
+     },
+     {
+      "accuracy": 0.8502700430808027,
+      "share": 0.7999726804665336,
+      "passes": 10.257839655353578,
+      "calls": 4.999863402332668
+     },
+     {
+      "accuracy": 0.8516570347798676,
+      "share": 0.8501502574340652,
+      "passes": 10.837835452348427,
+      "calls": 5.250751287170328
+     },
+     {
+      "accuracy": 0.853041924976358,
+      "share": 0.9002605863192181,
+      "passes": 11.418112850688242,
+      "calls": 5.501302931596091
+     },
+     {
+      "accuracy": 0.8544268151728486,
+      "share": 0.9502238100241672,
+      "passes": 11.995422927393086,
+      "calls": 5.7511190501208365
+     },
+     {
+      "accuracy": 0.8557318482715143,
+      "share": 1.0,
+      "passes": 12.571608700220656,
+      "calls": 6.0
+     }
+    ]
+   }
+  }
+ }
+}
