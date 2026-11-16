@@ -6,7 +6,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH -C "H200|H100|L40S|A100-80GB|A100-40GB|A40"
 #SBATCH --mem=96G
-#SBATCH -t 16:00:00
+#SBATCH -t 30:00:00
 #SBATCH -o logs/base-model-%j.out
 
 # GPU job: the whole candidate pipeline for one shard of one dataset split with another frozen base model
@@ -14,7 +14,7 @@
 # crops), second round (grounded crops, reasoning, judge), sampled reasoning; every candidate encoded by that
 # model. Results go to results/base_<size>/. Shards follow VLMLGT_CHAIN, so each stage finds exactly the
 # questions its earlier stage produced; every stage is resumable, so a resubmitted job continues.
-# Needs the question embeddings of that model (STEP=features of run_unseen_step.sbatch with VLMLGT_MODEL set).
+# The first step computes that model's question embeddings for the split's ranker subset (skipped if present).
 # Usage: sbatch --export=ALL,VLMLGT_MODEL=4b,DATASET=textvqa,SPLIT=val,SHARD=0,NUM_SHARDS=2 slurm/run_base_model_chain.sbatch
 
 set -euo pipefail
@@ -28,6 +28,8 @@ export VLMLGT_MODEL="${VLMLGT_MODEL:-4b}" VLMLGT_CHAIN=1
 PYTHON_BIN="$SLURM_SUBMIT_DIR/.venv/bin/python"
 M=experiments.approach1_latent_self_correction
 S=(--dataset "$DATASET" --split "$SPLIT" --shard "${SHARD:-0}" --num-shards "${NUM_SHARDS:-1}")
+FEATURES=experiments/approach1_latent_self_correction/q_features/${DATASET}_${SPLIT}_${VLMLGT_MODEL}.pt
+[[ -f "$FEATURES" ]] || srun "$PYTHON_BIN" -m $M.extract_prompt_features --dataset "$DATASET" --split "$SPLIT" --subset
 srun "$PYTHON_BIN" -m $M.candidate_pools "${S[@]}" --temperature 1.0 --subset
 srun "$PYTHON_BIN" -m $M.correction_candidates "${S[@]}"
 srun "$PYTHON_BIN" -m $M.correction_v2 "${S[@]}"
