@@ -42,3 +42,19 @@ def test_breakdown_skips_absent_datasets():
     datasets = np.array(["ai2d"] * 4)
     out = breakdown(datasets, np.array([True, False, False, True]), np.array([True, True, False, True]))
     assert set(out) == {"pooled", "ai2d"} and out["ai2d"]["fixed"] == 1
+
+
+def test_chain_shards_partition_the_subset(monkeypatch=None):
+    from experiments.approach1_latent_self_correction import correction_scale as cs
+    original = cs.ranker_subset
+    cs.ranker_subset = lambda dataset, split: list(range(0, 50, 5))
+    try:
+        shards = [cs.chain_indices("textvqa", "train", k, 3) for k in range(3)]
+    finally:
+        cs.ranker_subset = original
+    assert sorted(i for s in shards for i in s) == list(range(0, 50, 5)) and not set(shards[0]) & set(shards[1])
+
+
+def test_default_model_is_2b_with_heads():
+    from experiments.approach1_latent_self_correction import correction_scale as cs
+    assert cs.MODEL_SIZE == "2b" and cs.HEADS_AVAILABLE and cs.RESULTS_ROOT == cs.BASE_RESULTS and not cs.CHAIN

@@ -37,15 +37,15 @@ from experiments.approach1_latent_self_correction.candidate_pools import (
     question_embeddings,
 )
 from experiments.approach1_latent_self_correction.correction_candidates import encode_candidate
-from experiments.approach1_latent_self_correction.correction_scale import dataset_dir
+from experiments.approach1_latent_self_correction.correction_scale import CHAIN, MODEL_SIZE, RESULTS_ROOT, chain_indices, dataset_dir
 from experiments.approach1_latent_self_correction.correction_v2 import COT_PROMPT, extract_final, judge_probability
 from experiments.approach1_latent_self_correction.export_heads import load_head, score
 from models.load_model import load_qwen3_vl
 from models.run_inference import build_messages
 
 HERE = Path(__file__).parent
-V2_DIR = HERE / "results" / "correction_v2"
-OUT_DIR = HERE / "results" / "correction_v3"
+V2_DIR = RESULTS_ROOT / "correction_v2"
+OUT_DIR = RESULTS_ROOT / "correction_v3"
 SAMPLES = 3
 TEMPERATURE = 0.7
 TOP_P = 0.95
@@ -107,12 +107,16 @@ def shard_of(indices: list[int], shard: int, num_shards: int, max_examples: int 
 def run(dataset: str, split: str, shard: int, num_shards: int, max_examples: int | None, samples: int,
         temperature: float, output: Path) -> None:
     """Generate the sampled reasoning answers, their encodings and judge scores for one shard."""
-    indices = shard_of(v2_indices(dataset, split), shard, num_shards, max_examples)
+    if CHAIN:  # the same questions this shard's earlier stages handled
+        covered = set(v2_indices(dataset, split))
+        indices = [i for i in chain_indices(dataset, split, shard, num_shards, max_examples) if i in covered]
+    else:
+        indices = shard_of(v2_indices(dataset, split), shard, num_shards, max_examples)
     known = v2_known_answers(dataset, split)
     data = cached_split(dataset, split)
     embeddings = question_embeddings(dataset, split)
     heads = {"head": load_head(DEFAULT_HEAD), "probe": load_head(DEFAULT_PROBE)}
-    model, processor = load_qwen3_vl("2b")
+    model, processor = load_qwen3_vl(MODEL_SIZE)
     tokenizer = processor.tokenizer
     yes_id = tokenizer.encode("Yes", add_special_tokens=False)[0]
     no_id = tokenizer.encode("No", add_special_tokens=False)[0]

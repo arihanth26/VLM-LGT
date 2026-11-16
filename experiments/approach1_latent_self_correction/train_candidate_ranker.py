@@ -32,15 +32,15 @@ import numpy as np
 import torch
 from torch import nn
 
-from experiments.approach1_latent_self_correction.correction_scale import ALL_DATASETS, DATASET_NAMES
+from experiments.approach1_latent_self_correction.correction_scale import ALL_DATASETS, DATASET_NAMES, MODEL_SIZE, RESULTS_ROOT, pool_temperatures
 from experiments.approach1_latent_self_correction.correction_stats import paired_difference
 from experiments.approach1_latent_self_correction.scoring import normalize_vqa_answer
 
 HERE = Path(__file__).parent
-CORRECTION_DIR = HERE / "results" / "correction"
-POOL_DIR = HERE / "results" / "pools"
+CORRECTION_DIR = RESULTS_ROOT / "correction"
+POOL_DIR = RESULTS_ROOT / "pools"
 FEATURE_DIR = HERE / "q_features"
-RESULTS_DIR = HERE / "results"
+RESULTS_DIR = HERE / "results"  # the 2B train baselines (another base model takes its greedy answer from its pools)
 SOURCES = ("vcd_0.5", "vcd_1", "zoom_0", "zoom_1", "zoom_2", "zoom_3")
 CORRECTION_SETS = {"none": (), "vcd": ("vcd_0.5", "vcd_1"), "zoom": ("zoom_0", "zoom_1", "zoom_2", "zoom_3"), "all": SOURCES}
 SCALARS = ("vote_share", "is_greedy", "correction_share", "tf_confidence", "log_tf_confidence", "tokens", "head", "probe", "head_logit")
@@ -55,23 +55,23 @@ def read_jsonl(path: Path) -> list[dict]:
 def load_questions(split: str, include_extra: bool = False) -> list[dict]:
     """Every question of a split with its distinct candidates, their states and features, and its pools."""
     pools = {}
-    temperatures = ("1",) if split in ("train", "unseen") else ("1", "1.3")  # unseen datasets: T=1.0 pools only
+    temperatures = pool_temperatures(POOL_DIR, split)  # 2B val/test: T=1.0 and 1.3; train, unseen and 4B: T=1.0
     for temperature in temperatures:
         for path in sorted((POOL_DIR / f"T{temperature}" / split).glob("*.jsonl")):
             for record in read_jsonl(path):
                 if "samples" in record:
                     pools.setdefault((record["dataset"], record["index"]), {})[temperature] = record
     greedy_train = {}
-    if split == "train":
+    if split == "train" and MODEL_SIZE == "2b":
         for name in DATASET_NAMES:
             for record in read_jsonl(RESULTS_DIR / f"{name}_train_2b_baseline.jsonl"):
                 if "prediction" in record:
                     greedy_train[(name, record["index"])] = record["prediction"]["answer"]
     embeddings = {}
     for name in ALL_DATASETS:
-        if not (FEATURE_DIR / f"{name}_{split}_2b.pt").exists():  # the unseen split has only its own datasets
+        if not (FEATURE_DIR / f"{name}_{split}_{MODEL_SIZE}.pt").exists():  # the unseen split has only its own datasets
             continue
-        cached = torch.load(FEATURE_DIR / f"{name}_{split}_2b.pt", map_location="cpu", weights_only=True)
+        cached = torch.load(FEATURE_DIR / f"{name}_{split}_{MODEL_SIZE}.pt", map_location="cpu", weights_only=True)
         for row, index in enumerate(cached["indices"].tolist()):
             embeddings[(name, index)] = cached["prompt_features"][row]
 
@@ -84,7 +84,7 @@ def load_questions(split: str, include_extra: bool = False) -> list[dict]:
             if "encoded" not in record or record["index"] not in saved or key not in pools:
                 continue
             stored = saved[record["index"]]
-            greedy = greedy_train[key] if split == "train" else pools[key]["1"]["greedy"]["answer"]
+            greedy = greedy_train[key] if key in greedy_train else pools[key]["1"]["greedy"]["answer"]
             questions[key] = {
                 "key": key, "answers": stored["answers"], "states": stored["states"], "encoded": record["encoded"],
                 "question_state": embeddings[key], "greedy": greedy,
@@ -99,7 +99,7 @@ def load_questions(split: str, include_extra: bool = False) -> list[dict]:
 
 def add_extra_samples(questions: dict, split: str) -> None:
     """Append the samples of extend_pools.py (pools past ten) and the states of their new answers."""
-    for path in sorted((HERE / "results" / "correction_extra" / split).glob("*.jsonl")):
+    for path in sorted((RESULTS_ROOT / "correction_extra" / split).glob("*.jsonl")):
         saved = torch.load(path.with_suffix(".pt"), weights_only=False)["questions"]
         for record in read_jsonl(path):
             key = (record["dataset"], record["index"])
@@ -163,7 +163,7 @@ def batch_tensors(questions: list[dict], sets: list[tuple], device) -> dict:
     """Pad a batch of candidate sets to the largest one."""
     width = max(len(rows) for rows, _, _ in sets)
     count = len(sets)
-    answer = torch.zeros(count, width, 2048, dtype=torch.float16)
+    answer = torch.zeros(count, width, questions[0]["states"].shape[-1], dtype=torch.float16)  # 2048 for 2B, 2560 for 4B
     scalars = torch.zeros(count, width, len(SCALARS))
     labels = torch.zeros(count, width)
     mask = torch.zeros(count, width, dtype=torch.bool)

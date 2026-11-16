@@ -28,6 +28,15 @@ kinds of code. They have since been moved into
 approach out of that mistake, dataset code and modeling code stay in
 separate folders.
 
+## Branches
+
+- `main` is the integration branch: everything merged there runs and reproduces its reports.
+- New work goes on a feature branch (`feature/<topic>` or `<name>/<topic>`), branched from `main` and merged back
+  when its results are in. Prefer fast-forward merges; rebase on `main` first if it moved.
+- `feature/latent-self-correction` is the original Approach 1 branch. Leave it unchanged.
+- Never commit secrets, Hugging Face tokens or `.env` files; datasets, caches and model weights stay out of git
+  (see `.gitignore`).
+
 ## Setup
 
 1. Create a virtual environment and install dependencies:

@@ -31,7 +31,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from experiments.approach1_latent_self_correction.correction_scale import DATASET_NAMES
+from experiments.approach1_latent_self_correction.correction_scale import DATASET_NAMES, HEADS_AVAILABLE
 from experiments.approach1_latent_self_correction.scoring import normalize_vqa_answer
 from experiments.approach1_latent_self_correction.train_candidate_ranker import listwise_loss, load_questions
 from experiments.approach1_latent_self_correction.train_ranker_v2 import (
@@ -183,7 +183,7 @@ def batch_tensors(questions: list[dict], sets: list[tuple], device) -> dict:
     """Pad a batch of candidate sets (v2's helper with the wider scalar block)."""
     width = max(len(r) for r, _, _ in sets)
     n = len(sets)
-    answer = torch.zeros(n, width, 2048, dtype=torch.float16)
+    answer = torch.zeros(n, width, questions[0]["states"].shape[-1], dtype=torch.float16)  # 2048 for 2B, 2560 for 4B
     scalars = torch.zeros(n, width, len(SCALARS_V3))
     labels = torch.zeros(n, width)
     mask = torch.zeros(n, width, dtype=torch.bool)
@@ -368,7 +368,8 @@ def main() -> None:
         print(sweep[-1], flush=True)
     winners = {v: max((e for e in sweep if e["variant"] == v), key=lambda e: e["val_accuracy"]) for v in VARIANTS}
     chosen_models = {v: models[(v, winners[v]["learning_rate"])] for v in VARIANTS}
-    first, second = first_rankers(device), v2_rankers(device)
+    # The v1 and v2 rankers were trained on the 2B study; with another base model there is nothing to compare.
+    first, second = (first_rankers(device), v2_rankers(device)) if HEADS_AVAILABLE else (None, {})
 
     result = {"questions": {s: len(q) for s, q in data.items()}, "sweep": sweep, "winners": winners,
               "source_accuracy": {s: source_accuracy(data[s]) for s in ("val", "test")}, "val": {}, "test": {}, **result_extra}
@@ -382,7 +383,8 @@ def main() -> None:
             config = (temperature, k, SETS[name])
             key = f"T{temperature}_k{k}_{name}"
             outcomes = untrained(data[split], config)
-            outcomes["ranker_v1"] = choose_v2(first, data[split], config, device, first_ranker=True)
+            if first is not None:
+                outcomes["ranker_v1"] = choose_v2(first, data[split], config, device, first_ranker=True)
             for variant, ms in second.items():
                 outcomes[f"ranker_v2_{variant}"] = choose_v2(ms, data[split], config, device)
             for variant, ms in chosen_models.items():
@@ -445,6 +447,7 @@ def markdown(result: dict, v2_variants: list[str]) -> str:
                      f"{100 * row['test_difference']:+.2f} ({100 * row['ci_low']:+.2f} to {100 * row['ci_high']:+.2f}) |")
     names = (["greedy", "head_best", "judge_best", "ranker_v1"] + [f"ranker_v2_{v}" for v in v2_variants]
              + [f"ranker_v3_{v}" for v in VARIANTS] + ["oracle"])
+    names = [n for n in names if n in next(iter(result["test"].values()))]  # no v1/v2 columns with another base model
     lines += ["", "## Every configuration on test (pooled accuracy)", "", "| Configuration | " + " | ".join(names) + " |", "|---|" + "---:|" * len(names)]
     for key, rows in result["test"].items():
         lines.append(f"| {key} | " + " | ".join(f"{100 * rows[n]['pooled']['accuracy']:.2f}%" for n in names) + " |")

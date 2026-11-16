@@ -12,6 +12,7 @@
 # GPU job: one step of the unseen-dataset transfer test (run_unseen_pipeline.sh), chosen by STEP:
 #   build      download and normalize AI2D and InfographicVQA (build_unseen_splits.py)
 #   features   the constant question embedding of DATASET's unseen split (extract_prompt_features.py)
+#   features_subset  the same for DATASET's SPLIT, the ranker's subset only (with VLMLGT_MODEL: another base model)
 #   check      compare extract_prompt_features.py with extract_q_features.py on DATASET's split SPLIT
 #   evaluate   tests, then the frozen pipeline and the baselines on the unseen split (evaluate_unseen.py)
 # Usage: sbatch --export=ALL,STEP=features,DATASET=ai2d slurm/run_unseen_step.sbatch
@@ -27,6 +28,7 @@ M=experiments.approach1_latent_self_correction
 case "${STEP:?Set STEP}" in
     build)    srun "$PYTHON_BIN" -m data.approach1_latent_self_correction.build_unseen_splits ;;
     features) srun "$PYTHON_BIN" -m $M.extract_prompt_features --dataset "${DATASET:?}" --split unseen ;;
+    features_subset) srun "$PYTHON_BIN" -m $M.extract_prompt_features --dataset "${DATASET:?}" --split "${SPLIT:?}" --subset ;;
     check)    srun "$PYTHON_BIN" -m $M.extract_prompt_features --dataset "${DATASET:?}" --split "${SPLIT:?}" --check ;;
     evaluate) srun "$PYTHON_BIN" -m tests.run_tests tests.test_baselines tests.test_unseen
               srun "$PYTHON_BIN" -m $M.evaluate_unseen ;;

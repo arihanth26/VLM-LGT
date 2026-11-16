@@ -32,7 +32,7 @@ from experiments.approach1_latent_self_correction.baseline import (
     extract_reference,
     score_prediction,
 )
-from experiments.approach1_latent_self_correction.correction_scale import ALL_DATASETS, SPLITS, dataset_dir, shard_range
+from experiments.approach1_latent_self_correction.correction_scale import ALL_DATASETS, MODEL_SIZE, RESULTS_ROOT, SPLITS, dataset_dir, ranker_subset, shard_range
 from experiments.approach1_latent_self_correction.export_heads import load_head, score
 from experiments.approach1_latent_self_correction.extract_q_features import answer_messages, encode_state
 from models.load_model import load_qwen3_vl
@@ -43,7 +43,7 @@ FEATURE_DIR = Path(__file__).parent / "q_features"
 HEADS = REPO_ROOT / "trained_heads" / "approach1" / "winners" / "mixture"
 DEFAULT_HEAD = HEADS / "unified_new_seed1.pt"
 DEFAULT_PROBE = HEADS / "unified_new_linear_seed1.pt"
-POOL_DIR = Path(__file__).parent / "results" / "pools"
+POOL_DIR = RESULTS_ROOT / "pools"
 PROMPT_SUFFIX = "\nRespond with only the final answer, without explanation."
 
 
@@ -54,7 +54,7 @@ def cached_split(name: str, split: str):
     return load_from_disk(str(dataset_dir(name)))[split]
 
 
-def question_embeddings(name: str, split: str, size: str = "2b") -> dict[int, torch.Tensor]:
+def question_embeddings(name: str, split: str, size: str = MODEL_SIZE) -> dict[int, torch.Tensor]:
     """The cached prompt state of every question, by dataset index: the constant question embedding."""
     cached = torch.load(FEATURE_DIR / f"{name}_{split}_{size}.pt", map_location="cpu", weights_only=True)
     return {int(index): cached["prompt_features"][row] for row, index in enumerate(cached["indices"].tolist())}
@@ -81,7 +81,7 @@ def question_seed(seed: int, dataset: str, index: int) -> int:
 def run(
     dataset: str, split: str, output: Path, samples: int, temperature: float, top_p: float, seed: int,
     max_new_tokens: int, shard: int, num_shards: int, max_examples: int | None, labels_only: bool,
-    head_path: Path, probe_path: Path,
+    head_path: Path, probe_path: Path, subset: bool = False,
 ) -> None:
     """Generate and (unless labels_only) score one shard of candidate pools."""
     done = set()
@@ -90,9 +90,12 @@ def run(
     data = cached_split(dataset, split)
     embeddings = {} if labels_only else question_embeddings(dataset, split)
     heads = {} if labels_only else {"head": load_head(head_path), "probe": load_head(probe_path)}
-    model, processor = load_qwen3_vl("2b")
+    model, processor = load_qwen3_vl(MODEL_SIZE)
     output.parent.mkdir(parents=True, exist_ok=True)
-    indices = shard_range(len(data), shard, num_shards, max_examples)
+    if subset:  # only the questions the 2B second round covered (the ranker's train subset), in shards
+        indices = ranker_subset(dataset, split)[shard::num_shards][:max_examples]
+    else:
+        indices = shard_range(len(data), shard, num_shards, max_examples)
 
     for position, index in enumerate(indices, start=1):
         if index in done:
@@ -170,6 +173,7 @@ def main() -> None:
     parser.add_argument("--num-shards", type=int, default=1)
     parser.add_argument("--max-examples", type=int, default=None, help="Cap per shard, for a smoke test.")
     parser.add_argument("--labels-only", action="store_true", help="Samples and correctness only (train pass rates).")
+    parser.add_argument("--subset", action="store_true", help="Only the questions the 2B second round covered (the ranker's train subset).")
     parser.add_argument("--head", type=Path, default=DEFAULT_HEAD)
     parser.add_argument("--probe", type=Path, default=DEFAULT_PROBE)
     parser.add_argument("--output", type=Path, default=None)
@@ -180,7 +184,7 @@ def main() -> None:
         return
     output = args.output or POOL_DIR / f"T{args.temperature:g}" / args.split / f"{args.dataset}_shard{args.shard}of{args.num_shards}.jsonl"
     run(args.dataset, args.split, output, args.samples, args.temperature, args.top_p, args.seed, args.max_new_tokens,
-        args.shard, args.num_shards, args.max_examples, args.labels_only, args.head, args.probe)
+        args.shard, args.num_shards, args.max_examples, args.labels_only, args.head, args.probe, args.subset)
 
 
 if __name__ == "__main__":

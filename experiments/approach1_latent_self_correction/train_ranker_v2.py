@@ -22,7 +22,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from experiments.approach1_latent_self_correction.correction_scale import ALL_DATASETS, DATASET_NAMES
+from experiments.approach1_latent_self_correction.correction_scale import ALL_DATASETS, DATASET_NAMES, RESULTS_ROOT
 from experiments.approach1_latent_self_correction.correction_stats import paired_difference
 from experiments.approach1_latent_self_correction.scoring import normalize_vqa_answer
 from experiments.approach1_latent_self_correction.train_candidate_ranker import (
@@ -34,7 +34,7 @@ from experiments.approach1_latent_self_correction.train_candidate_ranker import 
 )
 
 HERE = Path(__file__).parent
-RESULTS = HERE / "results"
+RESULTS = RESULTS_ROOT  # results/ for the 2B study, results/base_<size>/ with VLMLGT_MODEL
 V2_DIR = RESULTS / "correction_v2"
 FIRST = ("vcd_0.5", "vcd_1", "zoom_0", "zoom_1", "zoom_2", "zoom_3")
 SETS = {
@@ -121,7 +121,7 @@ def batch_tensors(questions: list[dict], sets: list[tuple], device) -> dict:
     """Pad a batch of candidate sets."""
     width = max(len(r) for r, _, _ in sets)
     n = len(sets)
-    answer = torch.zeros(n, width, 2048, dtype=torch.float16)
+    answer = torch.zeros(n, width, questions[0]["states"].shape[-1], dtype=torch.float16)  # 2048 for 2B, 2560 for 4B
     scalars = torch.zeros(n, width, len(SCALARS_V2))
     labels = torch.zeros(n, width)
     mask = torch.zeros(n, width, dtype=torch.bool)

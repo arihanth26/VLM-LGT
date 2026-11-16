@@ -47,14 +47,14 @@ from experiments.approach1_latent_self_correction.correction_candidates import (
     encode_candidate,
     zoom_crops,
 )
-from experiments.approach1_latent_self_correction.correction_scale import dataset_dir, shard_range
+from experiments.approach1_latent_self_correction.correction_scale import CHAIN, MODEL_SIZE, RESULTS_ROOT, chain_indices, dataset_dir, shard_range
 from experiments.approach1_latent_self_correction.export_heads import load_head, score
 from models.load_model import load_qwen3_vl
 from models.run_inference import generate_with_confidence
 
 HERE = Path(__file__).parent
-FIRST_ROUND = HERE / "results" / "correction"
-OUT_DIR = HERE / "results" / "correction_v2"
+FIRST_ROUND = RESULTS_ROOT / "correction"
+OUT_DIR = RESULTS_ROOT / "correction_v2"
 COT_TOKENS = 256
 BOX_MARGIN = 0.15
 MIN_BOX = 0.2
@@ -158,7 +158,7 @@ def run(dataset: str, split: str, shard: int, num_shards: int, max_examples: int
     embeddings = question_embeddings(dataset, split)
     previous = first_round(split, dataset)
     heads = {"head": load_head(DEFAULT_HEAD), "probe": load_head(DEFAULT_PROBE)}
-    model, processor = load_qwen3_vl("2b")
+    model, processor = load_qwen3_vl(MODEL_SIZE)
     tokenizer = processor.tokenizer
     yes_id = tokenizer.encode("Yes", add_special_tokens=False)[0]
     no_id = tokenizer.encode("No", add_special_tokens=False)[0]
@@ -168,7 +168,8 @@ def run(dataset: str, split: str, shard: int, num_shards: int, max_examples: int
         done = {json.loads(l)["index"] for l in output.with_suffix(".jsonl").read_text().splitlines() if l.strip()}
     saved = torch.load(output.with_suffix(".pt"), weights_only=False) if output.with_suffix(".pt").exists() else {"questions": {}}
 
-    indices = [i for i in shard_range(len(data), shard, num_shards, max_examples) if i in previous]
+    base = chain_indices(dataset, split, shard, num_shards, max_examples) if CHAIN else shard_range(len(data), shard, num_shards, max_examples)
+    indices = [i for i in base if i in previous]
     for position, index in enumerate(indices, start=1):
         if index in done:
             continue

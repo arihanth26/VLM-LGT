@@ -56,6 +56,10 @@ def load_head(path: Path, device: str = "cpu"):
 
 def score(head, spec: HeadSpec, temperatures: dict, prompt: torch.Tensor, generated: torch.Tensor | None = None) -> dict:
     """Probabilities of being correct per mode: the prompt state, and for the verifier and joint modes the answer state."""
+    from experiments.approach1_latent_self_correction.correction_scale import HEADS_AVAILABLE
+
+    if not HEADS_AVAILABLE:  # another base model (VLMLGT_MODEL): the 2B heads cannot read its states; neutral score
+        return {mode: np.full(1 if prompt.dim() == 1 else prompt.shape[0], 0.5) for mode in ("pre_generation", "verifier", "joint")}
     if spec.kind == "verifier" and generated is None:
         raise ValueError("the verifier head needs the answer state")
     modes = modes_for(spec.kind) if generated is not None or spec.kind != "unified" else ("pre_generation",)

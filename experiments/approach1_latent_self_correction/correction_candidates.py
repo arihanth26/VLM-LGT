@@ -45,7 +45,15 @@ from experiments.approach1_latent_self_correction.candidate_pools import (
     cached_split,
     question_embeddings,
 )
-from experiments.approach1_latent_self_correction.correction_scale import dataset_dir, shard_range
+from experiments.approach1_latent_self_correction.correction_scale import (
+    CHAIN,
+    MODEL_SIZE,
+    RESULTS_ROOT,
+    chain_indices,
+    dataset_dir,
+    pool_temperatures,
+    shard_range,
+)
 from experiments.approach1_latent_self_correction.corruption import add_noise
 from experiments.approach1_latent_self_correction.export_heads import load_head, score
 from experiments.approach1_latent_self_correction.extract_q_features import answer_messages
@@ -53,7 +61,7 @@ from models.load_model import load_qwen3_vl
 from models.run_inference import build_messages, generate_with_confidence
 
 HERE = Path(__file__).parent
-OUT_DIR = HERE / "results" / "correction"
+OUT_DIR = RESULTS_ROOT / "correction"
 VCD_ALPHAS = (0.5, 1.0)
 VCD_BETA = 0.1
 NOISE_STRENGTH = 0.15
@@ -152,8 +160,12 @@ def pool_records(split: str, dataset: str, temperatures: tuple[str, ...]) -> dic
 
 
 def train_greedy(dataset: str) -> dict[int, dict]:
-    """Greedy answers and correctness of the train split, from the baseline run."""
+    """Greedy answers and correctness of the train split, from the 2B baseline run; with another base model, from
+    its own T=1.0 pools (generated in scored mode, so they hold the greedy answer)."""
     rows = {}
+    if MODEL_SIZE != "2b":
+        return {i: {"answer": r["greedy"]["answer"], "correct": bool(r["greedy"]["correct"])}
+                for i, r in pool_records("train", dataset, ("1",))["1"].items() if "greedy" in r}
     for line in (HERE / "results" / f"{dataset}_train_2b_baseline.jsonl").read_text(encoding="utf-8").splitlines():
         if line.strip():
             record = json.loads(line)
@@ -168,10 +180,10 @@ def run(dataset: str, split: str, shard: int, num_shards: int, max_examples: int
     data = cached_split(dataset, split)
     embeddings = question_embeddings(dataset, split)
     heads = {"head": load_head(DEFAULT_HEAD), "probe": load_head(DEFAULT_PROBE)}
-    temperatures = ("1",) if split in ("train", "unseen") else ("1", "1.3")  # unseen datasets: T=1.0 pools only
+    temperatures = pool_temperatures(POOL_DIR, split)  # 2B val/test: T=1.0 and 1.3; train, unseen and 4B: T=1.0
     pools = pool_records(split, dataset, temperatures)
     greedy_train = train_greedy(dataset) if split == "train" else {}
-    model, processor = load_qwen3_vl("2b")
+    model, processor = load_qwen3_vl(MODEL_SIZE)
     output.parent.mkdir(parents=True, exist_ok=True)
 
     done = set()
@@ -179,7 +191,8 @@ def run(dataset: str, split: str, shard: int, num_shards: int, max_examples: int
         done = {json.loads(l)["index"] for l in output.with_suffix(".jsonl").read_text().splitlines() if l.strip()}
     saved = torch.load(output.with_suffix(".pt"), weights_only=False) if output.with_suffix(".pt").exists() else {"questions": {}}
 
-    indices = [i for i in shard_range(len(data), shard, num_shards, max_examples) if i in pools[temperatures[0]]]
+    base = chain_indices(dataset, split, shard, num_shards, max_examples) if CHAIN else shard_range(len(data), shard, num_shards, max_examples)
+    indices = [i for i in base if i in pools[temperatures[0]]]
     for position, index in enumerate(indices, start=1):
         if index in done:
             continue
