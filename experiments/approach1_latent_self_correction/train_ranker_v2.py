@@ -22,7 +22,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from experiments.approach1_latent_self_correction.correction_scale import DATASET_NAMES
+from experiments.approach1_latent_self_correction.correction_scale import ALL_DATASETS, DATASET_NAMES
 from experiments.approach1_latent_self_correction.correction_stats import paired_difference
 from experiments.approach1_latent_self_correction.scoring import normalize_vqa_answer
 from experiments.approach1_latent_self_correction.train_candidate_ranker import (
@@ -69,7 +69,7 @@ def merge_v2(questions: list[dict], split: str) -> list[dict]:
             q["judge"] = record["judge"]
             if all(a in q["encoded"] for a in q["corrections"].values()):
                 kept[key] = q
-    order = {name: i for i, name in enumerate(DATASET_NAMES)}
+    order = {name: i for i, name in enumerate(ALL_DATASETS)}
     return sorted(kept.values(), key=lambda q: (order[q["key"][0]], q["key"][1]))
 
 

@@ -31,7 +31,7 @@ from pathlib import Path
 
 import numpy as np
 
-from experiments.approach1_latent_self_correction.correction_scale import DATASET_NAMES
+from experiments.approach1_latent_self_correction.correction_scale import ALL_DATASETS, DATASET_NAMES
 from experiments.approach1_latent_self_correction.correction_stats import policy_row
 from experiments.approach1_latent_self_correction.scoring import normalize_vqa_answer
 from experiments.approach1_latent_self_correction.train_candidate_ranker import load_questions
@@ -109,9 +109,10 @@ def evaluate(questions: list[dict], larger: dict) -> dict:
         final = np.array([r[name][0] for r in rows])
         entry = {"calls": float(np.mean([r[name][1] for r in rows])), "passes": float(np.mean([r[name][2] for r in rows])),
                  "pooled": policy_row(greedy.tolist(), final.tolist())}
-        for d in DATASET_NAMES:
+        for d in ALL_DATASETS:  # whichever datasets the split contains (the unseen split has only its own)
             m = datasets == d
-            entry[d] = policy_row(greedy[m].tolist(), final[m].tolist())
+            if m.any():
+                entry[d] = policy_row(greedy[m].tolist(), final[m].tolist())
         out[name] = entry
     return out
 

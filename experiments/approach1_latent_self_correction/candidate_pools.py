@@ -32,7 +32,7 @@ from experiments.approach1_latent_self_correction.baseline import (
     extract_reference,
     score_prediction,
 )
-from experiments.approach1_latent_self_correction.correction_scale import DATASET_NAMES, dataset_dir, shard_range
+from experiments.approach1_latent_self_correction.correction_scale import ALL_DATASETS, SPLITS, dataset_dir, shard_range
 from experiments.approach1_latent_self_correction.export_heads import load_head, score
 from experiments.approach1_latent_self_correction.extract_q_features import answer_messages, encode_state
 from models.load_model import load_qwen3_vl
@@ -75,7 +75,7 @@ def compact(result, correct: bool, answer_score: float, max_new_tokens: int) -> 
 
 def question_seed(seed: int, dataset: str, index: int) -> int:
     """Sampling seed of one question; the same at every temperature, so pools differ only by temperature."""
-    return seed + DATASET_NAMES.index(dataset) * 1_000_000 + index * 100
+    return seed + ALL_DATASETS.index(dataset) * 1_000_000 + index * 100
 
 
 def run(
@@ -159,8 +159,8 @@ def check_embedding(dataset: str, split: str, count: int = 3) -> None:
 def main() -> None:
     """Parse pool-generation options."""
     parser = argparse.ArgumentParser(description="Generate candidate pools for the candidate-search study.")
-    parser.add_argument("--dataset", required=True, choices=DATASET_NAMES)
-    parser.add_argument("--split", required=True, choices=("train", "val", "test"))
+    parser.add_argument("--dataset", required=True, choices=ALL_DATASETS)
+    parser.add_argument("--split", required=True, choices=SPLITS)
     parser.add_argument("--temperature", type=float, required=True)
     parser.add_argument("--samples", type=int, default=10)
     parser.add_argument("--top-p", type=float, default=0.95)

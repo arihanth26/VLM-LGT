@@ -32,7 +32,7 @@ from experiments.approach1_latent_self_correction.candidate_pools import (
     question_embeddings,
 )
 from experiments.approach1_latent_self_correction.correction_candidates import encode_candidate
-from experiments.approach1_latent_self_correction.correction_scale import DATASET_NAMES, dataset_dir
+from experiments.approach1_latent_self_correction.correction_scale import ALL_DATASETS, SPLITS, dataset_dir
 from experiments.approach1_latent_self_correction.correction_v2 import judge_probability
 from experiments.approach1_latent_self_correction.correction_v3_cot import shard_of, v2_indices, v2_known_answers
 from experiments.approach1_latent_self_correction.export_heads import load_head, score
@@ -135,8 +135,8 @@ def run(dataset: str, split: str, shard: int, num_shards: int, max_examples: int
 def main() -> None:
     """Parse shard options."""
     parser = argparse.ArgumentParser(description="Encode the escalation answers as candidates for the v3 ranker.")
-    parser.add_argument("--dataset", required=True, choices=DATASET_NAMES)
-    parser.add_argument("--split", required=True, choices=("train", "val", "test"))
+    parser.add_argument("--dataset", required=True, choices=ALL_DATASETS)
+    parser.add_argument("--split", required=True, choices=SPLITS)
     parser.add_argument("--shard", type=int, default=0)
     parser.add_argument("--num-shards", type=int, default=1)
     parser.add_argument("--max-examples", type=int, default=None)

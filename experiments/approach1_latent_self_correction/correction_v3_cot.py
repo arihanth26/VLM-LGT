@@ -172,7 +172,7 @@ def main() -> None:
     """Parse shard options."""
     parser = argparse.ArgumentParser(description="Several sampled reasoning answers per question (third correction round).")
     parser.add_argument("--dataset", required=True)
-    parser.add_argument("--split", required=True, choices=("train", "val", "test"))
+    parser.add_argument("--split", required=True, choices=("train", "val", "test", "unseen"))
     parser.add_argument("--shard", type=int, default=0)
     parser.add_argument("--num-shards", type=int, default=1)
     parser.add_argument("--max-examples", type=int, default=None, help="First N questions of the shard (smoke test).")

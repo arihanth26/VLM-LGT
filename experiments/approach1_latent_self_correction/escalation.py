@@ -36,7 +36,7 @@ from experiments.approach1_latent_self_correction.baseline import (
     score_prediction,
 )
 from experiments.approach1_latent_self_correction.candidate_pools import PROMPT_SUFFIX, cached_split
-from experiments.approach1_latent_self_correction.correction_scale import DATASET_NAMES, dataset_dir, shard_range
+from experiments.approach1_latent_self_correction.correction_scale import ALL_DATASETS, SPLITS, dataset_dir, shard_range
 from models.load_model import load_qwen3_vl
 from models.run_inference import generate_with_confidence
 
@@ -119,8 +119,8 @@ def main() -> None:
     parser.add_argument("--fix", required=True, choices=("model", "upscale"))
     parser.add_argument("--size", default="8b", help="Model size for --fix model.")
     parser.add_argument("--scales", type=float, nargs="+", default=[1.5, 2.0], help="Enlargement factors for --fix upscale.")
-    parser.add_argument("--dataset", required=True, choices=DATASET_NAMES)
-    parser.add_argument("--split", required=True, choices=("train", "val", "test"))
+    parser.add_argument("--dataset", required=True, choices=ALL_DATASETS)
+    parser.add_argument("--split", required=True, choices=SPLITS)
     parser.add_argument("--subset", action="store_true", help="Only the questions correction_v2 covered (the ranker's train subset).")
     parser.add_argument("--shard", type=int, default=0)
     parser.add_argument("--num-shards", type=int, default=1)

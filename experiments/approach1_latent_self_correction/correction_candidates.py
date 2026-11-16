@@ -168,7 +168,7 @@ def run(dataset: str, split: str, shard: int, num_shards: int, max_examples: int
     data = cached_split(dataset, split)
     embeddings = question_embeddings(dataset, split)
     heads = {"head": load_head(DEFAULT_HEAD), "probe": load_head(DEFAULT_PROBE)}
-    temperatures = ("1",) if split == "train" else ("1", "1.3")
+    temperatures = ("1",) if split in ("train", "unseen") else ("1", "1.3")  # unseen datasets: T=1.0 pools only
     pools = pool_records(split, dataset, temperatures)
     greedy_train = train_greedy(dataset) if split == "train" else {}
     model, processor = load_qwen3_vl("2b")
@@ -239,7 +239,7 @@ def main() -> None:
     """Parse shard options."""
     parser = argparse.ArgumentParser(description="Correction candidates and candidate states for the learned ranker.")
     parser.add_argument("--dataset", required=True)
-    parser.add_argument("--split", required=True, choices=("train", "val", "test"))
+    parser.add_argument("--split", required=True, choices=("train", "val", "test", "unseen"))
     parser.add_argument("--shard", type=int, default=0)
     parser.add_argument("--num-shards", type=int, default=1)
     parser.add_argument("--max-examples", type=int, default=None, help="Cap per shard (smoke test, or the train subset that gets corrections).")

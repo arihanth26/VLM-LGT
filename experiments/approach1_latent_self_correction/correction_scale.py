@@ -13,6 +13,12 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RAW_DIR = REPO_ROOT / "data" / "approach1_latent_self_correction" / "raw"
 DATASET_NAMES = ("chartqa_full", "textvqa", "docvqa", "scienceqa_img")
+# Datasets the heads and rankers never trained on, used only to test transfer (build_unseen_splits.py).
+# They live in a split of their own, "unseen", so no file of theirs can mix into the in-domain train, val
+# or test sets, and they come after DATASET_NAMES so every existing seed and index is unchanged.
+UNSEEN_DATASETS = ("ai2d", "infovqa")
+ALL_DATASETS = DATASET_NAMES + UNSEEN_DATASETS
+SPLITS = ("train", "val", "test", "unseen")
 
 
 def dataset_dir(name: str) -> Path:

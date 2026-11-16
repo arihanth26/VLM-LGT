@@ -32,7 +32,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from experiments.approach1_latent_self_correction.correction_scale import DATASET_NAMES
+from experiments.approach1_latent_self_correction.correction_scale import ALL_DATASETS, DATASET_NAMES
 from experiments.approach1_latent_self_correction.correction_stats import paired_difference
 from experiments.approach1_latent_self_correction.scoring import normalize_vqa_answer
 
@@ -55,7 +55,7 @@ def read_jsonl(path: Path) -> list[dict]:
 def load_questions(split: str, include_extra: bool = False) -> list[dict]:
     """Every question of a split with its distinct candidates, their states and features, and its pools."""
     pools = {}
-    temperatures = ("1",) if split == "train" else ("1", "1.3")
+    temperatures = ("1",) if split in ("train", "unseen") else ("1", "1.3")  # unseen datasets: T=1.0 pools only
     for temperature in temperatures:
         for path in sorted((POOL_DIR / f"T{temperature}" / split).glob("*.jsonl")):
             for record in read_jsonl(path):
@@ -68,7 +68,9 @@ def load_questions(split: str, include_extra: bool = False) -> list[dict]:
                 if "prediction" in record:
                     greedy_train[(name, record["index"])] = record["prediction"]["answer"]
     embeddings = {}
-    for name in DATASET_NAMES:
+    for name in ALL_DATASETS:
+        if not (FEATURE_DIR / f"{name}_{split}_2b.pt").exists():  # the unseen split has only its own datasets
+            continue
         cached = torch.load(FEATURE_DIR / f"{name}_{split}_2b.pt", map_location="cpu", weights_only=True)
         for row, index in enumerate(cached["indices"].tolist()):
             embeddings[(name, index)] = cached["prompt_features"][row]
@@ -91,7 +93,7 @@ def load_questions(split: str, include_extra: bool = False) -> list[dict]:
             }
     if include_extra:
         add_extra_samples(questions, split)
-    order = {name: i for i, name in enumerate(DATASET_NAMES)}
+    order = {name: i for i, name in enumerate(ALL_DATASETS)}
     return sorted(questions.values(), key=lambda q: (order[q["key"][0]], q["key"][1]))
 
 
