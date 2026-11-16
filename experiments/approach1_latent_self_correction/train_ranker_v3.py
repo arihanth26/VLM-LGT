@@ -329,6 +329,9 @@ def main() -> None:
                         help="Ranker variants to train; *_nods drops the dataset input (ablation).")
     parser.add_argument("--drop", nargs="+", default=[], choices=sorted(FEATURE_GROUPS),
                         help="Feature ablation: zero these input groups (the output files get a _drop_<groups> suffix).")
+    parser.add_argument("--hold-out", choices=DATASET_NAMES, default=None,
+                        help="Leave-one-dataset-out: train and select the learning rate without this dataset (train and val), "
+                             "then evaluate on every test dataset as usual; its test row is the transfer result. Use a *_nods variant.")
     parser.add_argument("--tag", default="", help="Suffix for the output files, e.g. _ablation.")
     parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
@@ -336,7 +339,7 @@ def main() -> None:
     args.with_escalation = args.with_escalation or args.with_reasoning_8b
     args.with_cot_samples = args.with_cot_samples or args.with_escalation
     suffix = (("_multi" if args.with_cot_samples else "") + ("_esc" if args.with_escalation else "") + ("_cot8b" if args.with_reasoning_8b else "")
-              + ("_drop_" + "_".join(sorted(args.drop)) if args.drop else "") + args.tag)
+              + ("_drop_" + "_".join(sorted(args.drop)) if args.drop else "") + (f"_holdout_{args.hold_out}" if args.hold_out else "") + args.tag)
     args.output = args.output or RESULTS / f"candidate_ranker_v3{suffix}.json"
     if args.with_cot_samples:
         SETS.update(MULTI_SETS)
@@ -360,9 +363,16 @@ def main() -> None:
     else:
         result_extra = {}
 
+    # Leave-one-dataset-out: the held-out dataset is absent from training and from the learning-rate choice;
+    # evaluation below still covers every dataset, so its rows are the ranker on a dataset it never saw.
+    keep = (lambda q: q["key"][0] != args.hold_out) if args.hold_out else (lambda q: True)
+    train_questions, select_questions = [q for q in data["train"] if keep(q)], [q for q in data["val"] if keep(q)]
+    if args.hold_out:
+        result_extra["hold_out"] = {"dataset": args.hold_out, "train": len(train_questions), "val_for_selection": len(select_questions)}
+        print(result_extra["hold_out"], flush=True)
     sweep, models = [], {}
     for variant, rate in itertools.product(VARIANTS, args.rates):
-        runs = [train(variant, rate, seed, data["train"], data["val"], device, args.epochs, args.batch_size) for seed in SEEDS]
+        runs = [train(variant, rate, seed, train_questions, select_questions, device, args.epochs, args.batch_size) for seed in SEEDS]
         sweep.append({"variant": variant, "learning_rate": rate, "val_accuracy": float(np.mean([a for _, a in runs]))})
         models[(variant, rate)] = [m for m, _ in runs]
         print(sweep[-1], flush=True)
