@@ -65,17 +65,43 @@ MULTI_SETS = {
     "everything_multi": SETS_V2["everything"] + COT_SAMPLES,
 }
 V3_DIR = RESULTS / "correction_v3"
+V4_DIR = RESULTS / "correction_v4"
+# Escalation candidates (escalation_candidates.py): the Qwen3-VL-8B answer and the 2B answers on images
+# enlarged 1.5x and 2x. Off unless --with-escalation, so models trained without them load unchanged.
+ESCALATION = ("esc_8b", "up1.5", "up2")
+ESCALATION_SETS = {
+    "esc8b": ("esc_8b",),
+    "esc": ESCALATION,
+    "ground_cot_esc8b": ("ground", "ground_ctx", "cot", "esc_8b"),
+    "ground_cot_multi_esc8b": ("ground", "ground_ctx", "cot") + COT_SAMPLES + ("esc_8b",),
+    "ground_cot_multi_esc": ("ground", "ground_ctx", "cot") + COT_SAMPLES + ESCALATION,
+    "everything_multi_esc": SETS_V2["everything"] + COT_SAMPLES + ESCALATION,
+}
+# Approximate cost of one answer in 2B generation calls: 8B has about 4x the parameters; an image
+# enlarged by s has about s^2 times the image tokens. Every other source counts 1.
+CALL_WEIGHT = {"esc_8b": 4.0, "up1.5": 2.25, "up2": 4.0}
 SCALARS_V3 = SCALARS_V2 + tuple(f"from_{g}" for g in GROUPS) + tuple(f"dataset_{d}" for d in DATASET_NAMES)
 ALL_VARIANTS = ("full_ds", "scalars_ds", "full_nods", "scalars_nods")  # *_nods: no dataset one-hot (ablation)
 VARIANTS = ("full_ds", "scalars_ds")
 SELECT = ("1", 0, SETS["zoom_cot"])
 
 
-def merge_cot_samples(questions: list[dict], split: str) -> int:
-    """Add correction_v3_cot.py's sampled reasoning answers, states and judge scores in place; returns questions updated."""
+def enable_escalation() -> None:
+    """Add the escalation candidate sets and their source-agreement feature (before the dataset one-hot)."""
+    global SCALARS_V3
+    GROUPS["escalate"] = ESCALATION
+    SETS.update(ESCALATION_SETS)
+    SCALARS_V3 = SCALARS_V2 + tuple(f"from_{g}" for g in GROUPS) + tuple(f"dataset_{d}" for d in DATASET_NAMES)
+
+
+def merge_cot_samples(questions: list[dict], split: str, directory: Path | None = None) -> int:
+    """Add the extra candidates of one round in correction_v3 format (by default correction_v3_cot.py's sampled
+    reasoning answers; correction_v4 for the escalation candidates), with states and judge scores, in place;
+    returns questions updated."""
+    directory = V3_DIR if directory is None else directory  # looked up at call time, so V3_DIR can be redirected
     by_key = {q["key"]: q for q in questions}
     updated = 0
-    for path in sorted((V3_DIR / split).glob("*.jsonl")):
+    for path in sorted((directory / split).glob("*.jsonl")):
         pt = path.with_suffix(".pt")
         saved = torch.load(pt, weights_only=False)["questions"] if pt.exists() else {}
         for line in path.read_text(encoding="utf-8").splitlines():
@@ -210,7 +236,7 @@ def generation_calls(k: int, sources: tuple) -> int:
     passes (encoding and judging each distinct candidate, one forward each without generation) are
     reported separately as the mean candidate count.
     """
-    calls = 1 + k + sum(1 for s in sources if s not in ("ground", "ground_ctx"))
+    calls = 1 + k + sum(CALL_WEIGHT.get(s, 1) for s in sources if s not in ("ground", "ground_ctx"))
     grounded = sum(1 for s in sources if s in ("ground", "ground_ctx"))
     return calls + (grounded + 1 if grounded else 0)
 
@@ -278,22 +304,30 @@ def main() -> None:
     parser.add_argument("--rates", type=float, nargs="+", default=[3e-4, 1e-3])
     parser.add_argument("--with-cot-samples", action="store_true",
                         help="Merge results/correction_v3 (sampled reasoning answers) and add the *_multi candidate sets.")
+    parser.add_argument("--with-escalation", action="store_true",
+                        help="Also merge results/correction_v4 (8B and upscaled answers) and add the escalation candidate sets; implies --with-cot-samples.")
     parser.add_argument("--variants", nargs="+", default=list(VARIANTS), choices=ALL_VARIANTS,
                         help="Ranker variants to train; *_nods drops the dataset input (ablation).")
     parser.add_argument("--tag", default="", help="Suffix for the output files, e.g. _ablation.")
     parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
     VARIANTS = tuple(args.variants)
-    suffix = ("_multi" if args.with_cot_samples else "") + args.tag
+    args.with_cot_samples = args.with_cot_samples or args.with_escalation
+    suffix = ("_multi" if args.with_cot_samples else "") + ("_esc" if args.with_escalation else "") + args.tag
     args.output = args.output or RESULTS / f"candidate_ranker_v3{suffix}.json"
     if args.with_cot_samples:
         SETS.update(MULTI_SETS)
+    if args.with_escalation:
+        enable_escalation()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     data = {split: merge_v2(load_questions(split), split) for split in ("train", "val", "test")}
     print({s: len(q) for s, q in data.items()}, flush=True)
     if args.with_cot_samples:
         print({s: merge_cot_samples(q, s) for s, q in data.items()}, "questions with sampled reasoning", flush=True)
         result_extra = {"cot_samples": {s: sum(any(c in q["corrections"] for c in COT_SAMPLES) for q in qs) for s, qs in data.items()}}
+        if args.with_escalation:
+            print({s: merge_cot_samples(q, s, V4_DIR) for s, q in data.items()}, "questions with escalation candidates", flush=True)
+            result_extra["escalation"] = {s: sum(any(c in q["corrections"] for c in ESCALATION) for q in qs) for s, qs in data.items()}
     else:
         result_extra = {}
 

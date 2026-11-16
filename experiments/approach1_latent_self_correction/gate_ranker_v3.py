@@ -12,20 +12,25 @@
 #   random      each question corrected with probability b (the baseline to beat)
 # Thresholds come from validation (gating.py); on test each question is gated on its own score.
 #
-# Cost is counted per question in model passes, as in report 11 and from what each question actually
-# needed: 1 greedy generation, plus the detector's pass if it needs one; a corrected question adds one
-# batched sample call (k > 0), one call per correction (contrastive decoding 2, grounding 1 for the box
-# plus 1 per grounded answer, reasoning 1) and two scoring passes per distinct candidate (encoding and
-# judge). Generation calls are also reported on their own, since a scoring pass is a single forward pass.
+# Cost is counted per question from what it actually needed. Generation calls use train_ranker_v3's
+# convention (greedy 1, each sample 1, each correction source 1, the grounded crops one shared box call
+# plus one each, each sampled reasoning answer 1); passes add two scoring passes (encoding and judge)
+# per distinct candidate of a corrected question, and the detector's pass when it needs one.
+#
+# Models: the trained rankers exactly as saved by train_ranker_v3.py (--models), so the ungated row of
+# every configuration must reproduce the accuracy that run reported (--reported); the script records
+# the check and stops if it fails. With --with-cot-samples the sampled reasoning answers of
+# correction_v3_cot.py are merged and the *_multi configurations are gated as well.
 #
 # Configurations: the validation choice of report 12 (T1_k5_everything), the cost-limited choice
-# (T1_k0_ground_cot), reasoning only (T1_k0_cot) and crops + reasoning (T1_k0_zoom_cot), all with the
-# v3 scalars_ds ranker. Headlines, each chosen on validation and read once on test:
+# (T1_k0_ground_cot), reasoning only (T1_k0_cot) and crops + reasoning (T1_k0_zoom_cot), plus
+# T1_k0_cot_multi and T1_k0_ground_cot_multi with sampled reasoning. Headlines, each chosen on
+# validation and read once on test:
 #   per configuration   the best detector at budgets 20, 30 and 50%; the smallest budget whose
 #                       validation gain keeps 90% of correcting everything
 #   overall             the best (configuration, detector, budget) under an average cost of 2, 3 and 5
 #                       passes per question
-# Writes results/gating_v3.json and results/gating_v3.md.
+# Writes results/gating_v3<tag>.json and .md.
 
 import argparse
 import json
@@ -39,9 +44,21 @@ from experiments.approach1_latent_self_correction.correction_stats import paired
 from experiments.approach1_latent_self_correction.gating import BUDGETS, combine, gate, random_gate, threshold
 from experiments.approach1_latent_self_correction.train_candidate_ranker import load_questions
 from experiments.approach1_latent_self_correction.train_ranker_v2 import RESULTS, merge_v2
-from experiments.approach1_latent_self_correction.train_ranker_v3 import SETS, RankerV3, candidate_set, choose
+from experiments.approach1_latent_self_correction.train_ranker_v3 import (
+    MULTI_SETS,
+    V4_DIR,
+    enable_escalation,
+    SETS,
+    RankerV3,
+    candidate_set,
+    choose,
+    generation_calls,
+    merge_cot_samples,
+)
 
 CONFIGS = ("T1_k5_everything", "T1_k0_ground_cot", "T1_k0_cot", "T1_k0_zoom_cot")
+MULTI_CONFIGS = ("T1_k0_cot_multi", "T1_k0_ground_cot_multi")
+ESCALATION_CONFIGS = ("T1_k0_esc8b", "T1_k0_ground_cot_multi_esc8b", "T1_k0_ground_cot_multi_esc", "T1_k0_everything_multi_esc")
 DETECTORS = ("token", "pre_head", "after_head", "judge", "random")
 DETECTOR_PASS = {"token": 0, "pre_head": 0, "after_head": 1, "judge": 1, "random": 0}
 FIXED_BUDGETS = (0.2, 0.3, 0.5)
@@ -49,6 +66,7 @@ COST_CAPS = (2.0, 3.0, 5.0)
 KEEP = 0.9
 RANDOM_DRAWS = 50
 VARIANT = "scalars_ds"
+MAX_DIFFERENT_QUESTIONS = 3  # allowance for GPU non-determinism flipping a near-tie
 
 
 def parse(key: str) -> tuple[str, int, str]:
@@ -56,14 +74,6 @@ def parse(key: str) -> tuple[str, int, str]:
     temperature, rest = key[1:].split("_k", 1)
     k, name = rest.split("_", 1)
     return temperature, int(k), name
-
-
-def generation_calls(k: int, sources: tuple) -> int:
-    """Generation calls a corrected question adds to its greedy answer."""
-    calls = 1 if k else 0
-    calls += sum(2 if s.startswith("vcd") else 1 for s in sources)
-    calls += 1 if any(s.startswith("ground") for s in sources) else 0  # the bounding-box request
-    return calls
 
 
 def attach_gates(questions: list[dict], split: str) -> None:
@@ -81,30 +91,30 @@ def attach_gates(questions: list[dict], split: str) -> None:
                       "after_head": greedy["head_confidence"], "judge": q["judge"].get(q["greedy"], 0.5)}
 
 
-def load_models(device) -> list[RankerV3]:
-    """The three seeds of the v3 scalars_ds ranker saved by train_ranker_v3.py."""
-    saved = torch.load(RESULTS / "candidate_ranker_v3_models.pt", map_location=device, weights_only=False)[VARIANT]
+def load_models(path: Path, variant: str, device) -> list[RankerV3]:
+    """The three seeds of one v3 variant, as saved by train_ranker_v3.py."""
+    saved = torch.load(path, map_location=device, weights_only=False)[variant]
     models = []
     for state in saved:
-        model = RankerV3(VARIANT, state["network.0.weight"].shape[0]).to(device)
+        model = RankerV3(variant, state["network.0.weight"].shape[0]).to(device)
         model.load_state_dict(state)
         model.eval()
         models.append(model)
     return models
 
 
-def split_table(questions: list[dict], models: list, device) -> dict:
+def split_table(questions: list[dict], models: list, device, configs: tuple) -> dict:
     """Per question: dataset, greedy and corrected correctness per configuration, cost, detector scores."""
     table = {"dataset": np.array([q["key"][0] for q in questions]),
              "greedy": np.array([bool(q["encoded"][q["greedy"]]["correct"]) for q in questions]),
              "scores": {d: np.array([q["gates"][d] for q in questions], dtype=float) for d in DETECTORS if d != "random"},
              "corrected": {}, "passes": {}, "calls": {}}
-    for key in CONFIGS:
+    for key in configs:
         temperature, k, name = parse(key)
         config = (temperature, k, SETS[name])
         table["corrected"][key] = np.array(choose(models, questions, config, device))
         candidates = np.array([len(candidate_set(q, temperature, k, SETS[name])[0]) for q in questions])
-        table["calls"][key] = 1 + generation_calls(k, SETS[name])
+        table["calls"][key] = generation_calls(k, SETS[name])
         table["passes"][key] = table["calls"][key] + 2 * candidates
     return table
 
@@ -137,7 +147,7 @@ def summary(table: dict, key: str, detector: str, budget: float, reference: dict
 
 def grid(table: dict, reference: dict) -> dict:
     """Every configuration, detector and budget."""
-    return {key: {d: [summary(table, key, d, b, reference) for b in BUDGETS] for d in DETECTORS} for key in CONFIGS}
+    return {key: {d: [summary(table, key, d, b, reference) for b in BUDGETS] for d in DETECTORS} for key in table["corrected"]}
 
 
 def breakdown(table: dict, final: np.ndarray) -> dict:
@@ -172,7 +182,7 @@ def headlines(val: dict, test: dict, val_grid: dict) -> list[dict]:
     """Every validation-chosen setting, read once on test."""
     out = []
     base = float(val["greedy"].mean())
-    for key in CONFIGS:
+    for key in val["corrected"]:
         out.append(read_test(val, test, val_grid, "correct every question (no gate)", key, "token", 1.0))
         for b in FIXED_BUDGETS:
             out.append(read_test(val, test, val_grid, f"best detector at a {int(b * 100)}% budget", key, best_detector(val_grid, key, b), b))
@@ -182,7 +192,7 @@ def headlines(val: dict, test: dict, val_grid: dict) -> list[dict]:
         out.append(read_test(val, test, val_grid, f"smallest budget keeping {int(KEEP * 100)}% of the full validation gain", key,
                              best_detector(val_grid, key, b), b))
     for cap in COST_CAPS:
-        options = [(key, d, b) for key in CONFIGS for d in DETECTORS if d != "random" for b in BUDGETS
+        options = [(key, d, b) for key in val["corrected"] for d in DETECTORS if d != "random" for b in BUDGETS
                    if val_grid[key][d][BUDGETS.index(b)]["passes"] <= cap]
         key, d, b = max(options, key=lambda o: (val_grid[o[0]][o[1]][BUDGETS.index(o[2])]["accuracy"], -o[2]))
         out.append(read_test(val, test, val_grid, f"best under {cap:g} passes per question (any configuration)", key, d, b))
@@ -201,8 +211,10 @@ def markdown(result: dict) -> str:
     """Headline table and per-dataset rows of the gated settings."""
     lines = ["# Gating the v3 correction step", "",
              "Thresholds on the detector score come from validation; on test each question is gated on its own score. "
-             f"Ranker: v3 {VARIANT}. Greedy on test: {pct(result['greedy_test'])}. Passes: model passes per question "
+             f"Ranker: v3 {result['variant']} from `{result['models']}`. Greedy on test: {pct(result['greedy_test'])}. Passes: model passes per question "
              "(generation calls plus two scoring passes per distinct candidate of a corrected question); calls: generation calls only.", "",
+             "Reproduction check (ungated test accuracy against the training run's report): "
+             + ", ".join(f"{k} {pct(v['ours'])} vs {pct(v['reported'])}" for k, v in result["reproduction"].items()), "",
              "| Setting | Configuration | Detector | Budget (val) / share corrected (test) | Passes | Calls | Test accuracy | Gain (95% interval) | Fixed / broken | Over random gate |",
              "|---|---|---|---|---:|---:|---:|---|---|---|"]
     for h in result["headlines"]:
@@ -218,28 +230,71 @@ def markdown(result: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def reproduction(tables: dict, reported_path: Path, variant: str) -> dict:
+    """Ungated accuracy of each configuration on val and test against the training run's report."""
+    reported = json.loads(reported_path.read_text())
+    out = {}
+    for key in tables["test"]["corrected"]:
+        out[key] = {"ours": float(tables["test"]["corrected"][key].mean()),
+                    "reported": reported["test"][key][f"ranker_v3_{variant}"]["pooled"]["accuracy"],
+                    "ours_val": float(tables["val"]["corrected"][key].mean()),
+                    "reported_val": reported["val"][key][f"ranker_v3_{variant}"]["pooled"]["accuracy"]}
+        n_test, n_val = len(tables["test"]["greedy"]), len(tables["val"]["greedy"])
+        out[key]["questions_different_test"] = round(abs(out[key]["ours"] - out[key]["reported"]) * n_test)
+        out[key]["questions_different_val"] = round(abs(out[key]["ours_val"] - out[key]["reported_val"]) * n_val)
+        out[key]["match"] = max(out[key]["questions_different_test"], out[key]["questions_different_val"]) <= MAX_DIFFERENT_QUESTIONS
+    return out
+
+
 def main() -> None:
-    """Score every configuration once per split, then gate."""
+    """Score every configuration once per split, check it against the training run, then gate."""
     parser = argparse.ArgumentParser(description="Gating for the v3 correction step.")
-    parser.add_argument("--output", type=Path, default=RESULTS / "gating_v3.json")
+    parser.add_argument("--models", type=Path, default=RESULTS / "candidate_ranker_v3_models.pt")
+    parser.add_argument("--reported", type=Path, default=RESULTS / "candidate_ranker_v3.json",
+                        help="The training run's results, which the ungated rows must reproduce.")
+    parser.add_argument("--variant", default=VARIANT)
+    parser.add_argument("--with-cot-samples", action="store_true", help="Merge correction_v3 and gate the *_multi configurations too.")
+    parser.add_argument("--with-escalation", action="store_true",
+                        help="Merge correction_v4 (8B and upscaled answers) and gate the escalation configurations; implies --with-cot-samples.")
+    parser.add_argument("--tag", default="")
     args = parser.parse_args()
+    output = RESULTS / f"gating_v3{args.tag}.json"
+    configs = CONFIGS
+    args.with_cot_samples = args.with_cot_samples or args.with_escalation
+    if args.with_cot_samples:
+        SETS.update(MULTI_SETS)
+        configs = CONFIGS + MULTI_CONFIGS
+    if args.with_escalation:
+        enable_escalation()
+        configs = configs + ESCALATION_CONFIGS
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    models = load_models(device)
+    models = load_models(args.models, args.variant, device)
     tables = {}
     for split in ("val", "test"):
         questions = merge_v2(load_questions(split), split)
+        if args.with_cot_samples:
+            print(f"[cot samples] {split}: {merge_cot_samples(questions, split)} questions", flush=True)
+        if args.with_escalation:
+            print(f"[escalation] {split}: {merge_cot_samples(questions, split, V4_DIR)} questions", flush=True)
         attach_gates(questions, split)
-        tables[split] = split_table(questions, models, device)
+        tables[split] = split_table(questions, models, device, configs)
         print(f"[scored] {split}: {len(questions)} questions", flush=True)
+    check = reproduction(tables, args.reported, args.variant)
+    for key, row in check.items():
+        print(f"[reproduction] {key}: test {row['ours']:.6f} vs {row['reported']:.6f}, val {row['ours_val']:.6f} vs {row['reported_val']:.6f}"
+              f" -> {'ok' if row['match'] else 'MISMATCH'}", flush=True)
+    if not all(row["match"] for row in check.values()):
+        raise SystemExit("the ungated rows do not reproduce the training run; not gating")
     val, test = tables["val"], tables["test"]
     val_grid, test_grid = grid(val, val), grid(test, val)
-    result = {"budgets": list(BUDGETS), "configurations": list(CONFIGS), "detectors": list(DETECTORS),
+    result = {"models": args.models.name, "variant": args.variant, "reproduction": check,
+              "budgets": list(BUDGETS), "configurations": list(configs), "detectors": list(DETECTORS),
               "greedy_val": float(val["greedy"].mean()), "greedy_test": float(test["greedy"].mean()),
-              "ungated_test_accuracy": {k: float(test["corrected"][k].mean()) for k in CONFIGS},
+              "ungated_test_accuracy": {k: float(test["corrected"][k].mean()) for k in configs},
               "headlines": headlines(val, test, val_grid), "curves": {"val": val_grid, "test": test_grid}}
-    args.output.write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8")
-    args.output.with_suffix(".md").write_text(markdown(result), encoding="utf-8")
-    print(f"[done] wrote {args.output} and {args.output.with_suffix('.md')}")
+    output.write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8")
+    output.with_suffix(".md").write_text(markdown(result), encoding="utf-8")
+    print(f"[done] wrote {output} and {output.with_suffix('.md')}")
 
 
 if __name__ == "__main__":

@@ -13,7 +13,9 @@
 #
 # Every validation and test question is answered, not only the flagged ones, so the routing study can
 # try any detector and any budget offline without new generation, and the "fix everything" upper
-# reference is measured on the same questions.
+# reference is measured on the same questions. With --subset, only the questions correction_v2 covered
+# are answered (for train: the 12,000 questions the candidate ranker trains on), so these answers can
+# also become ranker candidates (escalation_candidates.py).
 #
 # Output: results/escalation/<fix>/<split>/<dataset>_shard<i>of<n>.jsonl, one record per question with
 # the answer(s), correctness, token confidence and image size. Resumes from what it already wrote.
@@ -68,7 +70,7 @@ def answer(model, processor, example, image, question, reference, max_new_tokens
 
 
 def run(fix: str, size: str, scales: list[float], dataset: str, split: str, shard: int, num_shards: int,
-        max_examples: int | None, max_new_tokens: int, max_pixels: int, output: Path) -> None:
+        max_examples: int | None, max_new_tokens: int, max_pixels: int, output: Path, subset: bool = False) -> None:
     """Answer one shard of one dataset split with the chosen fix."""
     done = set()
     if output.exists():
@@ -76,7 +78,12 @@ def run(fix: str, size: str, scales: list[float], dataset: str, split: str, shar
     data = cached_split(dataset, split)
     model, processor = load_qwen3_vl(size if fix == "model" else "2b")
     output.parent.mkdir(parents=True, exist_ok=True)
-    indices = shard_range(len(data), shard, num_shards, max_examples)
+    if subset:
+        from experiments.approach1_latent_self_correction.correction_v3_cot import shard_of, v2_indices
+
+        indices = shard_of(v2_indices(dataset, split), shard, num_shards, max_examples)
+    else:
+        indices = shard_range(len(data), shard, num_shards, max_examples)
     for position, index in enumerate(indices, start=1):
         if index in done:
             continue
@@ -113,7 +120,8 @@ def main() -> None:
     parser.add_argument("--size", default="8b", help="Model size for --fix model.")
     parser.add_argument("--scales", type=float, nargs="+", default=[1.5, 2.0], help="Enlargement factors for --fix upscale.")
     parser.add_argument("--dataset", required=True, choices=DATASET_NAMES)
-    parser.add_argument("--split", required=True, choices=("val", "test"))
+    parser.add_argument("--split", required=True, choices=("train", "val", "test"))
+    parser.add_argument("--subset", action="store_true", help="Only the questions correction_v2 covered (the ranker's train subset).")
     parser.add_argument("--shard", type=int, default=0)
     parser.add_argument("--num-shards", type=int, default=1)
     parser.add_argument("--max-examples", type=int, default=None, help="Cap per shard, for a smoke test.")
@@ -124,7 +132,7 @@ def main() -> None:
     name = f"model_{args.size}" if args.fix == "model" else "upscale"
     output = args.output or OUT_DIR / name / args.split / f"{args.dataset}_shard{args.shard}of{args.num_shards}.jsonl"
     run(args.fix, args.size, args.scales, args.dataset, args.split, args.shard, args.num_shards, args.max_examples,
-        args.max_new_tokens, args.max_pixels, output)
+        args.max_new_tokens, args.max_pixels, output, args.subset)
 
 
 if __name__ == "__main__":

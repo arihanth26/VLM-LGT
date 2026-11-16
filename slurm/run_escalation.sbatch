@@ -14,7 +14,7 @@
 #   FIX=upscale  greedy 2B answer on the image enlarged by each of SCALES (default "1.5 2")
 # Resumable. Output: experiments/approach1_latent_self_correction/results/escalation/<fix>/<split>/.
 # Usage: sbatch --export=ALL,FIX=model,DATASET=textvqa,SPLIT=val slurm/run_escalation.sbatch
-# Optional: SIZE, SCALES, SHARD (0), NUM_SHARDS (1), SMOKE (examples per shard)
+# Optional: SIZE, SCALES, SHARD (0), NUM_SHARDS (1), SUBSET (train: only the ranker's questions), SMOKE (examples per shard)
 
 set -euo pipefail
 cd "$SLURM_SUBMIT_DIR"
@@ -30,6 +30,7 @@ PYTHON_BIN="$SLURM_SUBMIT_DIR/.venv/bin/python"
 read -r -a SCALE_LIST <<< "${SCALES:-1.5 2}"
 ARGS=(--fix "$FIX" --size "${SIZE:-8b}" --scales "${SCALE_LIST[@]}" --dataset "$DATASET" --split "$SPLIT"
       --shard "${SHARD:-0}" --num-shards "${NUM_SHARDS:-1}")
+[[ -n "${SUBSET:-}" ]] && ARGS+=(--subset)
 if [[ -n "${SMOKE:-}" ]]; then
     ARGS+=(--max-examples "$SMOKE" --output "experiments/approach1_latent_self_correction/results/escalation_smoke/${FIX}_${SPLIT}_${DATASET}.jsonl")
 fi

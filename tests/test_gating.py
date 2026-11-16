@@ -32,13 +32,27 @@ def test_random_gate_and_combine():
 
 
 def test_generation_calls_and_parse():
-    from experiments.approach1_latent_self_correction.gate_ranker_v3 import generation_calls, parse
-    from experiments.approach1_latent_self_correction.train_ranker_v3 import SETS
+    from experiments.approach1_latent_self_correction.gate_ranker_v3 import parse
+    from experiments.approach1_latent_self_correction.train_ranker_v3 import MULTI_SETS, SETS, generation_calls
     assert parse("T1_k5_everything") == ("1", 5, "everything")
-    assert parse("T1_k0_ground_cot") == ("1", 0, "ground_cot")
-    assert generation_calls(0, SETS["cot"]) == 1
-    assert generation_calls(0, SETS["ground_cot"]) == 4      # box + 2 grounded answers + reasoning
-    assert generation_calls(5, SETS["everything"]) == 13     # samples 1 + vcd 2x2 + zoom 4 + box 1 + ground 2 + cot 1
+    assert parse("T1_k0_ground_cot_multi") == ("1", 0, "ground_cot_multi")
+    assert generation_calls(0, SETS["cot"]) == 2                   # greedy + reasoning
+    assert generation_calls(0, SETS["ground_cot"]) == 5            # greedy + box + 2 grounded + reasoning
+    assert generation_calls(0, MULTI_SETS["ground_cot_multi"]) == 8  # + 3 sampled reasoning answers
+
+
+def test_reproduction_check_counts_questions():
+    from experiments.approach1_latent_self_correction import gate_ranker_v3 as g
+    import json, tempfile
+    from pathlib import Path
+    tables = {s: {"greedy": np.zeros(1000, bool), "corrected": {"c": np.r_[np.ones(500, bool), np.zeros(500, bool)]}} for s in ("val", "test")}
+    row = lambda a: {"ranker_v3_scalars_ds": {"pooled": {"accuracy": a}}}
+    with tempfile.TemporaryDirectory() as d:
+        path = Path(d) / "r.json"
+        path.write_text(json.dumps({"val": {"c": row(0.502)}, "test": {"c": row(0.5)}}))
+        assert g.reproduction(tables, path, "scalars_ds")["c"]["match"]          # 2 questions apart: allowed
+        path.write_text(json.dumps({"val": {"c": row(0.51)}, "test": {"c": row(0.5)}}))
+        assert not g.reproduction(tables, path, "scalars_ds")["c"]["match"]      # 10 apart: stop
 
 
 def test_evaluate_gated_cost_and_outcome():
