@@ -55,3 +55,20 @@ def test_candidate_features_include_8b_agreement():
 def test_8b_costs_four_calls():
     assert v3.generation_calls(0, ("esc_8b",)) == 5.0
     assert v3.generation_calls(0, ("cot",)) == 2
+
+
+def test_drop_zeroes_the_ablated_columns_only():
+    answers = ["cat", "dog"]
+    q = {"key": ("docvqa", 0), "answers": answers, "greedy": "cat", "samples": {"1": ["dog"]},
+         "corrections": {"cot": "dog"}, "judge": {"cat": 0.9, "dog": 0.2},
+         "encoded": {a: {"tf_confidence": 0.5, "tokens": 1, "correct": a == "dog", "head_confidence": 0.7, "probe_confidence": 0.6} for a in answers}}
+    full = v3.candidate_set(q, "1", 1, ("cot",))[1]
+    try:
+        v3.DROPPED.update(v3.FEATURE_GROUPS["judge"])
+        dropped = v3.candidate_set(q, "1", 1, ("cot",))[1]
+    finally:
+        v3.DROPPED.clear()
+    judge = [i for i, n in enumerate(v3.SCALARS_V3) if n in ("judge", "judge_logit")]
+    other = [i for i in range(len(v3.SCALARS_V3)) if i not in judge]
+    assert (dropped[:, judge] == 0).all() and (full[:, judge] != 0).any()
+    assert np.array_equal(dropped[:, other], full[:, other])

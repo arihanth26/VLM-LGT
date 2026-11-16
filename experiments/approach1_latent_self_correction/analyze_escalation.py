@@ -39,7 +39,7 @@ DETECTORS = ("pre_head", "pre_probe", "after_head", "after_probe", "token", "ran
 RULES = ("replace", "confident")
 # Approximate cost of one fix answer in 2B greedy passes: 8B has about 4x the parameters; an image
 # enlarged by s has about s^2 times the image tokens, which dominate the cost of a short answer.
-FIX_COST = {"8b": 4.0, "up1.5": 2.25, "up2": 4.0}
+FIX_COST = {"4b": 2.0, "8b": 4.0, "up1.5": 2.25, "up2": 4.0}
 RANDOM_DRAWS = 50
 
 

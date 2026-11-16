@@ -1,0 +1,7 @@
+chartqa_full: train answers 7097510 7097511 7097512 7097513 7097514; candidates submitted
+textvqa: train answers 7097518 7097519 7097520 7097521 7097522; candidates submitted
+docvqa: train answers 7097526 7097527 7097528 7097529 7097530; candidates submitted
+scienceqa_img: train answers 7097535 7097536 7097537 7097538 7097539; candidates submitted
+candidate jobs: 7097515 7097516 7097517 7097523 7097524 7097525 7097531 7097533 7097534 7097540 7097541 7097542
+ranker v3 + escalation: 7097543; gating: 7097544
+Results: experiments/approach1_latent_self_correction/results/candidate_ranker_v3_multi_esc.md and experiments/approach1_latent_self_correction/results/gating_v3_multi_esc.md

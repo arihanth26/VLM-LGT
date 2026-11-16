@@ -80,6 +80,16 @@ ESCALATION_SETS = {
 # Approximate cost of one answer in 2B generation calls: 8B has about 4x the parameters; an image
 # enlarged by s has about s^2 times the image tokens. Every other source counts 1.
 CALL_WEIGHT = {"esc_8b": 4.0, "up1.5": 2.25, "up2": 4.0}
+# Feature ablation (--drop): groups of ranker inputs that are set to zero in training and evaluation, to
+# measure what each signal contributes. "states" is the full_* variants' hidden states, compared by variant.
+FEATURE_GROUPS = {
+    "judge": ("judge", "judge_logit"),                                      # the model's own yes/no judgement
+    "head": ("head", "probe", "head_logit"),                               # trained correctness head and probe
+    "token": ("tf_confidence", "log_tf_confidence"),                       # the answer's own probability
+    "agreement": ("vote_share", "correction_share"),                       # agreement with samples and corrections,
+                                                                           # plus every from_<source> column (added below)
+}
+DROPPED: set = set()  # names of the scalar columns zeroed by --drop
 SCALARS_V3 = SCALARS_V2 + tuple(f"from_{g}" for g in GROUPS) + tuple(f"dataset_{d}" for d in DATASET_NAMES)
 ALL_VARIANTS = ("full_ds", "scalars_ds", "full_nods", "scalars_nods")  # *_nods: no dataset one-hot (ablation)
 VARIANTS = ("full_ds", "scalars_ds")
@@ -136,7 +146,10 @@ def candidate_set(q: dict, temperature: str, k: int, sources: tuple) -> tuple[li
         norm = normalize_vqa_answer(q["answers"][row])
         extra.append([votes.count(norm) / len(votes) if votes else 0.0 for votes in offered.values()] + dataset)
     extra = np.asarray(extra, dtype=np.float32).reshape(len(rows), len(GROUPS) + len(DATASET_NAMES))
-    return rows, np.concatenate([features, extra], axis=1), labels
+    features = np.concatenate([features, extra], axis=1)
+    if DROPPED:  # ablation: the same columns are zero for every candidate, in training and evaluation
+        features[:, [i for i, name in enumerate(SCALARS_V3) if name in DROPPED]] = 0.0
+    return rows, features, labels
 
 
 class RankerV3(nn.Module):
@@ -308,17 +321,24 @@ def main() -> None:
                         help="Also merge results/correction_v4 (8B and upscaled answers) and add the escalation candidate sets; implies --with-cot-samples.")
     parser.add_argument("--variants", nargs="+", default=list(VARIANTS), choices=ALL_VARIANTS,
                         help="Ranker variants to train; *_nods drops the dataset input (ablation).")
+    parser.add_argument("--drop", nargs="+", default=[], choices=sorted(FEATURE_GROUPS),
+                        help="Feature ablation: zero these input groups (the output files get a _drop_<groups> suffix).")
     parser.add_argument("--tag", default="", help="Suffix for the output files, e.g. _ablation.")
     parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
     VARIANTS = tuple(args.variants)
     args.with_cot_samples = args.with_cot_samples or args.with_escalation
-    suffix = ("_multi" if args.with_cot_samples else "") + ("_esc" if args.with_escalation else "") + args.tag
+    suffix = (("_multi" if args.with_cot_samples else "") + ("_esc" if args.with_escalation else "")
+              + ("_drop_" + "_".join(sorted(args.drop)) if args.drop else "") + args.tag)
     args.output = args.output or RESULTS / f"candidate_ranker_v3{suffix}.json"
     if args.with_cot_samples:
         SETS.update(MULTI_SETS)
     if args.with_escalation:
         enable_escalation()
+    for group in args.drop:
+        DROPPED.update(FEATURE_GROUPS[group])
+        if group == "agreement":
+            DROPPED.update(f"from_{g}" for g in GROUPS)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     data = {split: merge_v2(load_questions(split), split) for split in ("train", "val", "test")}
     print({s: len(q) for s, q in data.items()}, flush=True)
