@@ -7,6 +7,8 @@
 # Sources:  esc_8b   the 8B greedy answer
 #           up1.5    the 2B answer on the image enlarged 1.5x
 #           up2      the 2B answer on the image enlarged 2x
+#           cot_8b   the 8B step-by-step reasoning answer (escalation.py --fix reasoning); not in the default
+#                    set, run with --sources cot_8b --out-dir correction_v5 so the first three stay as they are
 # Every answer not already encoded for its question (by the first round, correction_v2 or the sampled
 # reasoning of correction_v3) is encoded exactly like the other candidates, by the 2B model on the full
 # image and the original prompt: answer state, teacher-forced probability, head and probe scores with
@@ -43,6 +45,7 @@ ESCALATION = HERE / "results" / "escalation"
 V3_DIR = HERE / "results" / "correction_v3"
 OUT_DIR = HERE / "results" / "correction_v4"
 SOURCES = ("esc_8b", "up1.5", "up2")
+ALL_SOURCES = SOURCES + ("cot_8b",)
 
 
 def escalation_answers(dataset: str, split: str) -> dict[int, dict[str, dict]]:
@@ -58,13 +61,19 @@ def escalation_answers(dataset: str, split: str) -> dict[int, dict[str, dict]]:
             r = json.loads(line) if line.strip() else {}
             for scale, result in r.get("upscaled", {}).items():
                 out.setdefault(r["index"], {})[f"up{scale}"] = result
+    for path in sorted((ESCALATION / "reasoning_8b" / split).glob(f"{dataset}_shard*.jsonl")):
+        for line in path.read_text(encoding="utf-8").splitlines():
+            r = json.loads(line) if line.strip() else {}
+            if r.get("reasoning", {}).get("answer") is not None:  # no "Answer:" line: no candidate
+                out.setdefault(r["index"], {})["cot_8b"] = r["reasoning"]
     return out
 
 
 def known_answers(dataset: str, split: str) -> dict[int, set]:
-    """Answers already encoded per question: the first round and correction_v2 (its judge keys) and correction_v3."""
+    """Answers already encoded per question: the first round, correction_v2 (its judge keys), correction_v3 and
+    correction_v4 (so a later --out-dir round never encodes an answer twice)."""
     known = v2_known_answers(dataset, split)
-    for path in sorted((V3_DIR / split).glob(f"{dataset}_shard*.jsonl")):
+    for path in sorted((V3_DIR / split).glob(f"{dataset}_shard*.jsonl")) + sorted((OUT_DIR / split).glob(f"{dataset}_shard*.jsonl")):
         for line in path.read_text(encoding="utf-8").splitlines():
             r = json.loads(line) if line.strip() else {}
             if "encoded" in r:
@@ -72,9 +81,11 @@ def known_answers(dataset: str, split: str) -> dict[int, set]:
     return known
 
 
-def run(dataset: str, split: str, shard: int, num_shards: int, max_examples: int | None, output: Path) -> None:
+def run(dataset: str, split: str, shard: int, num_shards: int, max_examples: int | None, output: Path,
+        sources: tuple = SOURCES) -> None:
     """Encode and judge the new escalation answers of one shard."""
-    answers = escalation_answers(dataset, split)
+    answers = {i: {s: r for s, r in a.items() if s in sources} for i, a in escalation_answers(dataset, split).items()}
+    answers = {i: a for i, a in answers.items() if a}
     covered = [i for i in v2_indices(dataset, split) if i in answers]
     indices = shard_of(covered, shard, num_shards, max_examples)
     known = known_answers(dataset, split)
@@ -103,7 +114,7 @@ def run(dataset: str, split: str, shard: int, num_shards: int, max_examples: int
             record = {"dataset": dataset, "split": split, "index": index, "corrections": []}
             seen = known.get(index, set())
             encoded, states, new_answers = {}, [], []
-            for source in SOURCES:
+            for source in sources:
                 result = answers[index].get(source)
                 if result is None:
                     continue
@@ -140,10 +151,12 @@ def main() -> None:
     parser.add_argument("--shard", type=int, default=0)
     parser.add_argument("--num-shards", type=int, default=1)
     parser.add_argument("--max-examples", type=int, default=None)
+    parser.add_argument("--sources", nargs="+", default=list(SOURCES), choices=ALL_SOURCES)
+    parser.add_argument("--out-dir", default=OUT_DIR.name, help="Folder under results/ (correction_v5 for cot_8b).")
     parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
-    output = args.output or OUT_DIR / args.split / f"{args.dataset}_shard{args.shard}of{args.num_shards}"
-    run(args.dataset, args.split, args.shard, args.num_shards, args.max_examples, output)
+    output = args.output or HERE / "results" / args.out_dir / args.split / f"{args.dataset}_shard{args.shard}of{args.num_shards}"
+    run(args.dataset, args.split, args.shard, args.num_shards, args.max_examples, output, tuple(args.sources))
 
 
 if __name__ == "__main__":

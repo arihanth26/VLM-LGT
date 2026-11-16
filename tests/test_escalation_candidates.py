@@ -72,3 +72,10 @@ def test_drop_zeroes_the_ablated_columns_only():
     other = [i for i in range(len(v3.SCALARS_V3)) if i not in judge]
     assert (dropped[:, judge] == 0).all() and (full[:, judge] != 0).any()
     assert np.array_equal(dropped[:, other], full[:, other])
+
+
+def test_8b_reasoning_sets_and_cost():
+    assert "cot_8b" in v3.ESCALATION and v3.generation_calls(0, ("cot_8b",)) == 5.0
+    def check():
+        assert set(v3.SETS["ground_cot_multi_esc8b_cot8b"]) >= {"cot", "cot_s2", "esc_8b", "cot_8b"}
+    _with_escalation(check)

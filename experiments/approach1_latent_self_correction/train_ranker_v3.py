@@ -68,7 +68,8 @@ V3_DIR = RESULTS / "correction_v3"
 V4_DIR = RESULTS / "correction_v4"
 # Escalation candidates (escalation_candidates.py): the Qwen3-VL-8B answer and the 2B answers on images
 # enlarged 1.5x and 2x. Off unless --with-escalation, so models trained without them load unchanged.
-ESCALATION = ("esc_8b", "up1.5", "up2")
+ESCALATION = ("esc_8b", "up1.5", "up2", "cot_8b")  # cot_8b only exists with --with-reasoning-8b (correction_v5)
+V5_DIR = RESULTS / "correction_v5"
 ESCALATION_SETS = {
     "esc8b": ("esc_8b",),
     "esc": ESCALATION,
@@ -76,10 +77,13 @@ ESCALATION_SETS = {
     "ground_cot_multi_esc8b": ("ground", "ground_ctx", "cot") + COT_SAMPLES + ("esc_8b",),
     "ground_cot_multi_esc": ("ground", "ground_ctx", "cot") + COT_SAMPLES + ESCALATION,
     "everything_multi_esc": SETS_V2["everything"] + COT_SAMPLES + ESCALATION,
+    "cot8b": ("cot_8b",),
+    "ground_cot_multi_cot8b": ("ground", "ground_ctx", "cot") + COT_SAMPLES + ("cot_8b",),
+    "ground_cot_multi_esc8b_cot8b": ("ground", "ground_ctx", "cot") + COT_SAMPLES + ("esc_8b", "cot_8b"),
 }
 # Approximate cost of one answer in 2B generation calls: 8B has about 4x the parameters; an image
 # enlarged by s has about s^2 times the image tokens. Every other source counts 1.
-CALL_WEIGHT = {"esc_8b": 4.0, "up1.5": 2.25, "up2": 4.0}
+CALL_WEIGHT = {"esc_8b": 4.0, "up1.5": 2.25, "up2": 4.0, "cot_8b": 4.0}  # cot_8b: 8B reasoning against 2B reasoning
 # Feature ablation (--drop): groups of ranker inputs that are set to zero in training and evaluation, to
 # measure what each signal contributes. "states" is the full_* variants' hidden states, compared by variant.
 FEATURE_GROUPS = {
@@ -319,6 +323,8 @@ def main() -> None:
                         help="Merge results/correction_v3 (sampled reasoning answers) and add the *_multi candidate sets.")
     parser.add_argument("--with-escalation", action="store_true",
                         help="Also merge results/correction_v4 (8B and upscaled answers) and add the escalation candidate sets; implies --with-cot-samples.")
+    parser.add_argument("--with-reasoning-8b", action="store_true",
+                        help="Also merge results/correction_v5 (the 8B reasoning answers); implies --with-escalation.")
     parser.add_argument("--variants", nargs="+", default=list(VARIANTS), choices=ALL_VARIANTS,
                         help="Ranker variants to train; *_nods drops the dataset input (ablation).")
     parser.add_argument("--drop", nargs="+", default=[], choices=sorted(FEATURE_GROUPS),
@@ -327,8 +333,9 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
     VARIANTS = tuple(args.variants)
+    args.with_escalation = args.with_escalation or args.with_reasoning_8b
     args.with_cot_samples = args.with_cot_samples or args.with_escalation
-    suffix = (("_multi" if args.with_cot_samples else "") + ("_esc" if args.with_escalation else "")
+    suffix = (("_multi" if args.with_cot_samples else "") + ("_esc" if args.with_escalation else "") + ("_cot8b" if args.with_reasoning_8b else "")
               + ("_drop_" + "_".join(sorted(args.drop)) if args.drop else "") + args.tag)
     args.output = args.output or RESULTS / f"candidate_ranker_v3{suffix}.json"
     if args.with_cot_samples:
@@ -347,6 +354,8 @@ def main() -> None:
         result_extra = {"cot_samples": {s: sum(any(c in q["corrections"] for c in COT_SAMPLES) for q in qs) for s, qs in data.items()}}
         if args.with_escalation:
             print({s: merge_cot_samples(q, s, V4_DIR) for s, q in data.items()}, "questions with escalation candidates", flush=True)
+            if args.with_reasoning_8b:
+                print({s: merge_cot_samples(q, s, V5_DIR) for s, q in data.items()}, "questions with 8B reasoning", flush=True)
             result_extra["escalation"] = {s: sum(any(c in q["corrections"] for c in ESCALATION) for q in qs) for s, qs in data.items()}
     else:
         result_extra = {}

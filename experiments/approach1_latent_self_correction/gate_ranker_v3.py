@@ -47,6 +47,7 @@ from experiments.approach1_latent_self_correction.train_ranker_v2 import RESULTS
 from experiments.approach1_latent_self_correction.train_ranker_v3 import (
     MULTI_SETS,
     V4_DIR,
+    V5_DIR,
     enable_escalation,
     SETS,
     RankerV3,
@@ -59,6 +60,7 @@ from experiments.approach1_latent_self_correction.train_ranker_v3 import (
 CONFIGS = ("T1_k5_everything", "T1_k0_ground_cot", "T1_k0_cot", "T1_k0_zoom_cot")
 MULTI_CONFIGS = ("T1_k0_cot_multi", "T1_k0_ground_cot_multi")
 ESCALATION_CONFIGS = ("T1_k0_esc8b", "T1_k0_ground_cot_multi_esc8b", "T1_k0_ground_cot_multi_esc", "T1_k0_everything_multi_esc")
+REASONING_8B_CONFIGS = ("T1_k0_cot8b", "T1_k0_ground_cot_multi_cot8b", "T1_k0_ground_cot_multi_esc8b_cot8b")
 DETECTORS = ("token", "pre_head", "after_head", "judge", "random")
 DETECTOR_PASS = {"token": 0, "pre_head": 0, "after_head": 1, "judge": 1, "random": 0}
 FIXED_BUDGETS = (0.2, 0.3, 0.5)
@@ -256,17 +258,19 @@ def main() -> None:
     parser.add_argument("--with-cot-samples", action="store_true", help="Merge correction_v3 and gate the *_multi configurations too.")
     parser.add_argument("--with-escalation", action="store_true",
                         help="Merge correction_v4 (8B and upscaled answers) and gate the escalation configurations; implies --with-cot-samples.")
+    parser.add_argument("--with-reasoning-8b", action="store_true", help="Merge correction_v5 (8B reasoning) too; implies --with-escalation.")
     parser.add_argument("--tag", default="")
     args = parser.parse_args()
     output = RESULTS / f"gating_v3{args.tag}.json"
     configs = CONFIGS
+    args.with_escalation = args.with_escalation or args.with_reasoning_8b
     args.with_cot_samples = args.with_cot_samples or args.with_escalation
     if args.with_cot_samples:
         SETS.update(MULTI_SETS)
         configs = CONFIGS + MULTI_CONFIGS
     if args.with_escalation:
         enable_escalation()
-        configs = configs + ESCALATION_CONFIGS
+        configs = configs + ESCALATION_CONFIGS + (REASONING_8B_CONFIGS if args.with_reasoning_8b else ())
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     models = load_models(args.models, args.variant, device)
     tables = {}
@@ -276,6 +280,8 @@ def main() -> None:
             print(f"[cot samples] {split}: {merge_cot_samples(questions, split)} questions", flush=True)
         if args.with_escalation:
             print(f"[escalation] {split}: {merge_cot_samples(questions, split, V4_DIR)} questions", flush=True)
+        if args.with_reasoning_8b:
+            print(f"[8B reasoning] {split}: {merge_cot_samples(questions, split, V5_DIR)} questions", flush=True)
         attach_gates(questions, split)
         tables[split] = split_table(questions, models, device, configs)
         print(f"[scored] {split}: {len(questions)} questions", flush=True)

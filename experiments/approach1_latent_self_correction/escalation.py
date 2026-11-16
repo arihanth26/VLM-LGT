@@ -6,6 +6,9 @@
 #
 #   --fix model     greedy answer of a larger Qwen3-VL (default 8B) on the full image and the same
 #                   prompt as the 2B greedy answer in the candidate pools
+#   --fix reasoning step-by-step reasoning of a larger Qwen3-VL (default 8B) with the round-2 reasoning prompt
+#                   and answer extraction (correction_v2.COT_PROMPT, extract_final), 384 tokens for ChartQA and
+#                   256 otherwise as in correction_v3_cot.py; becomes the ranker candidate "cot_8b"
 #   --fix upscale   greedy answer of the same 2B model on the image enlarged by each --scales factor
 #                   (Lanczos), capped at --max-pixels. The processor's own limit is about 16.7M pixels,
 #                   so every image here already goes in at native size; enlarging it gives small text
@@ -69,6 +72,23 @@ def answer(model, processor, example, image, question, reference, max_new_tokens
             "tokens": len(result.token_probabilities), "seconds": round(time.time() - start, 3)}
 
 
+def reasoning(model, processor, example, image, question, reference, dataset: str) -> dict:
+    """The larger model's reasoning text and the final answer extracted from it (None if it has no "Answer:" line)."""
+    from experiments.approach1_latent_self_correction.correction_v2 import COT_PROMPT, extract_final
+    from experiments.approach1_latent_self_correction.correction_v3_cot import COT_TOKENS, DEFAULT_COT_TOKENS
+
+    budget = COT_TOKENS.get(dataset, DEFAULT_COT_TOKENS)
+    start = time.time()
+    result = generate_with_confidence(model, processor, image, COT_PROMPT.format(question=question), budget)
+    final = extract_final(result.answer)
+    out = {"text": result.answer, "capped": len(result.token_probabilities) >= budget, "answer": final,
+           "seconds": round(time.time() - start, 3), "tokens": len(result.token_probabilities)}
+    if final is not None:
+        correct, answer_score = score_prediction(example, reference, final, question)
+        out.update(correct=bool(correct), answer_score=float(answer_score))
+    return out
+
+
 def run(fix: str, size: str, scales: list[float], dataset: str, split: str, shard: int, num_shards: int,
         max_examples: int | None, max_new_tokens: int, max_pixels: int, output: Path, subset: bool = False) -> None:
     """Answer one shard of one dataset split with the chosen fix."""
@@ -76,7 +96,7 @@ def run(fix: str, size: str, scales: list[float], dataset: str, split: str, shar
     if output.exists():
         done = {json.loads(line)["index"] for line in output.read_text(encoding="utf-8").splitlines() if line.strip()}
     data = cached_split(dataset, split)
-    model, processor = load_qwen3_vl(size if fix == "model" else "2b")
+    model, processor = load_qwen3_vl(size if fix in ("model", "reasoning") else "2b")
     output.parent.mkdir(parents=True, exist_ok=True)
     if subset:
         from experiments.approach1_latent_self_correction.correction_v3_cot import shard_of, v2_indices
@@ -96,6 +116,9 @@ def run(fix: str, size: str, scales: list[float], dataset: str, split: str, shar
             if fix == "model":
                 record["model"] = size
                 record["answer"] = answer(model, processor, example, image, question, reference, max_new_tokens)
+            elif fix == "reasoning":
+                record["model"] = size
+                record["reasoning"] = reasoning(model, processor, example, image, question, reference, dataset)
             else:
                 record["upscaled"] = {}
                 for scale in scales:
@@ -116,7 +139,7 @@ def run(fix: str, size: str, scales: list[float], dataset: str, split: str, shar
 def main() -> None:
     """Parse options."""
     parser = argparse.ArgumentParser(description="Second-opinion answers for the escalation study.")
-    parser.add_argument("--fix", required=True, choices=("model", "upscale"))
+    parser.add_argument("--fix", required=True, choices=("model", "reasoning", "upscale"))
     parser.add_argument("--size", default="8b", help="Model size for --fix model.")
     parser.add_argument("--scales", type=float, nargs="+", default=[1.5, 2.0], help="Enlargement factors for --fix upscale.")
     parser.add_argument("--dataset", required=True, choices=ALL_DATASETS)
@@ -129,7 +152,7 @@ def main() -> None:
     parser.add_argument("--max-pixels", type=int, default=MAX_PIXELS)
     parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
-    name = f"model_{args.size}" if args.fix == "model" else "upscale"
+    name = {"model": f"model_{args.size}", "reasoning": f"reasoning_{args.size}", "upscale": "upscale"}[args.fix]
     output = args.output or OUT_DIR / name / args.split / f"{args.dataset}_shard{args.shard}of{args.num_shards}.jsonl"
     run(args.fix, args.size, args.scales, args.dataset, args.split, args.shard, args.num_shards, args.max_examples,
         args.max_new_tokens, args.max_pixels, output, args.subset)
