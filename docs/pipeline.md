@@ -41,8 +41,9 @@ are always made on validation; test is read once.
 | 7 | Escalation answers: 8B, 4B, 2B on images enlarged 1.5x/2x, 8B reasoning | `E.escalation` | `run_escalation.sbatch`, `run_reasoning_8b.sbatch` | `results/escalation/{model_8b,model_4b,upscale,reasoning_8b}/` | 13 |
 | 8 | Escalation answers as ranker candidates (encoded by 2B, judged) | `E.escalation_candidates` | `run_escalation_candidates.sbatch` | `results/correction_v4/` (8B, upscaled), `results/correction_v5/` (8B reasoning) | 13 |
 | 9 | Rankers: v1/v2 (report 11), v3 with source agreement (and `--with-cot-samples`, `--with-escalation`, `--with-reasoning-8b`, `--drop <inputs>`) | `E.train_candidate_ranker`, `E.train_ranker_v2`, `E.train_ranker_v3` | `train_*.sbatch` | `results/candidate_ranker*.json`, `*_models.pt` | 11–13 |
-| 10 | Gating of a saved ranker (validation thresholds; ungated rows must reproduce the ranker's run) | `E.gating`, `E.gate_ranker_v3` | `gate_ranker_v3.sbatch` | `results/gating_v3*.json` | 12–13 |
+| 10 | Gating of a saved ranker (validation thresholds; ungated rows must reproduce the ranker's run; `--drop judge --scoring-passes 1` for a ranker without the judge) | `E.gating`, `E.gate_ranker_v3` | `gate_ranker_v3.sbatch` | `results/gating_v3*.json` | 12–13 |
 | 11 | Routing to a larger model / upscaled image (no ranker) | `E.analyze_escalation` | `analyze_escalation.sbatch` | `results/escalation.json` | 13 |
+| 11b | Cascade 2B -> 4B -> 8B against routing straight to 8B, at matched cost | `E.analyze_cascade` | `analyze_cascade.sbatch` | `results/cascade.json` | 13 |
 | 12 | Training-free baselines on the same candidates | `E.compute_baselines` | `compute_baselines.sbatch` | `results/baselines.json` | 13 |
 | 13 | Transfer to unseen datasets (frozen pipeline) | `E.evaluate_unseen` | `run_unseen_pipeline.sh` | `results/unseen.json` | 13 |
 | 14 | Latency of every component on one H100 | `E.measure_latency` | `measure_latency.sbatch` | `results/latency.json` | 13 |
@@ -60,7 +61,8 @@ are always made on validation; test is read once.
 | `bash slurm/run_escalation_ranker_pipeline.sh` | Stage 7 on the train subset, stage 8, ranker v3 with the escalation candidates, stage 10 |
 | `bash slurm/run_reasoning_8b_pipeline.sh` | 8B reasoning (stages 7–8), ranker v3 with it, stage 10 |
 | `bash slurm/run_unseen_pipeline.sh` | Stages 1, 3–8 on the unseen split, then stage 13 |
-| `bash slurm/run_base_model_pipeline.sh` | Stage 15 |
+| `bash slurm/run_base_model_pipeline.sh` | Stage 15 (two jobs per dataset split, each under the 16h partition limit) |
+| `bash slurm/run_next_steps_pipeline.sh` | Stage 11b; rankers without the judge (one scoring pass per candidate), with and without the 8B candidates, and their gating |
 
 ## Conventions
 
@@ -68,7 +70,7 @@ are always made on validation; test is read once.
   training questions (3,000 per dataset) that every correction round covers (`correction_scale.ranker_subset`).
 - **Cost.** Generation calls per question follow `train_ranker_v3.generation_calls` (greedy, each sample, each source;
   the grounded crops share one box call; an 8B answer counts 4, a 4B answer 2). Passes add one encoding and one judge
-  pass per distinct candidate. Measured seconds are in `results/latency.json`.
+  pass per distinct candidate (only the encoding pass for a ranker trained without the judge). Measured seconds are in `results/latency.json`.
 - **Statistics.** Paired bootstrap intervals (2,000 resamples) and exact McNemar tests against the greedy answer on the
   same questions (`E.correction_stats`).
 - **Another base model.** `VLMLGT_MODEL=4b` switches every stage to that model and every result folder to

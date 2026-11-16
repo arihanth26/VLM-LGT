@@ -4,6 +4,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:1
+#SBATCH -p coc-gpu,ice-gpu
 #SBATCH -C "H100"
 #SBATCH --mem=64G
 #SBATCH -t 04:00:00

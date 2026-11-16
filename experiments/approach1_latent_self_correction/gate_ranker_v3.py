@@ -16,6 +16,9 @@
 # convention (greedy 1, each sample 1, each correction source 1, the grounded crops one shared box call
 # plus one each, each sampled reasoning answer 1); passes add two scoring passes (encoding and judge)
 # per distinct candidate of a corrected question, and the detector's pass when it needs one.
+# --drop gates a ranker trained with train_ranker_v3.py --drop (the same input columns are zeroed here);
+# --scoring-passes sets the scoring passes per candidate: 1 for a ranker trained without the judge
+# (--drop judge), which needs only the encoding pass.
 #
 # Models: the trained rankers exactly as saved by train_ranker_v3.py (--models), so the ungated row of
 # every configuration must reproduce the accuracy that run reported (--reported); the script records
@@ -45,6 +48,9 @@ from experiments.approach1_latent_self_correction.gating import BUDGETS, combine
 from experiments.approach1_latent_self_correction.train_candidate_ranker import load_questions
 from experiments.approach1_latent_self_correction.train_ranker_v2 import RESULTS, merge_v2
 from experiments.approach1_latent_self_correction.train_ranker_v3 import (
+    DROPPED,
+    FEATURE_GROUPS,
+    GROUPS,
     MULTI_SETS,
     V4_DIR,
     V5_DIR,
@@ -69,6 +75,7 @@ KEEP = 0.9
 RANDOM_DRAWS = 50
 VARIANT = "scalars_ds"
 MAX_DIFFERENT_QUESTIONS = 3  # allowance for GPU non-determinism flipping a near-tie
+SCORING = {"passes": 2}  # scoring passes per distinct candidate (encoding + judge); set by --scoring-passes
 
 
 def parse(key: str) -> tuple[str, int, str]:
@@ -117,7 +124,7 @@ def split_table(questions: list[dict], models: list, device, configs: tuple) -> 
         table["corrected"][key] = np.array(choose(models, questions, config, device))
         candidates = np.array([len(candidate_set(q, temperature, k, SETS[name])[0]) for q in questions])
         table["calls"][key] = generation_calls(k, SETS[name])
-        table["passes"][key] = table["calls"][key] + 2 * candidates
+        table["passes"][key] = table["calls"][key] + SCORING["passes"] * candidates
     return table
 
 
@@ -214,7 +221,8 @@ def markdown(result: dict) -> str:
     lines = ["# Gating the v3 correction step", "",
              "Thresholds on the detector score come from validation; on test each question is gated on its own score. "
              f"Ranker: v3 {result['variant']} from `{result['models']}`. Greedy on test: {pct(result['greedy_test'])}. Passes: model passes per question "
-             "(generation calls plus two scoring passes per distinct candidate of a corrected question); calls: generation calls only.", "",
+             f"(generation calls plus {result.get('scoring_passes', 2)} scoring pass(es) per distinct candidate of a corrected question); calls: generation calls only."
+             + (f" Ranker inputs zeroed: {', '.join(result['dropped'])}." if result.get("dropped") else ""), "",
              "Reproduction check (ungated test accuracy against the training run's report): "
              + ", ".join(f"{k} {pct(v['ours'])} vs {pct(v['reported'])}" for k, v in result["reproduction"].items()), "",
              "| Setting | Configuration | Detector | Budget (val) / share corrected (test) | Passes | Calls | Test accuracy | Gain (95% interval) | Fixed / broken | Over random gate |",
@@ -260,7 +268,14 @@ def main() -> None:
                         help="Merge correction_v4 (8B and upscaled answers) and gate the escalation configurations; implies --with-cot-samples.")
     parser.add_argument("--with-reasoning-8b", action="store_true", help="Merge correction_v5 (8B reasoning) too; implies --with-escalation.")
     parser.add_argument("--tag", default="")
+    parser.add_argument("--drop", nargs="+", default=[], choices=sorted(FEATURE_GROUPS),
+                        help="The input groups the ranker was trained without (train_ranker_v3.py --drop).")
+    parser.add_argument("--scoring-passes", type=int, default=2, choices=(1, 2),
+                        help="Scoring passes per distinct candidate: 2 (encoding + judge) or 1 (encoding only, for --drop judge).")
     args = parser.parse_args()
+    if args.scoring_passes == 1 and "judge" not in args.drop:
+        raise SystemExit("--scoring-passes 1 needs a ranker trained without the judge (--drop judge)")
+    SCORING["passes"] = args.scoring_passes
     output = RESULTS / f"gating_v3{args.tag}.json"
     configs = CONFIGS
     args.with_escalation = args.with_escalation or args.with_reasoning_8b
@@ -271,6 +286,10 @@ def main() -> None:
     if args.with_escalation:
         enable_escalation()
         configs = configs + ESCALATION_CONFIGS + (REASONING_8B_CONFIGS if args.with_reasoning_8b else ())
+    for group in args.drop:  # the same columns train_ranker_v3.py zeroed (after enable_escalation, as in training)
+        DROPPED.update(FEATURE_GROUPS[group])
+        if group == "agreement":
+            DROPPED.update(f"from_{g}" for g in GROUPS)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     models = load_models(args.models, args.variant, device)
     tables = {}
@@ -294,6 +313,7 @@ def main() -> None:
     val, test = tables["val"], tables["test"]
     val_grid, test_grid = grid(val, val), grid(test, val)
     result = {"models": args.models.name, "variant": args.variant, "reproduction": check,
+              "scoring_passes": args.scoring_passes, "dropped": sorted(args.drop),
               "budgets": list(BUDGETS), "configurations": list(configs), "detectors": list(DETECTORS),
               "greedy_val": float(val["greedy"].mean()), "greedy_test": float(test["greedy"].mean()),
               "ungated_test_accuracy": {k: float(test["corrected"][k].mean()) for k in configs},

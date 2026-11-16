@@ -56,5 +56,8 @@ def test_chain_shards_partition_the_subset(monkeypatch=None):
 
 
 def test_default_model_is_2b_with_heads():
+    import os
     from experiments.approach1_latent_self_correction import correction_scale as cs
+    if os.environ.get("VLMLGT_MODEL", "2b") != "2b" or os.environ.get("VLMLGT_CHAIN"):
+        return  # a job that switched the base model (the 4B chain) is not testing the default
     assert cs.MODEL_SIZE == "2b" and cs.HEADS_AVAILABLE and cs.RESULTS_ROOT == cs.BASE_RESULTS and not cs.CHAIN

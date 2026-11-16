@@ -10,7 +10,7 @@
 set -euo pipefail
 [[ -d experiments && -d models ]] || { echo "Run from the repository root."; exit 2; }
 mkdir -p logs
-SIZE="${SIZE:-4b}"; SHARDS="${NUM_SHARDS:-1}"  # one job per dataset split: 14 jobs in all
+SIZE="${SIZE:-4b}"; SHARDS="${NUM_SHARDS:-2}"  # two jobs per dataset split (each under the 16h partition limit): 26 jobs in all
 RESULTS=experiments/approach1_latent_self_correction/results/base_$SIZE
 SUBMIT=(sbatch --parsable --kill-on-invalid-dep=yes)
 CHAINS=()

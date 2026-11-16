@@ -4,6 +4,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --gres=gpu:1
+#SBATCH -p coc-gpu,ice-gpu
 #SBATCH -C "H200|H100|L40S|A100-80GB|A100-40GB|A40"
 #SBATCH --mem=128G
 #SBATCH -t 03:00:00
@@ -26,7 +27,7 @@ cd "$SLURM_SUBMIT_DIR"
 module load anaconda3
 PYTHON_BIN="$SLURM_SUBMIT_DIR/.venv/bin/python"
 [[ -x "$PYTHON_BIN" ]] || { echo "Run: sbatch slurm/setup_environment.sbatch"; exit 2; }
-srun "$PYTHON_BIN" -m tests.run_tests tests.test_gating tests.test_escalation tests.test_ranker_v3 tests.test_escalation_candidates
+srun "$PYTHON_BIN" -m tests.run_tests tests.test_gating tests.test_escalation tests.test_ranker_v3 tests.test_escalation_candidates tests.test_cascade
 RESULTS=experiments/approach1_latent_self_correction/results
 if [[ -n "${GATE_ARGS:-}" ]]; then
     srun "$PYTHON_BIN" -m experiments.approach1_latent_self_correction.gate_ranker_v3 $GATE_ARGS
