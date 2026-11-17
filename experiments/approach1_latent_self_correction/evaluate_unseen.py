@@ -6,6 +6,8 @@
 #   ranker        the saved v3 rankers, *_nods variant (it never sees a dataset label, so an unseen
 #                 dataset is not an unknown input); sampled reasoning (candidate_ranker_v3_multi_models.pt)
 #                 and, when present, the 8B and upscaled candidates (candidate_ranker_v3_multi_esc_models.pt)
+#                 and the 8B reasoning answers without the judge input (candidate_ranker_v3_multi_esc_cot8b_drop_judge_models.pt,
+#                 used once results/correction_v5/unseen exists)
 #   candidates    the configuration that ranker's own run chose on in-domain validation, plus a fixed list
 #   gate          answer-probability thresholds taken from the IN-DOMAIN validation split (gating.py), at
 #                 30% (the budget the in-domain gating study chose) and 50%
@@ -35,7 +37,9 @@ SPLIT = "unseen"
 VARIANT = "scalars_nods"
 BUDGETS = (0.3, 0.5)
 FIXED = {"multi": ("T1_k0_cot_multi", "T1_k0_ground_cot_multi", "T1_k0_everything_multi"),
-         "multi_esc": ("T1_k0_esc8b", "T1_k0_ground_cot_multi_esc8b", "T1_k0_ground_cot_multi_esc", "T1_k0_everything_multi_esc")}
+         "multi_esc": ("T1_k0_esc8b", "T1_k0_ground_cot_multi_esc8b", "T1_k0_ground_cot_multi_esc", "T1_k0_everything_multi_esc"),
+         "cot8b_nojudge": ("T1_k0_cot8b", "T1_k0_ground_cot_multi_cot8b", "T1_k0_ground_cot_multi_esc8b_cot8b")}
+HEADLINE = "candidate_ranker_v3_multi_esc_cot8b_drop_judge"  # the best in-domain ranker: 8B answer + 8B reasoning, no judge
 
 
 def in_domain_choice(report: Path) -> str:
@@ -114,6 +118,15 @@ def main() -> None:
         keys = list(dict.fromkeys((chosen["multi_esc"],) + FIXED["multi_esc"]))
         esc_models = load_models(RESULTS / "candidate_ranker_v3_multi_esc_models.pt", VARIANT, device)
         outcomes.update({f"{k} (with 8B)" if k in outcomes else k: v for k, v in score_configs(questions, esc_models, keys, device).items()})
+    # Phase 3: the ranker with the 8B reasoning answers, trained without the judge; merged last, so the earlier
+    # phases see exactly the candidates they were trained with.
+    if escalation and (RESULTS / f"{HEADLINE}_models.pt").exists() and (v3.V5_DIR / SPLIT).exists():
+        v3.merge_cot_samples(questions, SPLIT, v3.V5_DIR)
+        v3.DROPPED.update(v3.FEATURE_GROUPS["judge"])
+        chosen["cot8b_nojudge"] = in_domain_choice(RESULTS / f"{HEADLINE}.json")
+        keys = list(dict.fromkeys((chosen["cot8b_nojudge"],) + FIXED["cot8b_nojudge"]))
+        headline_models = load_models(RESULTS / f"{HEADLINE}_models.pt", VARIANT, device)
+        outcomes.update({f"{k} (8B reasoning, no judge)": v for k, v in score_configs(questions, headline_models, keys, device).items()})
 
     reference, tokens = val_token_scores(), token_scores(questions)
     for key, corrected in outcomes.items():

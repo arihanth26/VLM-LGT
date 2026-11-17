@@ -16,6 +16,9 @@
 # convention (greedy 1, each sample 1, each correction source 1, the grounded crops one shared box call
 # plus one each, each sampled reasoning answer 1); passes add two scoring passes (encoding and judge)
 # per distinct candidate of a corrected question, and the detector's pass when it needs one.
+# Seconds: with results/latency.json (measure_latency.py, one H100) each question also gets an estimated
+# wall-clock cost, the sum of the measured mean seconds of the components it runs (SECONDS_OF below), and
+# the headlines add the best setting under 0.3, 0.5, 1 and 2 seconds per question (chosen on validation).
 # --drop gates a ranker trained with train_ranker_v3.py --drop (the same input columns are zeroed here);
 # --scoring-passes sets the scoring passes per candidate: 1 for a ranker trained without the judge
 # (--drop judge), which needs only the encoding pass.
@@ -76,6 +79,38 @@ RANDOM_DRAWS = 50
 VARIANT = "scalars_ds"
 MAX_DIFFERENT_QUESTIONS = 3  # allowance for GPU non-determinism flipping a near-tie
 SCORING = {"passes": 2}  # scoring passes per distinct candidate (encoding + judge); set by --scoring-passes
+SECONDS_CAPS = (0.3, 0.5, 1.0, 2.0)
+LATENCY: dict = {}  # component -> mean seconds, from results/latency.json (empty: no seconds column)
+# Which measured component each candidate source costs. The upscaled-image answers were not timed; they are
+# estimated as a 2B short answer times the pixel ratio (scale squared), the same rule as their pass count.
+SECONDS_OF = {"cot": ("reasoning", 1.0), "cot_s0": ("reasoning_x3", 1 / 3), "cot_s1": ("reasoning_x3", 1 / 3), "cot_s2": ("reasoning_x3", 1 / 3),
+              "vcd_0.5": ("vcd", 1.0), "vcd_1": ("vcd", 1.0), "zoom_0": ("zoom", 1.0), "zoom_1": ("zoom", 1.0), "zoom_2": ("zoom", 1.0),
+              "zoom_3": ("zoom", 1.0), "esc_8b": ("greedy_8b", 1.0), "cot_8b": ("reasoning_8b", 1.0),
+              "up1.5": ("greedy", 2.25), "up2": ("greedy", 4.0)}
+DETECTOR_SECONDS = {"token": None, "pre_head": None, "after_head": "encode", "judge": "judge", "random": None}
+
+
+def generation_seconds(k: int, sources: tuple) -> float:
+    """Estimated generation seconds of a corrected question: greedy, k samples, the grounding calls once, each source."""
+    total = LATENCY["greedy"] + LATENCY["samples_10"] * k / 10
+    if any(s in ("ground", "ground_ctx") for s in sources):
+        total += LATENCY["grounding"]
+    for s in sources:
+        if s in SECONDS_OF:
+            component, factor = SECONDS_OF[s]
+            total += LATENCY[component] * factor
+    return total
+
+
+def scoring_seconds() -> float:
+    """Seconds to score one distinct candidate: the encoding pass, plus the judge pass when the ranker reads it."""
+    return LATENCY["encode"] + (LATENCY["judge"] if SCORING["passes"] == 2 else 0.0)
+
+
+def base_seconds(detector: str) -> float:
+    """Seconds of an uncorrected question: its greedy answer and the detector's pass, if any."""
+    extra = DETECTOR_SECONDS[detector]
+    return LATENCY.get("greedy", 0.0) + (LATENCY.get(extra, 0.0) if extra else 0.0)
 
 
 def parse(key: str) -> tuple[str, int, str]:
@@ -125,6 +160,8 @@ def split_table(questions: list[dict], models: list, device, configs: tuple) -> 
         candidates = np.array([len(candidate_set(q, temperature, k, SETS[name])[0]) for q in questions])
         table["calls"][key] = generation_calls(k, SETS[name])
         table["passes"][key] = table["calls"][key] + SCORING["passes"] * candidates
+        if LATENCY:
+            table.setdefault("seconds", {})[key] = generation_seconds(k, SETS[name]) + scoring_seconds() * candidates
     return table
 
 
@@ -142,16 +179,18 @@ def evaluate(table: dict, key: str, detector: str, budget: float, reference: dic
     base = 1 + DETECTOR_PASS[detector]
     passes = np.where(mask, table["passes"][key], base)
     calls = np.where(mask, table["calls"][key], 1)
-    return {"final": final, "share": float(mask.mean()), "passes": float(passes.mean()), "calls": float(calls.mean())}
+    seconds = np.where(mask, table["seconds"][key], base_seconds(detector)) if "seconds" in table else np.zeros(len(mask))
+    return {"final": final, "share": float(mask.mean()), "passes": float(passes.mean()), "calls": float(calls.mean()),
+            "seconds": float(seconds.mean())}
 
 
 def summary(table: dict, key: str, detector: str, budget: float, reference: dict) -> dict:
     """Accuracy, share and costs; the random detector averaged over draws."""
     if detector != "random":
         e = evaluate(table, key, detector, budget, reference)
-        return {"accuracy": float(e["final"].mean()), "share": e["share"], "passes": e["passes"], "calls": e["calls"]}
+        return {"accuracy": float(e["final"].mean()), "share": e["share"], "passes": e["passes"], "calls": e["calls"], "seconds": e["seconds"]}
     draws = [evaluate(table, key, "random", budget, reference, s) for s in range(RANDOM_DRAWS)]
-    return {m: float(np.mean([d["final"].mean() if m == "accuracy" else d[m] for d in draws])) for m in ("accuracy", "share", "passes", "calls")}
+    return {m: float(np.mean([d["final"].mean() if m == "accuracy" else d[m] for d in draws])) for m in ("accuracy", "share", "passes", "calls", "seconds")}
 
 
 def grid(table: dict, reference: dict) -> dict:
@@ -175,7 +214,7 @@ def read_test(val: dict, test: dict, val_grid: dict, name: str, key: str, detect
     v = val_grid[key][detector][BUDGETS.index(budget)]
     return {"name": name, "configuration": key, "detector": detector, "budget": budget,
             "val": {"accuracy": v["accuracy"], "passes": v["passes"], "share": v["share"]},
-            "test_share": e["share"], "test_passes": e["passes"], "test_calls": e["calls"],
+            "test_share": e["share"], "test_passes": e["passes"], "test_calls": e["calls"], "test_seconds": e["seconds"],
             "test": breakdown(test, e["final"]),
             "test_random_accuracy": summary(test, key, "random", budget, val)["accuracy"],
             "vs_random": paired_difference(rand["final"].tolist(), e["final"].tolist())}
@@ -205,6 +244,12 @@ def headlines(val: dict, test: dict, val_grid: dict) -> list[dict]:
                    if val_grid[key][d][BUDGETS.index(b)]["passes"] <= cap]
         key, d, b = max(options, key=lambda o: (val_grid[o[0]][o[1]][BUDGETS.index(o[2])]["accuracy"], -o[2]))
         out.append(read_test(val, test, val_grid, f"best under {cap:g} passes per question (any configuration)", key, d, b))
+    for cap in (SECONDS_CAPS if "seconds" in val else ()):
+        options = [(key, d, b) for key in val["corrected"] for d in DETECTORS if d != "random" for b in BUDGETS
+                   if val_grid[key][d][BUDGETS.index(b)]["seconds"] <= cap]
+        if options:
+            key, d, b = max(options, key=lambda o: (val_grid[o[0]][o[1]][BUDGETS.index(o[2])]["accuracy"], -o[2]))
+            out.append(read_test(val, test, val_grid, f"best under {cap:g} s per question on one H100 (any configuration)", key, d, b))
     return out
 
 
@@ -225,12 +270,14 @@ def markdown(result: dict) -> str:
              + (f" Ranker inputs zeroed: {', '.join(result['dropped'])}." if result.get("dropped") else ""), "",
              "Reproduction check (ungated test accuracy against the training run's report): "
              + ", ".join(f"{k} {pct(v['ours'])} vs {pct(v['reported'])}" for k, v in result["reproduction"].items()), "",
-             "| Setting | Configuration | Detector | Budget (val) / share corrected (test) | Passes | Calls | Test accuracy | Gain (95% interval) | Fixed / broken | Over random gate |",
-             "|---|---|---|---|---:|---:|---:|---|---|---|"]
+             "Seconds: estimated wall-clock seconds per question on one H100, from the measured component times (results/latency.json)." if result.get("latency") else "",
+             "",
+             "| Setting | Configuration | Detector | Budget (val) / share corrected (test) | Passes | Calls | Seconds | Test accuracy | Gain (95% interval) | Fixed / broken | Over random gate |",
+             "|---|---|---|---|---:|---:|---:|---:|---|---|---|"]
     for h in result["headlines"]:
         t, v = h["test"]["pooled"], h["vs_random"]
         lines.append(f"| {h['name']} | {h['configuration']} | {h['detector']} | {int(round(100 * h['budget']))}% / {100 * h['test_share']:.1f}% | "
-                     f"{h['test_passes']:.2f} | {h['test_calls']:.2f} | {pct(t['accuracy'])} | {pts(t['difference'])} ({pts(t['ci_low'])} to {pts(t['ci_high'])}) | "
+                     f"{h['test_passes']:.2f} | {h['test_calls']:.2f} | {h.get('test_seconds', 0):.2f} | {pct(t['accuracy'])} | {pts(t['difference'])} ({pts(t['ci_low'])} to {pts(t['ci_high'])}) | "
                      f"+{t['fixed']} / -{t['broken']} | {pts(v['difference'])} ({pts(v['ci_low'])} to {pts(v['ci_high'])}) |")
     lines += ["", "Per dataset (gain over greedy on test):", "", "| Setting | Configuration | " + " | ".join(DATASET_NAMES) + " |",
               "|---|---|" + "---|" * len(DATASET_NAMES)]
@@ -270,12 +317,15 @@ def main() -> None:
     parser.add_argument("--tag", default="")
     parser.add_argument("--drop", nargs="+", default=[], choices=sorted(FEATURE_GROUPS),
                         help="The input groups the ranker was trained without (train_ranker_v3.py --drop).")
+    parser.add_argument("--latency", type=Path, default=RESULTS / "latency.json", help="Measured component seconds (measure_latency.py); skipped if absent.")
     parser.add_argument("--scoring-passes", type=int, default=2, choices=(1, 2),
                         help="Scoring passes per distinct candidate: 2 (encoding + judge) or 1 (encoding only, for --drop judge).")
     args = parser.parse_args()
     if args.scoring_passes == 1 and "judge" not in args.drop:
         raise SystemExit("--scoring-passes 1 needs a ranker trained without the judge (--drop judge)")
     SCORING["passes"] = args.scoring_passes
+    if args.latency.exists():
+        LATENCY.update({name: c["mean"] for name, c in json.loads(args.latency.read_text())["components"].items()})
     output = RESULTS / f"gating_v3{args.tag}.json"
     configs = CONFIGS
     args.with_escalation = args.with_escalation or args.with_reasoning_8b
@@ -313,7 +363,7 @@ def main() -> None:
     val, test = tables["val"], tables["test"]
     val_grid, test_grid = grid(val, val), grid(test, val)
     result = {"models": args.models.name, "variant": args.variant, "reproduction": check,
-              "scoring_passes": args.scoring_passes, "dropped": sorted(args.drop),
+              "scoring_passes": args.scoring_passes, "dropped": sorted(args.drop), "latency": dict(LATENCY),
               "budgets": list(BUDGETS), "configurations": list(configs), "detectors": list(DETECTORS),
               "greedy_val": float(val["greedy"].mean()), "greedy_test": float(test["greedy"].mean()),
               "ungated_test_accuracy": {k: float(test["corrected"][k].mean()) for k in configs},

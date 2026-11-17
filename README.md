@@ -16,7 +16,7 @@ once; every result is compared with the model's greedy answer on the same questi
 ## Results
 
 Qwen3-VL-2B, frozen. Test accuracy over the four datasets (greedy: 82.78%). Model passes count generation calls
-plus the scoring passes of each distinct candidate (docs/pipeline.md, Conventions); the 8B row counts one 8B answer as 4.
+plus the scoring passes of each distinct candidate (docs/pipeline.md, Conventions); the 8B rows count one 8B answer as 4 (report 13 also gives measured seconds).
 
 | Method | Test accuracy | Gain (95% interval) | Model passes per question | Report |
 |---|---:|---|---:|---|
@@ -25,19 +25,23 @@ plus the scoring passes of each distinct candidate (docs/pipeline.md, Convention
 | Ranker v1 over samples and crops | 83.85% | +1.07 (+0.77 to +1.40) | 13.5 | 11 |
 | Ranker v2 with reasoning and the model's own judge | 84.62% | +1.84 (+1.44 to +2.24) | 4.5 | 11 |
 | Ranker v3 (one ranker over every correction source) | 85.87% | +3.09 (+2.54 to +3.61) | 24.1 | 12 |
-| Ranker v3 + sampled reasoning | **86.38%** | **+3.60 (+3.10 to +4.09)** | 12.0 | 12 |
-| … gated: corrects the 50% least-confident questions | 86.38% | +3.60 (+3.10 to +4.10) | **7.0** | 12 |
-| Route the 30% least-confident questions to Qwen3-VL-8B | 87.32% | +4.54 (+4.01 to +5.08) | ≈2.1 | 13 |
+| Ranker v3 + sampled reasoning | 86.38% | +3.60 (+3.10 to +4.09) | 12.0 | 12 |
+| … gated: corrects the 50% least-confident questions | 86.38% | +3.60 (+3.10 to +4.10) | 7.0 | 12 |
+| … ranker trained without the judge (one scoring pass per candidate), gated at 50% | 86.38% | +3.60 (+3.10 to +4.10) | **5.8** | 13 |
+| Route the 30% least-confident questions to Qwen3-VL-8B | 87.32% | +4.54 (+4.01 to +5.08) | 2.1 | 13 |
+| Route to Qwen3-VL-8B, setting chosen on validation (65% routed, keep the more confident answer) | 88.29% | +5.52 (+4.93 to +6.10) | 3.6 | 13 |
+| Ranker v3 with the 8B answer and 8B reasoning as candidates, no judge | **89.53%** | **+6.76 (+6.10 to +7.37)** | 18.3 | 13 |
+| … gated: corrects the 50% least-confident questions | 89.31% | +6.54 (+5.89 to +7.15) | 9.9 | 13 |
 
 Detection (test AUROC for "the answer is correct"): unified head 0.86–0.93 per dataset against 0.65–0.75 for the
-token probability (report 02). Experiments in progress (report 13): the 8B answers and 8B reasoning as ranker
-candidates, training-free baselines at matched cost, ranker input ablations, Qwen3-VL-4B as the base model,
-transfer to unseen datasets, and measured latency.
+token probability (report 02). Measured on one H100, an 8B short answer takes 0.16 s against 0.12 s for the 2B one and a
+step-by-step answer 1.6–2.0 s (report 13). In progress: Qwen3-VL-4B as the base model, transfer to unseen datasets (AI2D,
+InfographicVQA), seeds, leave-one-dataset-out and training-set size for the best ranker, and gating with seconds as the cost.
 
 ## Reports
 
 Self-contained HTML in [results/approach1/](results/approach1/), indexed in [results/README.md](results/README.md).
-Read 08 for the whole detection stage, 11 for the learned correction step, 12 for the current best ranker and gating.
+Read 08 for the whole detection stage, 11 for the learned correction step, 12 for ranker v3 and gating, 13 for larger models as fixes and the current best result.
 The full pipeline, stage by stage, is in [docs/pipeline.md](docs/pipeline.md).
 
 ## Repository layout
@@ -65,7 +69,7 @@ VLM-LGT/
 ├── slurm/                               One job script per stage, and *_pipeline.sh dependency chains
 ├── tests/                               Unit tests (run with python -m tests.run_tests tests.<module>)
 ├── trained_heads/approach1/             Exported correctness heads and probes
-├── results/approach1/                   Published reports (01–12) and their data (04_sweep_data/)
+├── results/approach1/                   Published reports (01–13) and their data (04_sweep_data/)
 └── docs/                                pipeline.md (the correction pipeline), approach1_detailed_notes.md (earlier stages and commands)
 ```
 

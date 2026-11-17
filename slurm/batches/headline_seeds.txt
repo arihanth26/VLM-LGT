@@ -1,0 +1,4 @@
+# The best ranker (8B answer + 8B reasoning, no judge) retrained with two further seed sets: how much the
+# result depends on training randomness. Outputs candidate_ranker_v3_multi_esc_cot8b_drop_judge_seeds<offset>.*
+train_ranker_v3 --with-reasoning-8b --drop judge --variants scalars_ds scalars_nods --seed-offset 100
+train_ranker_v3 --with-reasoning-8b --drop judge --variants scalars_ds scalars_nods --seed-offset 200

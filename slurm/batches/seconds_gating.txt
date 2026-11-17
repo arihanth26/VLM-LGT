@@ -1,0 +1,6 @@
+# Gating with the measured H100 seconds as a second cost axis (results/latency.json), for the main rankers.
+# New tags (_seconds) so the earlier gating files stay as they are.
+gate_ranker_v3 --with-cot-samples --tag _multi_seconds --models experiments/approach1_latent_self_correction/results/candidate_ranker_v3_multi_models.pt --reported experiments/approach1_latent_self_correction/results/candidate_ranker_v3_multi.json
+gate_ranker_v3 --with-cot-samples --drop judge --scoring-passes 1 --tag _multi_drop_judge_seconds --models experiments/approach1_latent_self_correction/results/candidate_ranker_v3_multi_drop_judge_models.pt --reported experiments/approach1_latent_self_correction/results/candidate_ranker_v3_multi_drop_judge.json
+gate_ranker_v3 --with-reasoning-8b --tag _multi_esc_cot8b_seconds --models experiments/approach1_latent_self_correction/results/candidate_ranker_v3_multi_esc_cot8b_models.pt --reported experiments/approach1_latent_self_correction/results/candidate_ranker_v3_multi_esc_cot8b.json
+gate_ranker_v3 --with-reasoning-8b --drop judge --scoring-passes 1 --tag _multi_esc_cot8b_drop_judge_seconds --models experiments/approach1_latent_self_correction/results/candidate_ranker_v3_multi_esc_cot8b_drop_judge_models.pt --reported experiments/approach1_latent_self_correction/results/candidate_ranker_v3_multi_esc_cot8b_drop_judge.json

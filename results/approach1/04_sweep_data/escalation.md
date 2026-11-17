@@ -2,6 +2,36 @@
 
 Every setting is chosen on validation and read once on test. A budget sets a fixed threshold on the detector score from validation; on test each question is routed on its own score. Accuracy is pooled over the four datasets.
 
+## Fix: 4b
+
+Questions {'val': 6420, 'test': 9517}, missing fix answers {'val': 0, 'test': 0}. 2B greedy on test: 82.78%. Fix everything: 85.85% (+3.07). Oracle (either answer right): 90.25%.
+
+| Setting | Detector | Rule | Budget (val) / share routed (test) | Cost (2B passes) | Test accuracy | Gain (95% interval) | Fixed / broken | Gain over random, same budget |
+|---|---|---|---:|---:|---:|---|---|---|
+| best detector and rule at a 20% budget | token | confident | 20% / 19.4% | 1.39 | 85.56% | +2.78 (+2.30 to +3.25) | +405 / -140 | +1.95 (+1.49 to +2.43) |
+| best detector and rule at a 30% budget | token | confident | 30% / 29.6% | 1.59 | 86.03% | +3.25 (+2.70 to +3.81) | +509 / -200 | +2.10 (+1.62 to +2.59) |
+| best detector, rule and budget | token | confident | 65% / 64.6% | 2.29 | 86.58% | +3.80 (+3.19 to +4.41) | +623 / -261 | +1.46 (+1.09 to +1.85) |
+| smallest budget keeping 80% of the best validation gain | token | confident | 30% / 29.6% | 1.59 | 86.03% | +3.25 (+2.70 to +3.81) | +509 / -200 | +2.10 (+1.62 to +2.59) |
+
+Per dataset, first headline (20% budget):
+
+| Dataset | Greedy | Chosen | Gain (95% interval) | Fix everything |
+|---|---:|---:|---|---:|
+| chartqa_full | 76.48% | 80.08% | +3.60 (+2.56 to +4.68) | 81.16% |
+| textvqa | 81.52% | 83.24% | +1.72 (+0.80 to +2.64) | 81.64% |
+| docvqa | 87.04% | 88.92% | +1.88 (+1.16 to +2.64) | 89.16% |
+| scienceqa_img | 86.86% | 91.08% | +4.21 (+3.17 to +5.35) | 92.76% |
+
+Detector AUROC on test (2B answer right / fix would help):
+
+| Detector | 2B right | Fix helps |
+|---|---:|---:|
+| pre_head | 0.857 | 0.805 |
+| pre_probe | 0.856 | 0.807 |
+| after_head | 0.881 | 0.821 |
+| after_probe | 0.877 | 0.822 |
+| token | 0.847 | 0.829 |
+
 ## Fix: 8b
 
 Questions {'val': 6420, 'test': 9517}, missing fix answers {'val': 0, 'test': 0}. 2B greedy on test: 82.78%. Fix everything: 87.87% (+5.10). Oracle (either answer right): 91.40%.

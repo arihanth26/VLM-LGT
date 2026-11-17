@@ -1,0 +1,5 @@
+# Leave-one-dataset-out for the best ranker: trained without one dataset, tested on it (no dataset input).
+train_ranker_v3 --with-reasoning-8b --drop judge --variants scalars_nods --hold-out chartqa_full
+train_ranker_v3 --with-reasoning-8b --drop judge --variants scalars_nods --hold-out textvqa
+train_ranker_v3 --with-reasoning-8b --drop judge --variants scalars_nods --hold-out docvqa
+train_ranker_v3 --with-reasoning-8b --drop judge --variants scalars_nods --hold-out scienceqa_img

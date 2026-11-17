@@ -63,6 +63,8 @@ are always made on validation; test is read once.
 | `bash slurm/run_unseen_pipeline.sh` | Stages 1, 3–8 on the unseen split, then stage 13 |
 | `bash slurm/run_base_model_pipeline.sh` | Stage 15 (two jobs per dataset split, each under the 16h partition limit) |
 | `bash slurm/run_next_steps_pipeline.sh` | Stage 11b; rankers without the judge (one scoring pass per candidate), with and without the 8B candidates, and their gating |
+| `bash slurm/run_followups_pipeline.sh` | Packed follow-ups of the best ranker (seeds, leave-one-dataset-out, training-set size, gating in seconds) and 8B reasoning on the unseen datasets with a second unseen evaluation |
+| `sbatch --export=ALL,BATCH=<file> slurm/run_batch.sbatch` | Several short runs in one job (one per line of `slurm/batches/<file>`), to stay under the 50-job queue limit |
 
 ## Conventions
 
@@ -71,6 +73,7 @@ are always made on validation; test is read once.
 - **Cost.** Generation calls per question follow `train_ranker_v3.generation_calls` (greedy, each sample, each source;
   the grounded crops share one box call; an 8B answer counts 4, a 4B answer 2). Passes add one encoding and one judge
   pass per distinct candidate (only the encoding pass for a ranker trained without the judge). Measured seconds are in `results/latency.json`.
+  With `results/latency.json`, gating also reports estimated seconds per question on one H100 (`gate_ranker_v3.SECONDS_OF`).
 - **Statistics.** Paired bootstrap intervals (2,000 resamples) and exact McNemar tests against the greedy answer on the
   same questions (`E.correction_stats`).
 - **Another base model.** `VLMLGT_MODEL=4b` switches every stage to that model and every result folder to

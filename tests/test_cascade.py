@@ -44,3 +44,36 @@ def test_confident_keeps_the_more_confident_2b_answer():
 def test_gating_scoring_passes_default_is_two():
     from experiments.approach1_latent_self_correction import gate_ranker_v3
     assert gate_ranker_v3.SCORING["passes"] == 2
+
+
+def test_seconds_estimate_counts_each_component_once():
+    from experiments.approach1_latent_self_correction import gate_ranker_v3 as g
+    saved, passes = dict(g.LATENCY), g.SCORING["passes"]
+    try:
+        g.LATENCY.clear()
+        g.LATENCY.update({"greedy": 0.1, "samples_10": 0.2, "grounding": 1.0, "reasoning": 1.5, "reasoning_x3": 1.8,
+                          "greedy_8b": 0.15, "reasoning_8b": 2.0, "encode": 0.05, "judge": 0.04, "zoom": 0.1, "vcd": 0.3})
+        sources = ("ground", "ground_ctx", "cot", "cot_s0", "cot_s1", "cot_s2", "esc_8b", "cot_8b")
+        assert abs(g.generation_seconds(0, sources) - (0.1 + 1.0 + 1.5 + 1.8 + 0.15 + 2.0)) < 1e-9  # grounding once, the 3 samples once
+        assert abs(g.generation_seconds(5, ()) - (0.1 + 0.1)) < 1e-9
+        g.SCORING["passes"] = 1
+        assert abs(g.scoring_seconds() - 0.05) < 1e-9
+        g.SCORING["passes"] = 2
+        assert abs(g.scoring_seconds() - 0.09) < 1e-9
+        assert abs(g.base_seconds("token") - 0.1) < 1e-9 and abs(g.base_seconds("judge") - 0.14) < 1e-9
+    finally:
+        g.LATENCY.clear(); g.LATENCY.update(saved); g.SCORING["passes"] = passes
+
+
+def test_evaluate_reports_seconds_when_timed():
+    from experiments.approach1_latent_self_correction import gate_ranker_v3 as g
+    saved = dict(g.LATENCY)
+    try:
+        g.LATENCY.clear(); g.LATENCY.update({"greedy": 0.1})
+        table = {"greedy": np.array([True, False]), "scores": {"token": np.array([0.9, 0.1])},
+                 "corrected": {"c": np.array([True, True])}, "passes": {"c": np.array([5.0, 5.0])}, "calls": {"c": 3.0},
+                 "seconds": {"c": np.array([2.0, 2.0])}}
+        e = g.evaluate(table, "c", "token", 0.5, table)
+        assert e["share"] == 0.5 and abs(e["seconds"] - (0.1 + 2.0) / 2) < 1e-9
+    finally:
+        g.LATENCY.clear(); g.LATENCY.update(saved)

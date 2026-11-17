@@ -1,0 +1,8 @@
+# Data efficiency of the best ranker: trained on 250, 750 and 1,500 questions per dataset (the full run uses 3,000).
+train_ranker_v3 --with-reasoning-8b --drop judge --variants scalars_ds --train-limit 250
+train_ranker_v3 --with-reasoning-8b --drop judge --variants scalars_ds --train-limit 750
+train_ranker_v3 --with-reasoning-8b --drop judge --variants scalars_ds --train-limit 1500
+# The same for the 2B-only ranker (sampled reasoning, no judge), the setting without a larger model.
+train_ranker_v3 --with-cot-samples --drop judge --variants scalars_ds --train-limit 250
+train_ranker_v3 --with-cot-samples --drop judge --variants scalars_ds --train-limit 750
+train_ranker_v3 --with-cot-samples --drop judge --variants scalars_ds --train-limit 1500
