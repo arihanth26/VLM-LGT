@@ -1,0 +1,3 @@
+# The 2B-only ranker without the judge (sampled reasoning, no larger model) retrained with two further seed sets.
+train_ranker_v3 --with-cot-samples --drop judge --variants scalars_ds scalars_nods --seed-offset 100
+train_ranker_v3 --with-cot-samples --drop judge --variants scalars_ds scalars_nods --seed-offset 200

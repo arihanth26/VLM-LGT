@@ -1,0 +1,5 @@
+# Which inputs the best ranker (8B answer + 8B reasoning as candidates, no judge) relies on: each run also zeroes
+# one more input group, in training and evaluation. Outputs candidate_ranker_v3_multi_esc_cot8b_drop_<groups>.*
+train_ranker_v3 --with-reasoning-8b --drop judge agreement --variants scalars_ds scalars_nods
+train_ranker_v3 --with-reasoning-8b --drop judge token --variants scalars_ds scalars_nods
+train_ranker_v3 --with-reasoning-8b --drop judge head --variants scalars_ds scalars_nods
