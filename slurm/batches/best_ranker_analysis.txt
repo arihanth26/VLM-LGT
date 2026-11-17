@@ -1,0 +1,2 @@
+# Paired comparisons, answer origins, oracle gap and abstention for the best ranker (analyze_best_ranker.py).
+analyze_best_ranker

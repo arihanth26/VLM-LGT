@@ -26,7 +26,7 @@ module load anaconda3
 export HF_HOME="${HF_HOME:-$SLURM_SUBMIT_DIR/.hf_cache}"  # model weights, for runs that load a model
 PYTHON_BIN="$SLURM_SUBMIT_DIR/.venv/bin/python"
 [[ -x "$PYTHON_BIN" ]] || { echo "Run: sbatch slurm/setup_environment.sbatch"; exit 2; }
-srun "$PYTHON_BIN" -m tests.run_tests tests.test_gating tests.test_ranker_v3 tests.test_escalation_candidates tests.test_cascade tests.test_escalation
+srun "$PYTHON_BIN" -m tests.run_tests tests.test_gating tests.test_ranker_v3 tests.test_escalation_candidates tests.test_cascade tests.test_escalation tests.test_best_ranker_analysis
 failed=()
 while IFS= read -r line || [[ -n "$line" ]]; do
     [[ -z "${line// }" || "$line" == \#* ]] && continue
