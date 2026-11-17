@@ -1,0 +1,5 @@
+# Greedy answers of idefics3_8b (another model family, models/model_config.py) on chartqa_full: validation and test for the routing
+# study, and the ranker's training subset so they can later be used as ranker candidates. Resumable.
+escalation --fix model --size idefics3_8b --dataset chartqa_full --split val
+escalation --fix model --size idefics3_8b --dataset chartqa_full --split test
+escalation --fix model --size idefics3_8b --dataset chartqa_full --split train --subset

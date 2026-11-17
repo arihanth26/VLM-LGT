@@ -20,4 +20,5 @@ cd "$SLURM_SUBMIT_DIR"
 module load anaconda3
 export HF_HOME="${HF_HOME:-$SLURM_SUBMIT_DIR/.hf_cache}"
 PYTHON_BIN="$SLURM_SUBMIT_DIR/.venv/bin/python"
-srun "$PYTHON_BIN" -m experiments.approach1_latent_self_correction.measure_latency
+# LATENCY_ARGS: options for measure_latency.py, e.g. "--models 2b 8b internvl3_8b idefics3_8b --output <file>"
+srun "$PYTHON_BIN" -m experiments.approach1_latent_self_correction.measure_latency ${LATENCY_ARGS:-}

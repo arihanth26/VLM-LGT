@@ -1,0 +1,5 @@
+# Greedy answers of idefics3_8b (another model family, models/model_config.py) on scienceqa_img: validation and test for the routing
+# study, and the ranker's training subset so they can later be used as ranker candidates. Resumable.
+escalation --fix model --size idefics3_8b --dataset scienceqa_img --split val
+escalation --fix model --size idefics3_8b --dataset scienceqa_img --split test
+escalation --fix model --size idefics3_8b --dataset scienceqa_img --split train --subset
