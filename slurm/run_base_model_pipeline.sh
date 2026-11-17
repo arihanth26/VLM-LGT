@@ -8,6 +8,7 @@
 # Options (environment):
 #   DATASETS   which datasets' chains to submit (default all four), e.g. DATASETS="docvqa scienceqa_img"
 #   SPLITS     which splits (default "train val test")
+#   TIME       one time limit for every chain (default: per dataset, below)
 #   RANKER=0   submit only the chains (the ranker and gating are submitted separately, once every chain has run
 #              where all chains' outputs are gathered)
 # Time limits follow the measured 4B chain times (2.9-4.7 h per half split; DocVQA has the largest images), about twice
@@ -23,6 +24,7 @@ DATASETS=(${DATASETS:-chartqa_full textvqa docvqa scienceqa_img}); SPLITS=(${SPL
 declare -A HOURS=([chartqa_full]=07:00:00 [textvqa]=07:00:00 [docvqa]=10:00:00 [scienceqa_img]=07:00:00)
 [[ "$SIZE" == "8b" ]] && HOURS=([chartqa_full]=08:00:00 [textvqa]=08:00:00 [docvqa]=12:00:00 [scienceqa_img]=08:00:00)  # 8B: about 1.3x the 4B time
 if (( SHARDS >= 4 )); then HOURS=([chartqa_full]=04:00:00 [textvqa]=04:00:00 [docvqa]=06:00:00 [scienceqa_img]=04:00:00); fi  # quarter splits
+[[ -n "${TIME:-}" ]] && for K in "${!HOURS[@]}"; do HOURS[$K]=$TIME; done  # TIME=hh:mm:ss: one limit for every chain
 RESULTS=experiments/approach1_latent_self_correction/results/base_$SIZE
 SUBMIT=(sbatch --parsable --kill-on-invalid-dep=yes)
 CHAINS=()
