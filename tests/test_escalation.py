@@ -51,5 +51,6 @@ def test_headline_chooses_on_validation():
 
 
 def test_cost_skips_2b_for_pre_generation_replace():
-    assert cost("pre_head", "replace", 0.2, "8b") == 0.8 + 0.8
-    assert cost("after_head", "replace", 0.2, "8b") == 1.0 + 0.8
+    from experiments.approach1_latent_self_correction.analyze_escalation import FIX_COST  # 4 against 2B, 2 against 4B
+    assert abs(cost("pre_head", "replace", 0.2, "8b") - (0.8 + 0.2 * FIX_COST["8b"])) < 1e-9
+    assert abs(cost("after_head", "replace", 0.2, "8b") - (1.0 + 0.2 * FIX_COST["8b"])) < 1e-9

@@ -1,0 +1,8 @@
+# The 8B short answer and 8B step-by-step answer of every textvqa question, encoded and judged by the base model
+# (VLMLGT_MODEL; 4B for the base-model study) as ranker candidates: correction_v4 and correction_v5 under results/base_<size>/.
+escalation_candidates --dataset textvqa --split train --sources esc_8b --out-dir correction_v4
+escalation_candidates --dataset textvqa --split val --sources esc_8b --out-dir correction_v4
+escalation_candidates --dataset textvqa --split test --sources esc_8b --out-dir correction_v4
+escalation_candidates --dataset textvqa --split train --sources cot_8b --out-dir correction_v5
+escalation_candidates --dataset textvqa --split val --sources cot_8b --out-dir correction_v5
+escalation_candidates --dataset textvqa --split test --sources cot_8b --out-dir correction_v5

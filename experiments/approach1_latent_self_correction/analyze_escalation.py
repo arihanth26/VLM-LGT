@@ -27,19 +27,20 @@ from pathlib import Path
 
 import numpy as np
 
-from experiments.approach1_latent_self_correction.correction_scale import DATASET_NAMES
+from experiments.approach1_latent_self_correction.correction_scale import DATASET_NAMES, MODEL_SIZE, RESULTS_ROOT
 from experiments.approach1_latent_self_correction.correction_stats import auroc, paired_difference, policy_row
 from experiments.approach1_latent_self_correction.gating import BUDGETS, gate, random_gate, threshold
 
 HERE = Path(__file__).parent
 RESULTS = HERE / "results"
-POOLS = RESULTS / "pools" / "T1"
+POOLS = RESULTS_ROOT / "pools" / "T1"  # the base model's greedy answers (VLMLGT_MODEL; 2B by default)
 ESCALATION = RESULTS / "escalation"
 DETECTORS = ("pre_head", "pre_probe", "after_head", "after_probe", "token", "random")
 RULES = ("replace", "confident")
 # Approximate cost of one fix answer in 2B greedy passes: 8B has about 4x the parameters; an image
 # enlarged by s has about s^2 times the image tokens, which dominate the cost of a short answer.
-FIX_COST = {"4b": 2.0, "8b": 4.0, "up1.5": 2.25, "up2": 4.0}
+BASE_PARAMS = {"2b": 2.0, "4b": 4.0, "8b": 8.0}
+FIX_COST = {"4b": 4.0 / BASE_PARAMS[MODEL_SIZE], "8b": 8.0 / BASE_PARAMS[MODEL_SIZE], "up1.5": 2.25, "up2": 4.0}  # in base-model passes
 RANDOM_DRAWS = 50
 
 
@@ -237,11 +238,13 @@ def markdown(result: dict) -> str:
 def main() -> None:
     """Load greedy answers and fixes, analyze each fix, write JSON and Markdown."""
     parser = argparse.ArgumentParser(description="Routing study: send the least-confident questions to a fix.")
-    parser.add_argument("--output", type=Path, default=RESULTS / "escalation.json")
+    parser.add_argument("--output", type=Path, default=RESULTS_ROOT / "escalation.json")
     args = parser.parse_args()
     greedy = {s: load_greedy(s) for s in ("val", "test")}
     fixes = {s: load_fixes(s) for s in ("val", "test")}
     names = sorted(set(fixes["val"]) & set(fixes["test"]))
+    if MODEL_SIZE != "2b":  # with a larger base model only the still larger models are fixes (the enlarged images are 2B answers)
+        names = [f for f in names if f in BASE_PARAMS and BASE_PARAMS[f] > BASE_PARAMS[MODEL_SIZE]]
     print({s: len(g) for s, g in greedy.items()}, names, flush=True)
     result = {"budgets": BUDGETS, "fix_cost": FIX_COST, "fixes": {f: analyze(f, greedy, fixes) for f in names}}
     args.output.write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8")

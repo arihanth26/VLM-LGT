@@ -53,7 +53,11 @@ def test_candidate_features_include_8b_agreement():
 
 
 def test_8b_costs_four_calls():
-    assert v3.generation_calls(0, ("esc_8b",)) == 5.0
+    # 4 base-model calls against 2B (the default), 2 against 4B: the weight follows the base model's size
+    assert v3.CALL_WEIGHT["esc_8b"] == 8.0 / v3.BASE_PARAMS[v3.MODEL_SIZE]
+    assert v3.generation_calls(0, ("esc_8b",)) == 1 + v3.CALL_WEIGHT["esc_8b"]
+    if v3.MODEL_SIZE == "2b":
+        assert v3.generation_calls(0, ("esc_8b",)) == 5.0
     assert v3.generation_calls(0, ("cot",)) == 2
 
 
@@ -75,7 +79,7 @@ def test_drop_zeroes_the_ablated_columns_only():
 
 
 def test_8b_reasoning_sets_and_cost():
-    assert "cot_8b" in v3.ESCALATION and v3.generation_calls(0, ("cot_8b",)) == 5.0
+    assert "cot_8b" in v3.ESCALATION and v3.generation_calls(0, ("cot_8b",)) == 1 + v3.CALL_WEIGHT["cot_8b"]
     def check():
         assert set(v3.SETS["ground_cot_multi_esc8b_cot8b"]) >= {"cot", "cot_s2", "esc_8b", "cot_8b"}
     _with_escalation(check)

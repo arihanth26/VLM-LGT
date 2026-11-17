@@ -31,7 +31,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from experiments.approach1_latent_self_correction.correction_scale import DATASET_NAMES, HEADS_AVAILABLE
+from experiments.approach1_latent_self_correction.correction_scale import DATASET_NAMES, HEADS_AVAILABLE, MODEL_SIZE
 from experiments.approach1_latent_self_correction.scoring import normalize_vqa_answer
 from experiments.approach1_latent_self_correction.train_candidate_ranker import listwise_loss, load_questions
 from experiments.approach1_latent_self_correction.train_ranker_v2 import (
@@ -83,7 +83,9 @@ ESCALATION_SETS = {
 }
 # Approximate cost of one answer in 2B generation calls: 8B has about 4x the parameters; an image
 # enlarged by s has about s^2 times the image tokens. Every other source counts 1.
-CALL_WEIGHT = {"esc_8b": 4.0, "up1.5": 2.25, "up2": 4.0, "cot_8b": 4.0}  # cot_8b: 8B reasoning against 2B reasoning
+BASE_PARAMS = {"2b": 2.0, "4b": 4.0, "8b": 8.0}  # billions of parameters of each base model
+EIGHT_B = 8.0 / BASE_PARAMS.get(MODEL_SIZE, 2.0)  # an 8B answer in base-model calls: 4 against 2B, 2 against 4B
+CALL_WEIGHT = {"esc_8b": EIGHT_B, "up1.5": 2.25, "up2": 4.0, "cot_8b": EIGHT_B}  # cot_8b: 8B reasoning against base reasoning
 # Feature ablation (--drop): groups of ranker inputs that are set to zero in training and evaluation, to
 # measure what each signal contributes. "states" is the full_* variants' hidden states, compared by variant.
 FEATURE_GROUPS = {

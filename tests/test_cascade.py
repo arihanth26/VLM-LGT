@@ -31,7 +31,8 @@ def test_rules_and_cost():
     # confident: question 1 has 2B 0.2, 4B 0.2, 8B 0.9 -> 8B; question 0 has 2B 0.1, 4B 0.9 -> 4B
     assert final(a, to4, to8, "confident").tolist() == [True, True, True, True]
     s = setting(a, a, "token", "replace", 0.5, 0.5, False)
-    assert abs(s["cost"] - (1 + 2 * 0.5 + 4 * 0.25)) < 1e-9 and s["to4"] == 0.5 and s["to8"] == 0.25
+    from experiments.approach1_latent_self_correction.analyze_escalation import FIX_COST  # in base-model passes
+    assert abs(s["cost"] - (1 + FIX_COST["4b"] * 0.5 + FIX_COST["8b"] * 0.25)) < 1e-9 and s["to4"] == 0.5 and s["to8"] == 0.25
 
 
 def test_confident_keeps_the_more_confident_2b_answer():

@@ -15,6 +15,9 @@
 # the constant cached question embedding, and the 2B model's own P(Yes) judge score. Nothing about the
 # 8B model enters the features except the answer text, so the ranker's inputs stay on one scale.
 #
+# Base model: VLMLGT_MODEL (correction_scale.py) selects the model that encodes and judges the answers and the result
+# folders (results/base_<size>/ for 4B); the escalation answers themselves are always read from results/escalation/.
+# The enlarged-image answers come from the 2B model, so they are only offered with the 2B base model.
 # Questions: those correction_v2 covered (train: the ranker's 12,000; all of val and test).
 # Output per shard: results/correction_v4/<split>/<dataset>_shard<k>of<n>.jsonl and .pt, in the
 # correction_v3 record format, merged by train_ranker_v3.py --with-escalation. Resumable.
@@ -34,7 +37,7 @@ from experiments.approach1_latent_self_correction.candidate_pools import (
     question_embeddings,
 )
 from experiments.approach1_latent_self_correction.correction_candidates import encode_candidate
-from experiments.approach1_latent_self_correction.correction_scale import ALL_DATASETS, SPLITS, dataset_dir
+from experiments.approach1_latent_self_correction.correction_scale import ALL_DATASETS, MODEL_SIZE, RESULTS_ROOT, SPLITS, dataset_dir
 from experiments.approach1_latent_self_correction.correction_v2 import judge_probability
 from experiments.approach1_latent_self_correction.correction_v3_cot import shard_of, v2_indices, v2_known_answers
 from experiments.approach1_latent_self_correction.export_heads import load_head, score
@@ -42,8 +45,8 @@ from models.load_model import load_qwen3_vl
 
 HERE = Path(__file__).parent
 ESCALATION = HERE / "results" / "escalation"
-V3_DIR = HERE / "results" / "correction_v3"
-OUT_DIR = HERE / "results" / "correction_v4"
+V3_DIR = RESULTS_ROOT / "correction_v3"
+OUT_DIR = RESULTS_ROOT / "correction_v4"
 SOURCES = ("esc_8b", "up1.5", "up2")
 ALL_SOURCES = SOURCES + ("cot_8b",)
 
@@ -92,7 +95,7 @@ def run(dataset: str, split: str, shard: int, num_shards: int, max_examples: int
     data = cached_split(dataset, split)
     embeddings = question_embeddings(dataset, split)
     heads = {"head": load_head(DEFAULT_HEAD), "probe": load_head(DEFAULT_PROBE)}
-    model, processor = load_qwen3_vl("2b")
+    model, processor = load_qwen3_vl(MODEL_SIZE)
     yes_id = processor.tokenizer.encode("Yes", add_special_tokens=False)[0]
     no_id = processor.tokenizer.encode("No", add_special_tokens=False)[0]
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -155,7 +158,9 @@ def main() -> None:
     parser.add_argument("--out-dir", default=OUT_DIR.name, help="Folder under results/ (correction_v5 for cot_8b).")
     parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
-    output = args.output or HERE / "results" / args.out_dir / args.split / f"{args.dataset}_shard{args.shard}of{args.num_shards}"
+    if MODEL_SIZE != "2b" and any(s.startswith("up") for s in args.sources):
+        raise SystemExit("the enlarged-image answers are 2B answers; with another base model use --sources esc_8b and/or cot_8b")
+    output = args.output or RESULTS_ROOT / args.out_dir / args.split / f"{args.dataset}_shard{args.shard}of{args.num_shards}"
     run(args.dataset, args.split, args.shard, args.num_shards, args.max_examples, output, tuple(args.sources))
 
 
