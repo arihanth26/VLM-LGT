@@ -8,7 +8,7 @@
 # Options (environment):
 #   DATASETS   which datasets' chains to submit (default all four), e.g. DATASETS="docvqa scienceqa_img"
 #   SPLITS     which splits (default "train val test")
-#   RANKER=0   submit only the chains (for a second account that runs part of the chains; the ranker and gating run
+#   RANKER=0   submit only the chains (the ranker and gating are submitted separately, once every chain has run
 #              where all chains' outputs are gathered)
 # Time limits follow the measured 4B chain times (2.9-4.7 h per half split; DocVQA has the largest images), about twice
 # the expected time: the scheduler counts requested GPU-minutes per user, so a smaller request lets more jobs run at once.
