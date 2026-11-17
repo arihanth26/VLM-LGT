@@ -7,7 +7,7 @@
 #SBATCH -p coc-gpu,ice-gpu
 #SBATCH -C "H200|H100|L40S|A100-80GB|A100-40GB|A40"
 #SBATCH --mem=96G
-#SBATCH -t 16:00:00
+#SBATCH -t 10:00:00
 #SBATCH -o logs/base-model-%j.out
 
 # GPU job: the whole candidate pipeline for one shard of one dataset split with another frozen base model

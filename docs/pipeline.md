@@ -61,7 +61,7 @@ are always made on validation; test is read once.
 | `bash slurm/run_escalation_ranker_pipeline.sh` | Stage 7 on the train subset, stage 8, ranker v3 with the escalation candidates, stage 10 |
 | `bash slurm/run_reasoning_8b_pipeline.sh` | 8B reasoning (stages 7–8), ranker v3 with it, stage 10 |
 | `bash slurm/run_unseen_pipeline.sh` | Stages 1, 3–8 on the unseen split, then stage 13 |
-| `bash slurm/run_base_model_pipeline.sh` | Stage 15 (two jobs per dataset split, each under the 16h partition limit) |
+| `bash slurm/run_base_model_pipeline.sh` | Stage 15 (two jobs per dataset split; `DATASETS=`, `SPLITS=`, `RANKER=0` to run part of it from a second account, see [ice_helper_4b.md](ice_helper_4b.md)) |
 | `bash slurm/run_next_steps_pipeline.sh` | Stage 11b; rankers without the judge (one scoring pass per candidate), with and without the 8B candidates, and their gating |
 | `bash slurm/run_followups_pipeline.sh` | Packed follow-ups of the best ranker (seeds, leave-one-dataset-out, training-set size, gating in seconds) and 8B reasoning on the unseen datasets with a second unseen evaluation |
 | `sbatch --export=ALL,BATCH=<file> slurm/run_batch.sbatch` | Several short runs in one job (one per line of `slurm/batches/<file>`), to stay under the 50-job queue limit |
