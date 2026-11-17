@@ -21,6 +21,7 @@ mkdir -p logs
 SIZE="${SIZE:-4b}"; SHARDS="${NUM_SHARDS:-2}"  # two jobs per dataset split
 DATASETS=(${DATASETS:-chartqa_full textvqa docvqa scienceqa_img}); SPLITS=(${SPLITS:-train val test})
 declare -A HOURS=([chartqa_full]=07:00:00 [textvqa]=07:00:00 [docvqa]=10:00:00 [scienceqa_img]=07:00:00)
+[[ "$SIZE" == "8b" ]] && HOURS=([chartqa_full]=08:00:00 [textvqa]=08:00:00 [docvqa]=12:00:00 [scienceqa_img]=08:00:00)  # 8B: about 1.3x the 4B time
 if (( SHARDS >= 4 )); then HOURS=([chartqa_full]=04:00:00 [textvqa]=04:00:00 [docvqa]=06:00:00 [scienceqa_img]=04:00:00); fi  # quarter splits
 RESULTS=experiments/approach1_latent_self_correction/results/base_$SIZE
 SUBMIT=(sbatch --parsable --kill-on-invalid-dep=yes)
