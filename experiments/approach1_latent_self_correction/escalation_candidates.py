@@ -7,6 +7,8 @@
 # Sources:  esc_8b   the 8B greedy answer
 #           up1.5    the 2B answer on the image enlarged 1.5x
 #           up2      the 2B answer on the image enlarged 2x
+#           esc_internvl / esc_idefics   the greedy answers of InternVL3-8B and Idefics3-8B (other model families;
+#                    escalation.py --size internvl3_8b / idefics3_8b), with --out-dir correction_v6
 #           cot_8b   the 8B step-by-step reasoning answer (escalation.py --fix reasoning); not in the default
 #                    set, run with --sources cot_8b --out-dir correction_v5 so the first three stay as they are
 # Every answer not already encoded for its question (by the first round, correction_v2 or the sampled
@@ -48,7 +50,8 @@ ESCALATION = HERE / "results" / "escalation"
 V3_DIR = RESULTS_ROOT / "correction_v3"
 OUT_DIR = RESULTS_ROOT / "correction_v4"
 SOURCES = ("esc_8b", "up1.5", "up2")
-ALL_SOURCES = SOURCES + ("cot_8b",)
+FAMILY_FOLDERS = {"esc_internvl": "model_internvl3_8b", "esc_idefics": "model_idefics3_8b"}
+ALL_SOURCES = SOURCES + ("cot_8b",) + tuple(FAMILY_FOLDERS)
 
 
 def escalation_answers(dataset: str, split: str) -> dict[int, dict[str, dict]]:
@@ -64,6 +67,12 @@ def escalation_answers(dataset: str, split: str) -> dict[int, dict[str, dict]]:
             r = json.loads(line) if line.strip() else {}
             for scale, result in r.get("upscaled", {}).items():
                 out.setdefault(r["index"], {})[f"up{scale}"] = result
+    for source, folder in FAMILY_FOLDERS.items():
+        for path in sorted((ESCALATION / folder / split).glob(f"{dataset}_shard*.jsonl")):
+            for line in path.read_text(encoding="utf-8").splitlines():
+                r = json.loads(line) if line.strip() else {}
+                if "answer" in r:
+                    out.setdefault(r["index"], {})[source] = r["answer"]
     for path in sorted((ESCALATION / "reasoning_8b" / split).glob(f"{dataset}_shard*.jsonl")):
         for line in path.read_text(encoding="utf-8").splitlines():
             r = json.loads(line) if line.strip() else {}
@@ -76,7 +85,8 @@ def known_answers(dataset: str, split: str) -> dict[int, set]:
     """Answers already encoded per question: the first round, correction_v2 (its judge keys), correction_v3 and
     correction_v4 (so a later --out-dir round never encodes an answer twice)."""
     known = v2_known_answers(dataset, split)
-    for path in sorted((V3_DIR / split).glob(f"{dataset}_shard*.jsonl")) + sorted((OUT_DIR / split).glob(f"{dataset}_shard*.jsonl")):
+    later = [RESULTS_ROOT / f"correction_v{n}" for n in (4, 5, 6)]  # every escalation round, so no answer is encoded twice
+    for path in sorted((V3_DIR / split).glob(f"{dataset}_shard*.jsonl")) + [p for d in later for p in sorted((d / split).glob(f"{dataset}_shard*.jsonl"))]:
         for line in path.read_text(encoding="utf-8").splitlines():
             r = json.loads(line) if line.strip() else {}
             if "encoded" in r:

@@ -70,6 +70,10 @@ V4_DIR = RESULTS / "correction_v4"
 # enlarged 1.5x and 2x. Off unless --with-escalation, so models trained without them load unchanged.
 ESCALATION = ("esc_8b", "up1.5", "up2", "cot_8b")  # cot_8b only exists with --with-reasoning-8b (correction_v5)
 V5_DIR = RESULTS / "correction_v5"
+# Fixes from other model families (escalation_candidates.py --sources esc_internvl esc_idefics --out-dir correction_v6):
+# their own source-agreement group, added only with --with-other-families, so every earlier model loads unchanged.
+V6_DIR = RESULTS / "correction_v6"
+FAMILIES = ("esc_internvl", "esc_idefics")
 ESCALATION_SETS = {
     "esc8b": ("esc_8b",),
     "esc": ESCALATION,
@@ -81,11 +85,17 @@ ESCALATION_SETS = {
     "ground_cot_multi_cot8b": ("ground", "ground_ctx", "cot") + COT_SAMPLES + ("cot_8b",),
     "ground_cot_multi_esc8b_cot8b": ("ground", "ground_ctx", "cot") + COT_SAMPLES + ("esc_8b", "cot_8b"),
 }
+FAMILY_SETS = {
+    "families": FAMILIES,
+    "esc8b_families": ("esc_8b",) + FAMILIES,
+    "ground_cot_multi_families": ("ground", "ground_ctx", "cot") + COT_SAMPLES + FAMILIES,
+    "ground_cot_multi_esc8b_cot8b_families": ("ground", "ground_ctx", "cot") + COT_SAMPLES + ("esc_8b", "cot_8b") + FAMILIES,
+}
 # Approximate cost of one answer in 2B generation calls: 8B has about 4x the parameters; an image
 # enlarged by s has about s^2 times the image tokens. Every other source counts 1.
 BASE_PARAMS = {"2b": 2.0, "4b": 4.0, "8b": 8.0}  # billions of parameters of each base model
 EIGHT_B = 8.0 / BASE_PARAMS.get(MODEL_SIZE, 2.0)  # an 8B answer in base-model calls: 4 against 2B, 2 against 4B
-CALL_WEIGHT = {"esc_8b": EIGHT_B, "up1.5": 2.25, "up2": 4.0, "cot_8b": EIGHT_B}  # cot_8b: 8B reasoning against base reasoning
+CALL_WEIGHT = {"esc_8b": EIGHT_B, "up1.5": 2.25, "up2": 4.0, "cot_8b": EIGHT_B, "esc_internvl": EIGHT_B, "esc_idefics": EIGHT_B}  # cot_8b: 8B reasoning against base reasoning
 # Feature ablation (--drop): groups of ranker inputs that are set to zero in training and evaluation, to
 # measure what each signal contributes. "states" is the full_* variants' hidden states, compared by variant.
 FEATURE_GROUPS = {
@@ -107,6 +117,14 @@ def enable_escalation() -> None:
     global SCALARS_V3
     GROUPS["escalate"] = ESCALATION
     SETS.update(ESCALATION_SETS)
+    SCALARS_V3 = SCALARS_V2 + tuple(f"from_{g}" for g in GROUPS) + tuple(f"dataset_{d}" for d in DATASET_NAMES)
+
+
+def enable_families() -> None:
+    """Add the other-family candidate sets and their own source-agreement feature (after the escalation group)."""
+    global SCALARS_V3
+    GROUPS["families"] = FAMILIES
+    SETS.update(FAMILY_SETS)
     SCALARS_V3 = SCALARS_V2 + tuple(f"from_{g}" for g in GROUPS) + tuple(f"dataset_{d}" for d in DATASET_NAMES)
 
 
@@ -327,6 +345,8 @@ def main() -> None:
                         help="Also merge results/correction_v4 (8B and upscaled answers) and add the escalation candidate sets; implies --with-cot-samples.")
     parser.add_argument("--with-reasoning-8b", action="store_true",
                         help="Also merge results/correction_v5 (the 8B reasoning answers); implies --with-escalation.")
+    parser.add_argument("--with-other-families", action="store_true",
+                        help="Also merge results/correction_v6 (InternVL3-8B and Idefics3-8B answers); implies --with-reasoning-8b.")
     parser.add_argument("--variants", nargs="+", default=list(VARIANTS), choices=ALL_VARIANTS,
                         help="Ranker variants to train; *_nods drops the dataset input (ablation).")
     parser.add_argument("--drop", nargs="+", default=[], choices=sorted(FEATURE_GROUPS),
@@ -342,9 +362,11 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
     VARIANTS = tuple(args.variants)
+    args.with_reasoning_8b = args.with_reasoning_8b or args.with_other_families
     args.with_escalation = args.with_escalation or args.with_reasoning_8b
     args.with_cot_samples = args.with_cot_samples or args.with_escalation
     suffix = (("_multi" if args.with_cot_samples else "") + ("_esc" if args.with_escalation else "") + ("_cot8b" if args.with_reasoning_8b else "")
+              + ("_families" if args.with_other_families else "")
               + ("_drop_" + "_".join(sorted(args.drop)) if args.drop else "") + (f"_holdout_{args.hold_out}" if args.hold_out else "")
               + (f"_seeds{args.seed_offset}" if args.seed_offset else "") + (f"_train{args.train_limit}" if args.train_limit else "") + args.tag)
     args.output = args.output or RESULTS / f"candidate_ranker_v3{suffix}.json"
@@ -352,6 +374,8 @@ def main() -> None:
         SETS.update(MULTI_SETS)
     if args.with_escalation:
         enable_escalation()
+    if args.with_other_families:
+        enable_families()
     for group in args.drop:
         DROPPED.update(FEATURE_GROUPS[group])
         if group == "agreement":
@@ -366,6 +390,8 @@ def main() -> None:
             print({s: merge_cot_samples(q, s, V4_DIR) for s, q in data.items()}, "questions with escalation candidates", flush=True)
             if args.with_reasoning_8b:
                 print({s: merge_cot_samples(q, s, V5_DIR) for s, q in data.items()}, "questions with 8B reasoning", flush=True)
+            if args.with_other_families:
+                print({s: merge_cot_samples(q, s, V6_DIR) for s, q in data.items()}, "questions with other-family answers", flush=True)
             result_extra["escalation"] = {s: sum(any(c in q["corrections"] for c in ESCALATION) for q in qs) for s, qs in data.items()}
     else:
         result_extra = {}

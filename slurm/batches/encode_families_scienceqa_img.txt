@@ -1,0 +1,4 @@
+# InternVL3-8B and Idefics3-8B answers on scienceqa_img, encoded and judged by the 2B model as ranker candidates (correction_v6).
+escalation_candidates --dataset scienceqa_img --split train --sources esc_internvl esc_idefics --out-dir correction_v6
+escalation_candidates --dataset scienceqa_img --split val --sources esc_internvl esc_idefics --out-dir correction_v6
+escalation_candidates --dataset scienceqa_img --split test --sources esc_internvl esc_idefics --out-dir correction_v6

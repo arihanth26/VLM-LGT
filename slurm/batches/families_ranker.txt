@@ -1,0 +1,4 @@
+# The best ranker retrained with the other-family answers as extra candidates (8B answer, 8B reasoning, InternVL3-8B,
+# Idefics3-8B; no judge input), then gated with one scoring pass per candidate and measured seconds.
+train_ranker_v3 --with-other-families --drop judge --variants scalars_ds scalars_nods
+gate_ranker_v3 --with-other-families --drop judge --scoring-passes 1 --tag _multi_esc_cot8b_families_drop_judge --models experiments/approach1_latent_self_correction/results/candidate_ranker_v3_multi_esc_cot8b_families_drop_judge_models.pt --reported experiments/approach1_latent_self_correction/results/candidate_ranker_v3_multi_esc_cot8b_families_drop_judge.json

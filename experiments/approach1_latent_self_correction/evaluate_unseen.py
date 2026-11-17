@@ -136,11 +136,11 @@ def main() -> None:
             rows[f"{key}, gate {int(b * 100)}% (corrected {100 * routed.mean():.1f}%)"] = breakdown(datasets, greedy, combine(routed, corrected, greedy))
 
     larger = larger_models(SPLIT)
-    if "8b" in larger:
-        big = np.array([bool(larger["8b"][q["key"]]["correct"]) if q["key"] in larger["8b"] else g for q, g in zip(questions, greedy)])
+    for size, answers in larger.items():  # every larger or other-family model with unseen answers (8B, InternVL3, Idefics3)
+        big = np.array([bool(answers[q["key"]]["correct"]) if q["key"] in answers else g for q, g in zip(questions, greedy)])
         for b in BUDGETS:
             routed = gate(tokens, threshold(reference, b))
-            rows[f"8B on gated questions, gate {int(b * 100)}% (corrected {100 * routed.mean():.1f}%)"] = breakdown(datasets, greedy, combine(routed, big, greedy))
+            rows[f"{size} on gated questions, gate {int(b * 100)}% (corrected {100 * routed.mean():.1f}%)"] = breakdown(datasets, greedy, combine(routed, big, greedy))
     baselines = baseline_rows(questions, larger)
     result = {"questions": {d: int((datasets == d).sum()) for d in UNSEEN_DATASETS}, "variant": VARIANT,
               "in_domain_choice": chosen, "pipeline": rows,

@@ -83,3 +83,22 @@ def test_8b_reasoning_sets_and_cost():
     def check():
         assert set(v3.SETS["ground_cot_multi_esc8b_cot8b"]) >= {"cot", "cot_s2", "esc_8b", "cot_8b"}
     _with_escalation(check)
+
+
+def test_other_families_add_their_own_agreement_feature_only_when_enabled():
+    before = len(v3.SCALARS_V3)
+    assert "families" not in v3.GROUPS and "esc8b_families" not in v3.SETS
+    def check():
+        v3.enable_families()
+        assert len(v3.SCALARS_V3) == before + 2  # from_escalate, then from_families
+        assert v3.SCALARS_V3[-len(DATASET_NAMES) - 2:-len(DATASET_NAMES)] == ("from_escalate", "from_families")
+        assert set(v3.SETS["ground_cot_multi_esc8b_cot8b_families"]) >= {"esc_8b", "cot_8b", "esc_internvl", "esc_idefics"}
+        assert v3.generation_calls(0, ("esc_internvl",)) == 1 + v3.CALL_WEIGHT["esc_8b"]
+    _with_escalation(check)
+    assert len(v3.SCALARS_V3) == before and "families" not in v3.GROUPS
+
+
+def test_family_answers_are_read_from_their_own_folders():
+    from experiments.approach1_latent_self_correction import escalation_candidates as ec
+    assert ec.FAMILY_FOLDERS == {"esc_internvl": "model_internvl3_8b", "esc_idefics": "model_idefics3_8b"}
+    assert set(ec.FAMILY_FOLDERS) <= set(ec.ALL_SOURCES)
