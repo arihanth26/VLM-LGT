@@ -39,8 +39,8 @@ DETECTORS = ("pre_head", "pre_probe", "after_head", "after_probe", "token", "ran
 RULES = ("replace", "confident")
 # Approximate cost of one fix answer in 2B greedy passes: 8B has about 4x the parameters; an image
 # enlarged by s has about s^2 times the image tokens, which dominate the cost of a short answer.
-BASE_PARAMS = {"2b": 2.0, "4b": 4.0, "8b": 8.0}
-FIX_COST = {"4b": 4.0 / BASE_PARAMS[MODEL_SIZE], "8b": 8.0 / BASE_PARAMS[MODEL_SIZE], "up1.5": 2.25, "up2": 4.0}  # in base-model passes
+BASE_PARAMS = {"2b": 2.0, "4b": 4.0, "8b": 8.0, "internvl3_8b": 8.0, "idefics3_8b": 8.0}  # billions of parameters
+FIX_COST = {**{m: p / BASE_PARAMS[MODEL_SIZE] for m, p in BASE_PARAMS.items() if m != "2b"}, "up1.5": 2.25, "up2": 4.0}  # in base-model passes
 RANDOM_DRAWS = 50
 
 

@@ -39,7 +39,7 @@ from experiments.approach1_latent_self_correction.train_ranker_v2 import RESULTS
 from experiments.approach1_latent_self_correction.train_ranker_v3 import COT_SAMPLES, MULTI_SETS, merge_cot_samples
 
 ESCALATION = RESULTS / "escalation"
-MODEL_CALLS = {"4b": 2.0, "8b": 4.0}
+MODEL_CALLS = {"4b": 2.0, "8b": 4.0, "internvl3_8b": 4.0, "idefics3_8b": 4.0}  # by parameter count against 2B
 SC_SAMPLES = (4, 9)
 BEST_SET = MULTI_SETS["ground_cot_multi"]
 

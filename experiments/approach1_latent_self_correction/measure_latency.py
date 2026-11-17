@@ -109,6 +109,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Wall-clock cost of every pipeline component.")
     parser.add_argument("--per-dataset", type=int, default=50)
     parser.add_argument("--output", type=Path, default=RESULTS / "latency.json")
+    parser.add_argument("--models", nargs="+", default=["2b", "8b"],
+                        help="2b: every 2B component; 8b: 8B short and reasoning answers; any other key of models/model_config.py: its short answer.")
     args = parser.parse_args()
     questions = []
     for dataset in DATASET_NAMES:
@@ -118,7 +120,9 @@ def main() -> None:
             questions.append((dataset, index, extract_image(example, dataset_dir(dataset)), extract_question(example)))
     raw: dict[str, list[float]] = {}
     per_question = []
-    for size, run in (("2b", components_2b), ("8b", components_8b)):
+    other = lambda size: (lambda model, processor, image, question, dataset: {f"greedy_{size}": timed(
+        generate_with_confidence, model, processor, image, question + PROMPT_SUFFIX, 64)[1]})
+    for size, run in [(s, {"2b": components_2b, "8b": components_8b}.get(s) or other(s)) for s in args.models]:
         model, processor = load_qwen3_vl(size)
         for position, (dataset, index, image, question) in enumerate(questions):
             with torch.no_grad():

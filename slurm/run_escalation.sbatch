@@ -33,6 +33,6 @@ ARGS=(--fix "$FIX" --size "${SIZE:-8b}" --scales "${SCALE_LIST[@]}" --dataset "$
       --shard "${SHARD:-0}" --num-shards "${NUM_SHARDS:-1}")
 [[ -n "${SUBSET:-}" ]] && ARGS+=(--subset)
 if [[ -n "${SMOKE:-}" ]]; then
-    ARGS+=(--max-examples "$SMOKE" --output "experiments/approach1_latent_self_correction/results/escalation_smoke/${FIX}_${SPLIT}_${DATASET}.jsonl")
+    ARGS+=(--max-examples "$SMOKE" --output "experiments/approach1_latent_self_correction/results/escalation_smoke/${FIX}_${SIZE:-8b}_${SPLIT}_${DATASET}.jsonl")
 fi
 srun "$PYTHON_BIN" -m experiments.approach1_latent_self_correction.escalation "${ARGS[@]}"

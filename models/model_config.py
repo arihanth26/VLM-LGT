@@ -36,6 +36,18 @@ MODEL_VARIANTS = {
         hf_repo_id="Qwen/Qwen3-VL-8B-Instruct",
         description="Largest checkpoint used here; the escalation target for hard questions (escalation.py).",
     ),
+    # Fixes from other model families (escalation.py --size <key>): same transformers image-text-to-text interface
+    # and chat format, so every script that generates with a Qwen3-VL model generates with these unchanged.
+    "internvl3_8b": ModelVariant(
+        name="internvl3-8b",
+        hf_repo_id="OpenGVLab/InternVL3-8B-hf",
+        description="InternVL3 8B (InternViT vision encoder): a fix from another model family.",
+    ),
+    "idefics3_8b": ModelVariant(
+        name="idefics3-8b",
+        hf_repo_id="HuggingFaceM4/Idefics3-8B-Llama3",
+        description="Idefics3 8B (SigLIP vision encoder, Llama 3.1 language model): a fix from another model family.",
+    ),
 }
 
 

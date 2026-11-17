@@ -18,4 +18,5 @@ export HF_HOME="${HF_HOME:-$SLURM_SUBMIT_DIR/.hf_cache}"
 
 PYTHON_BIN="$SLURM_SUBMIT_DIR/.venv/bin/python"
 SIZE="${MODEL_SIZE:-2b}"
-"$PYTHON_BIN" -c "from huggingface_hub import snapshot_download; print(snapshot_download('Qwen/Qwen3-VL-${SIZE^^}-Instruct'))"
+# MODEL_SIZE is any key of models/model_config.py (2b, 4b, 8b, internvl3_8b, idefics3_8b).
+"$PYTHON_BIN" -c "from huggingface_hub import snapshot_download; from models.model_config import get_variant; print(snapshot_download(get_variant('$SIZE').hf_repo_id))"
