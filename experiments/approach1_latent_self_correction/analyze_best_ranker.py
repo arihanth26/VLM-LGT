@@ -18,7 +18,9 @@
 #               probability, against the greedy answer ranked by its answer probability.
 #   examples    a few fixed and broken questions per dataset (question, reference, greedy and chosen answers, origin).
 #
-# Writes results/best_ranker_analysis.json and .md.
+# With another base model (VLMLGT_MODEL=4b) every path is under results/base_4b/; the 2B-only ranker there is the one
+# trained with the judge (--baseline-models candidate_ranker_v3_multi_models.pt --baseline-with-judge).
+# Writes results/best_ranker_analysis.json and .md (results/base_<size>/ for another base model).
 
 import argparse
 import json
@@ -154,10 +156,13 @@ def main() -> None:
     """Score both rankers on test, compare with routing, write the analysis."""
     parser = argparse.ArgumentParser(description="Paired comparisons and analyses of the best ranker.")
     parser.add_argument("--output", default=str(RESULTS / "best_ranker_analysis.json"))
+    parser.add_argument("--baseline-models", default=str(TWO_B_MODELS), help="The ranker without the 8B candidates.")
+    parser.add_argument("--baseline-with-judge", action="store_true", help="That ranker was trained with the judge input.")
     args = parser.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     v3.SETS.update(v3.MULTI_SETS)
-    v3.DROPPED.update(v3.FEATURE_GROUPS["judge"])  # both rankers were trained without the judge
+    if not args.baseline_with_judge:
+        v3.DROPPED.update(v3.FEATURE_GROUPS["judge"])  # the baseline ranker was trained without the judge
     questions = load("test")
     val_tokens = np.array([r["greedy"]["token_confidence"] for r in pools("val").values()])
     test_pools = pools("test")
@@ -167,7 +172,8 @@ def main() -> None:
     tokens = np.array([test_pools[k]["greedy"]["token_confidence"] for k in keys])
 
     # Phase 1, the 2B-only ranker: trained without the escalation group, so it is scored before that group is enabled.
-    two_b = pick(load_models(TWO_B_MODELS, VARIANT, device), questions, v3.SETS[TWO_B_SET], device)
+    two_b = pick(load_models(args.baseline_models, VARIANT, device), questions, v3.SETS[TWO_B_SET], device)
+    v3.DROPPED.update(v3.FEATURE_GROUPS["judge"])  # the best ranker is always the one trained without the judge
     v3.enable_escalation()
     best = pick(load_models(BEST_MODELS, VARIANT, device), questions, v3.SETS[BEST_SET], device)
     sources = v3.SETS[BEST_SET]

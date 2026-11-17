@@ -1,0 +1,2 @@
+# The best-ranker analysis with 4B as the base model (run with VLMLGT_MODEL=4b); the 4B ranker without the 8B candidates was trained with the judge.
+analyze_best_ranker --baseline-models experiments/approach1_latent_self_correction/results/base_4b/candidate_ranker_v3_multi_models.pt --baseline-with-judge
