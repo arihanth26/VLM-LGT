@@ -1,0 +1,5 @@
+# Reruns after leaving out detectors that are constant on validation (the 2B heads with the 4B base model), VLMLGT_MODEL=4b.
+analyze_escalation
+gate_ranker_v3 --with-cot-samples --tag _multi --models experiments/approach1_latent_self_correction/results/base_4b/candidate_ranker_v3_multi_models.pt --reported experiments/approach1_latent_self_correction/results/base_4b/candidate_ranker_v3_multi.json
+gate_ranker_v3 --with-reasoning-8b --drop judge --scoring-passes 1 --tag _multi_esc_cot8b_drop_judge --models experiments/approach1_latent_self_correction/results/base_4b/candidate_ranker_v3_multi_esc_cot8b_drop_judge_models.pt --reported experiments/approach1_latent_self_correction/results/base_4b/candidate_ranker_v3_multi_esc_cot8b_drop_judge.json
+analyze_best_ranker --baseline-models experiments/approach1_latent_self_correction/results/base_4b/candidate_ranker_v3_multi_models.pt --baseline-with-judge

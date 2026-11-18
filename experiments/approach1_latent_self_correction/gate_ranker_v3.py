@@ -168,6 +168,13 @@ def split_table(questions: list[dict], models: list, device, configs: tuple) -> 
     return table
 
 
+def informative(detectors: tuple, val_scores: dict) -> tuple:
+    """The detectors whose validation scores vary. A constant score (the head and probe with a base model they were not
+    trained on, which score 0.5 everywhere) has every question at or below its threshold, so it would correct every
+    question whatever the budget; it is left out."""
+    return tuple(d for d in detectors if d == "random" or np.ptp(val_scores[d]) > 0)
+
+
 def routed(table: dict, detector: str, budget: float, reference: dict, seed: int = 1) -> np.ndarray:
     """Questions sent to correction under one detector and budget, thresholds from `reference` (validation)."""
     if detector == "random":
@@ -371,10 +378,14 @@ def main() -> None:
     if not all(row["match"] for row in check.values()):
         raise SystemExit("the ungated rows do not reproduce the training run; not gating")
     val, test = tables["val"], tables["test"]
+    global DETECTORS
+    all_detectors, DETECTORS = DETECTORS, informative(DETECTORS, val["scores"])
+    if DETECTORS != all_detectors:
+        print(f"[detectors] constant on validation, left out: {sorted(set(all_detectors) - set(DETECTORS))}", flush=True)
     val_grid, test_grid = grid(val, val), grid(test, val)
     result = {"models": args.models.name, "variant": args.variant, "reproduction": check,
               "scoring_passes": args.scoring_passes, "dropped": sorted(args.drop), "latency": dict(LATENCY),
-              "budgets": list(BUDGETS), "configurations": list(configs), "detectors": list(DETECTORS),
+              "budgets": list(BUDGETS), "configurations": list(configs), "detectors": list(DETECTORS), "constant_detectors_left_out": sorted(set(all_detectors) - set(DETECTORS)),
               "greedy_val": float(val["greedy"].mean()), "greedy_test": float(test["greedy"].mean()),
               "ungated_test_accuracy": {k: float(test["corrected"][k].mean()) for k in configs},
               "headlines": headlines(val, test, val_grid), "curves": {"val": val_grid, "test": test_grid}}

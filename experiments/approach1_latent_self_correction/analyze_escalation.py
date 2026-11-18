@@ -241,12 +241,19 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=RESULTS_ROOT / "escalation.json")
     args = parser.parse_args()
     greedy = {s: load_greedy(s) for s in ("val", "test")}
+    # A detector that is constant on validation (the head and probe with a base model they were not trained on score
+    # 0.5 everywhere) has every question at or below its threshold, so it would route every question; it is left out.
+    global DETECTORS
+    constant = [d for d in DETECTORS[:-1] if len({g[d] for g in greedy["val"].values()}) == 1]
+    DETECTORS = tuple(d for d in DETECTORS if d not in constant)
+    if constant:
+        print(f"[detectors] constant on validation, left out: {constant}", flush=True)
     fixes = {s: load_fixes(s) for s in ("val", "test")}
     names = sorted(set(fixes["val"]) & set(fixes["test"]))
     if MODEL_SIZE != "2b":  # with a larger base model only the still larger models are fixes (the enlarged images are 2B answers)
         names = [f for f in names if f in BASE_PARAMS and BASE_PARAMS[f] > BASE_PARAMS[MODEL_SIZE]]
     print({s: len(g) for s, g in greedy.items()}, names, flush=True)
-    result = {"budgets": BUDGETS, "fix_cost": FIX_COST, "fixes": {f: analyze(f, greedy, fixes) for f in names}}
+    result = {"budgets": BUDGETS, "fix_cost": FIX_COST, "constant_detectors_left_out": constant, "fixes": {f: analyze(f, greedy, fixes) for f in names}}
     args.output.write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8")
     args.output.with_suffix(".md").write_text(markdown(result), encoding="utf-8")
     print(f"[done] wrote {args.output} and {args.output.with_suffix('.md')}")

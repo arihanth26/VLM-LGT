@@ -1,0 +1,2 @@
+# The 8B base-model gating rerun after leaving out constant detectors, VLMLGT_MODEL=8b.
+gate_ranker_v3 --with-cot-samples --tag _multi --models experiments/approach1_latent_self_correction/results/base_8b/candidate_ranker_v3_multi_models.pt --reported experiments/approach1_latent_self_correction/results/base_8b/candidate_ranker_v3_multi.json

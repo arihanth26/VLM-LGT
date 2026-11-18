@@ -63,3 +63,10 @@ def test_evaluate_gated_cost_and_outcome():
     e = evaluate(table, "c", "token", 0.5, table)
     assert e["final"].tolist() == [True, True, True, True]
     assert e["share"] == 0.5 and e["passes"] == (1 + 1 + 10 + 10) / 4 and e["calls"] == (1 + 1 + 5 + 5) / 4
+
+
+def test_constant_detectors_are_left_out():
+    import numpy as np
+    from experiments.approach1_latent_self_correction.gate_ranker_v3 import informative
+    scores = {"token": np.array([0.1, 0.9, 0.5]), "pre_head": np.full(3, 0.5), "after_head": np.array([0.2, 0.3, 0.2]), "judge": np.full(3, 0.5)}
+    assert informative(("token", "pre_head", "after_head", "judge", "random"), scores) == ("token", "after_head", "random")
