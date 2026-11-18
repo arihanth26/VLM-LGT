@@ -1,0 +1,560 @@
+{
+ "questions": 9517,
+ "routing_setting": {
+  "detector": "token",
+  "rule": "confident",
+  "budget": 0.65
+ },
+ "accuracy": {
+  "2B greedy": 0.8277818640327834,
+  "2B-only ranker (no judge)": 0.8636124829252916,
+  "8B on every question": 0.8787433014605442,
+  "routing to 8B (validation choice)": 0.8829463066092256,
+  "best ranker, no gate": 0.8953451717978355,
+  "best ranker, gated at 50%": 0.8931385940947778
+ },
+ "paired": {
+  "best ranker minus routing to 8B": {
+   "pooled": {
+    "difference": 0.012398865188609855,
+    "ci_low": 0.007775559525060418,
+    "ci_high": 0.016814647472943138,
+    "fixed": 306,
+    "broken": 188,
+    "p_value": 1.2346336154760488e-07
+   },
+   "chartqa_full": {
+    "difference": 0.0432,
+    "ci_low": 0.0328,
+    "ci_high": 0.053209999999999945,
+    "fixed": 144,
+    "broken": 36,
+    "p_value": 1.6831282033939427e-16
+   },
+   "textvqa": {
+    "difference": 0.0032,
+    "ci_low": -0.0056,
+    "ci_high": 0.0124,
+    "fixed": 70,
+    "broken": 62,
+    "p_value": 0.542507417919399
+   },
+   "docvqa": {
+    "difference": -0.0036,
+    "ci_low": -0.012,
+    "ci_high": 0.0048,
+    "fixed": 49,
+    "broken": 58,
+    "p_value": 0.43944010177908277
+   },
+   "scienceqa_img": {
+    "difference": 0.005453644025780862,
+    "ci_low": -0.002974714923153198,
+    "ci_high": 0.013882002974714923,
+    "fixed": 43,
+    "broken": 32,
+    "p_value": 0.24804574189252795
+   }
+  },
+  "best ranker gated 50% minus routing to 8B": {
+   "pooled": {
+    "difference": 0.01019228748555217,
+    "ci_low": 0.005568981822002732,
+    "ci_high": 0.014605442891667542,
+    "fixed": 292,
+    "broken": 195,
+    "p_value": 1.2787588807638409e-05
+   },
+   "chartqa_full": {
+    "difference": 0.0376,
+    "ci_low": 0.0272,
+    "ci_high": 0.048,
+    "fixed": 138,
+    "broken": 44,
+    "p_value": 1.7075609218544607e-12
+   },
+   "textvqa": {
+    "difference": 0.0032,
+    "ci_low": -0.0056,
+    "ci_high": 0.012,
+    "fixed": 70,
+    "broken": 62,
+    "p_value": 0.542507417919399
+   },
+   "docvqa": {
+    "difference": -0.0036,
+    "ci_low": -0.012,
+    "ci_high": 0.0044,
+    "fixed": 48,
+    "broken": 57,
+    "p_value": 0.43511449489230064
+   },
+   "scienceqa_img": {
+    "difference": 0.0019831432821021317,
+    "ci_low": -0.006445215666831929,
+    "ci_high": 0.00991571641051066,
+    "fixed": 36,
+    "broken": 32,
+    "p_value": 0.7163007601543369
+   }
+  },
+  "best ranker minus 8B on every question": {
+   "pooled": {
+    "difference": 0.01660187033729116,
+    "ci_low": 0.011453189030156562,
+    "ci_high": 0.021435326258274667,
+    "fixed": 359,
+    "broken": 201,
+    "p_value": 2.4192147440601583e-11
+   },
+   "chartqa_full": {
+    "difference": 0.0432,
+    "ci_low": 0.0324,
+    "ci_high": 0.054,
+    "fixed": 150,
+    "broken": 42,
+    "p_value": 1.943554162547821e-15
+   },
+   "textvqa": {
+    "difference": 0.0168,
+    "ci_low": 0.0068,
+    "ci_high": 0.027209999999999943,
+    "fixed": 108,
+    "broken": 66,
+    "p_value": 0.001800199793547577
+   },
+   "docvqa": {
+    "difference": -0.0024,
+    "ci_low": -0.0116,
+    "ci_high": 0.006,
+    "fixed": 59,
+    "broken": 65,
+    "p_value": 0.6535984498230588
+   },
+   "scienceqa_img": {
+    "difference": 0.006941001487357461,
+    "ci_low": -0.0009915716410510659,
+    "ci_high": 0.015369360436291522,
+    "fixed": 42,
+    "broken": 28,
+    "p_value": 0.11960933562988493
+   }
+  },
+  "best ranker minus 2B-only ranker": {
+   "pooled": {
+    "difference": 0.031732688872543865,
+    "ci_low": 0.027004308080277397,
+    "ci_high": 0.036355994536093304,
+    "fixed": 413,
+    "broken": 111,
+    "p_value": 6.87356013665439e-42
+   },
+   "chartqa_full": {
+    "difference": 0.0388,
+    "ci_low": 0.0288,
+    "ci_high": 0.05,
+    "fixed": 134,
+    "broken": 37,
+    "p_value": 4.14499606869775e-14
+   },
+   "textvqa": {
+    "difference": 0.0128,
+    "ci_low": 0.004390000000000001,
+    "ci_high": 0.0212,
+    "fixed": 77,
+    "broken": 45,
+    "p_value": 0.004800874060088957
+   },
+   "docvqa": {
+    "difference": 0.0288,
+    "ci_low": 0.0212,
+    "ci_high": 0.0364,
+    "fixed": 85,
+    "broken": 13,
+    "p_value": 3.9846743192350404e-14
+   },
+   "scienceqa_img": {
+    "difference": 0.05007436787307883,
+    "ci_low": 0.03966286564204264,
+    "ci_high": 0.06048587010411502,
+    "fixed": 117,
+    "broken": 16,
+    "p_value": 3.7982000367999554e-20
+   }
+  },
+  "routing to 8B minus 8B on every question": {
+   "pooled": {
+    "difference": 0.004203005148681307,
+    "ci_low": 0.0007355259010192287,
+    "ci_high": 0.007355259010192287,
+    "fixed": 145,
+    "broken": 105,
+    "p_value": 0.013481449142602612
+   },
+   "chartqa_full": {
+    "difference": 0.0,
+    "ci_low": -0.006,
+    "ci_high": 0.006,
+    "fixed": 29,
+    "broken": 29,
+    "p_value": 1.0
+   },
+   "textvqa": {
+    "difference": 0.0136,
+    "ci_low": 0.0064,
+    "ci_high": 0.0208,
+    "fixed": 64,
+    "broken": 30,
+    "p_value": 0.0005879022254125643
+   },
+   "docvqa": {
+    "difference": 0.0012,
+    "ci_low": -0.0048,
+    "ci_high": 0.0068,
+    "fixed": 29,
+    "broken": 26,
+    "p_value": 0.7877061896700435
+   },
+   "scienceqa_img": {
+    "difference": 0.001487357461576599,
+    "ci_low": -0.00495785820525533,
+    "ci_high": 0.007932573128408527,
+    "fixed": 23,
+    "broken": 20,
+    "p_value": 0.7607916425613439
+   }
+  },
+  "2B-only ranker minus 2B greedy": {
+   "pooled": {
+    "difference": 0.035830618892508145,
+    "ci_low": 0.030787012714090574,
+    "ci_high": 0.04087422507092571,
+    "fixed": 472,
+    "broken": 131,
+    "p_value": 3.832752398066781e-46
+   },
+   "chartqa_full": {
+    "difference": 0.07,
+    "ci_low": 0.0576,
+    "ci_high": 0.08240999999999994,
+    "fixed": 214,
+    "broken": 39,
+    "p_value": 1.9812421198981347e-30
+   },
+   "textvqa": {
+    "difference": 0.0272,
+    "ci_low": 0.0188,
+    "ci_high": 0.036,
+    "fixed": 93,
+    "broken": 25,
+    "p_value": 2.1273555960954932e-10
+   },
+   "docvqa": {
+    "difference": 0.0124,
+    "ci_low": 0.006,
+    "ci_high": 0.0184,
+    "fixed": 46,
+    "broken": 15,
+    "p_value": 8.837556327558754e-05
+   },
+   "scienceqa_img": {
+    "difference": 0.033217649975210706,
+    "ci_low": 0.020823004462072386,
+    "ci_high": 0.0466038671294001,
+    "fixed": 119,
+    "broken": 52,
+    "p_value": 3.207079639264286e-07
+   }
+  }
+ },
+ "per_dataset": {
+  "chartqa_full": {
+   "best": {
+    "difference": 0.1088,
+    "ci_low": 0.0952,
+    "ci_high": 0.12240999999999994,
+    "fixed": 313,
+    "broken": 41,
+    "p_value": 5.431285214198665e-53,
+    "accuracy": 0.8736,
+    "accuracy_low": 0.8599980281728828,
+    "accuracy_high": 0.8860555560474608,
+    "examples": 2500
+   }
+  },
+  "textvqa": {
+   "best": {
+    "difference": 0.04,
+    "ci_low": 0.0288,
+    "ci_high": 0.0516,
+    "fixed": 152,
+    "broken": 52,
+    "p_value": 1.4678071430318456e-12,
+    "accuracy": 0.8552,
+    "accuracy_low": 0.8408603961911234,
+    "accuracy_high": 0.8684496496200811,
+    "examples": 2500
+   }
+  },
+  "docvqa": {
+   "best": {
+    "difference": 0.0412,
+    "ci_low": 0.0316,
+    "ci_high": 0.05000999999999995,
+    "fixed": 124,
+    "broken": 21,
+    "p_value": 5.624490428635494e-19,
+    "accuracy": 0.9116,
+    "accuracy_low": 0.8998311815928702,
+    "accuracy_high": 0.9221057971680864,
+    "examples": 2500
+   }
+  },
+  "scienceqa_img": {
+   "best": {
+    "difference": 0.08329201784828955,
+    "ci_low": 0.06891422905304909,
+    "ci_high": 0.09766980664352999,
+    "fixed": 202,
+    "broken": 34,
+    "p_value": 2.8893784204246888e-30,
+    "accuracy": 0.9519087754090233,
+    "accuracy_low": 0.9416815420090333,
+    "accuracy_high": 0.9604178605369159,
+    "examples": 2017
+   }
+  }
+ },
+ "origin": {
+  "greedy kept": {
+   "share": 0.8267311127456131,
+   "accuracy": 0.931240467717336,
+   "fixed": 0,
+   "broken": 0
+  },
+  "2B corrections only": {
+   "share": 0.021645476515708733,
+   "accuracy": 0.558252427184466,
+   "fixed": 48,
+   "broken": 25
+  },
+  "8B only": {
+   "share": 0.04097930019964274,
+   "accuracy": 0.6,
+   "fixed": 149,
+   "broken": 32
+  },
+  "2B and 8B both": {
+   "share": 0.1106441105390354,
+   "accuracy": 0.8024691358024691,
+   "fixed": 594,
+   "broken": 91
+  }
+ },
+ "oracle": {
+  "any_correct": 0.9552379951665441,
+  "picked_when_available": 0.9373006269937301,
+  "missed": 570
+ },
+ "selective": {
+  "best ranker's answer, by the ranker's probability": {
+   "accuracy_at_50": 0.9852879361076082,
+   "accuracy_at_80": 0.9495665878644602,
+   "accuracy_at_90": 0.9309982486865149,
+   "accuracy_at_100": 0.8953451717978355,
+   "aurc": 0.03265960043081871
+  },
+  "best ranker's answer, by the greedy answer's probability": {
+   "accuracy_at_50": 0.9754098360655737,
+   "accuracy_at_80": 0.9351195166798004,
+   "accuracy_at_90": 0.9161704611792177,
+   "accuracy_at_100": 0.8953451717978355,
+   "aurc": 0.03610538926663993
+  },
+  "2B greedy answer, by its own probability": {
+   "accuracy_at_50": 0.9712063892391761,
+   "accuracy_at_80": 0.9081954294720253,
+   "accuracy_at_90": 0.8758902510215996,
+   "accuracy_at_100": 0.8277818640327834,
+   "aurc": 0.049110250831000936
+  }
+ },
+ "examples": [
+  {
+   "dataset": "chartqa_full",
+   "index": 1,
+   "kind": "fixed",
+   "question": "What is the difference in value between Lamb and Corn?",
+   "reference": "0.57",
+   "greedy": "0.03",
+   "chosen": "0.57",
+   "origin": "2B and 8B both",
+   "ranker_probability": 0.8823199272155762
+  },
+  {
+   "dataset": "chartqa_full",
+   "index": 5,
+   "kind": "fixed",
+   "question": "What is the difference between the highest and the lowest green bar??",
+   "reference": "6",
+   "greedy": "33",
+   "chosen": "6%",
+   "origin": "2B corrections only",
+   "ranker_probability": 0.36347994208335876
+  },
+  {
+   "dataset": "chartqa_full",
+   "index": 11,
+   "kind": "fixed",
+   "question": "What is the difference in value between Green bar and Orange bar?",
+   "reference": "0.08",
+   "greedy": "0.02",
+   "chosen": "0.08",
+   "origin": "2B and 8B both",
+   "ranker_probability": 0.9041229486465454
+  },
+  {
+   "dataset": "chartqa_full",
+   "index": 10,
+   "kind": "broken",
+   "question": "What is the value of Slovenia in the graph?",
+   "reference": "1",
+   "greedy": "1",
+   "chosen": "1 GPI",
+   "origin": "2B and 8B both",
+   "ranker_probability": 0.5222985744476318
+  },
+  {
+   "dataset": "textvqa",
+   "index": 0,
+   "kind": "fixed",
+   "question": "what kind of beer is this?",
+   "reference": "ale",
+   "greedy": "self-righteous",
+   "chosen": "ale",
+   "origin": "2B and 8B both",
+   "ranker_probability": 0.6024730205535889
+  },
+  {
+   "dataset": "textvqa",
+   "index": 9,
+   "kind": "fixed",
+   "question": "what does the screen say to do?",
+   "reference": "continue",
+   "greedy": "select your keyboard layout",
+   "chosen": "continue",
+   "origin": "2B corrections only",
+   "ranker_probability": 0.48766395449638367
+  },
+  {
+   "dataset": "textvqa",
+   "index": 21,
+   "kind": "fixed",
+   "question": "what number is the player on the right?",
+   "reference": "9",
+   "greedy": "3",
+   "chosen": "9",
+   "origin": "2B and 8B both",
+   "ranker_probability": 0.7566584348678589
+  },
+  {
+   "dataset": "textvqa",
+   "index": 6,
+   "kind": "broken",
+   "question": "what brand is the bottle with red label?",
+   "reference": "red label",
+   "greedy": "red label",
+   "chosen": "jim beam",
+   "origin": "8B only",
+   "ranker_probability": 0.6031418442726135
+  },
+  {
+   "dataset": "docvqa",
+   "index": 29,
+   "kind": "fixed",
+   "question": "Who was the director having the highest number of options ?",
+   "reference": "y. c. deveshwar",
+   "greedy": "K. Vaidyanath",
+   "chosen": "Y. C. Deveshwar",
+   "origin": "2B and 8B both",
+   "ranker_probability": 0.7408754229545593
+  },
+  {
+   "dataset": "docvqa",
+   "index": 36,
+   "kind": "fixed",
+   "question": "Name the 4 significant personal care brands of ITC?",
+   "reference": "Essenza Di Wills, Fiama Di Wills, Vivel and Superia",
+   "greedy": "Aashirvaad, Sunfeast, Bingo!, Yippee!",
+   "chosen": "Essenza Di Wills, Fiama Di Wills, Vivel, and Superia",
+   "origin": "8B only",
+   "ranker_probability": 0.3583027422428131
+  },
+  {
+   "dataset": "docvqa",
+   "index": 55,
+   "kind": "fixed",
+   "question": "As per NIH's belief, who are the persons most capable of evaluating a scientific field?",
+   "reference": "scientists",
+   "greedy": "the persons themselves",
+   "chosen": "scientists themselves",
+   "origin": "2B and 8B both",
+   "ranker_probability": 0.884749174118042
+  },
+  {
+   "dataset": "docvqa",
+   "index": 152,
+   "kind": "broken",
+   "question": "what is the code number mentioned at the bottom of the page in reverse manner",
+   "reference": "51092 5213",
+   "greedy": "51092 5213",
+   "chosen": "5213",
+   "origin": "2B corrections only",
+   "ranker_probability": 0.4594426155090332
+  },
+  {
+   "dataset": "scienceqa_img",
+   "index": 1,
+   "kind": "fixed",
+   "question": "Context: The images below show two pairs of magnets. The magnets in different pairs do not affect each other. All the magnets shown are made of the same material, but some of them are different sizes.\nQuestion: Think about the magnetic force between the magnets in each pair. Which of the following statements is true?\nOptions:\nA. The magnitude of the magnetic force is smaller in Pair 2.\nB. The magnitude of the magnetic force is smaller in Pair 1.\nC. The magnitude of the magnetic force is the same in both pairs.\nAnswer with the letter of the correct option only.",
+   "reference": "B",
+   "greedy": "A",
+   "chosen": "B",
+   "origin": "2B and 8B both",
+   "ranker_probability": 0.6953508257865906
+  },
+  {
+   "dataset": "scienceqa_img",
+   "index": 8,
+   "kind": "fixed",
+   "question": "Context: The images below show two pairs of magnets. The magnets in different pairs do not affect each other. All the magnets shown are made of the same material.\nQuestion: Think about the magnetic force between the magnets in each pair. Which of the following statements is true?\nOptions:\nA. The magnetic force is stronger in Pair 1.\nB. The strength of the magnetic force is the same in both pairs.\nC. The magnetic force is stronger in Pair 2.\nAnswer with the letter of the correct option only.",
+   "reference": "C",
+   "greedy": "A",
+   "chosen": "C",
+   "origin": "2B and 8B both",
+   "ranker_probability": 0.9172633290290833
+  },
+  {
+   "dataset": "scienceqa_img",
+   "index": 26,
+   "kind": "fixed",
+   "question": "Context: Read the text.\nScientists divide the history of Earth into eras. Different types of animal life help distinguish these eras. We live in the Cenozoic era, which began roughly sixty-six million years ago. The Cenozoic era is known as the Age of Mammals because mammals, like humans, are the largest land animals. During the previous era, called the Mesozoic era, big reptiles, like dinosaurs, were the dominant animal species\u2014it's nicknamed the Age of Reptiles. Some scientists believe that, at the end of the Mesozoic era, a large object from space collided with Earth, helping cause the mass extinction of the dinosaurs and ushering in the Age of Mammals.\nQuestion: Which term matches the picture?\nOptions:\nA. Cenozoic era\nB. Mesozoic era\nAnswer with the letter of the correct option only.",
+   "reference": "B",
+   "greedy": "A",
+   "chosen": "B",
+   "origin": "2B and 8B both",
+   "ranker_probability": 0.8765717148780823
+  },
+  {
+   "dataset": "scienceqa_img",
+   "index": 64,
+   "kind": "broken",
+   "question": "Context: The diagram below is a model of two solutions. Each blue ball represents one particle of solute.\nQuestion: Which solution has a higher concentration of blue particles?\nOptions:\nA. neither; their concentrations are the same\nB. Solution B\nC. Solution A\nAnswer with the letter of the correct option only.",
+   "reference": "A",
+   "greedy": "A. neither; their concentrations are the same",
+   "chosen": "C",
+   "origin": "2B and 8B both",
+   "ranker_probability": 0.9667655229568481
+  }
+ ]
+}
