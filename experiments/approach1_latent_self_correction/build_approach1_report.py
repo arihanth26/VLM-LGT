@@ -692,19 +692,25 @@ probabilities = score(head, spec, temperatures, prompt_state, answer_state)   # 
     return fill(text, winners=total_files, configs=total_configs, seq=seq_files, table=table(["Folder", "Trained on", "Configurations", "Files", "Largest gap to sweep mean"], rows, left_cols=(0, 1)))
 
 
+def published(name: str) -> Path:
+    """A correction file from its published copy (04_sweep_data/correction_<name>) when there is one, else the working folder."""
+    copy = SWEEP / f"correction_{name}"
+    return copy if copy.exists() else RESULTS / name
+
+
 def correction_tables() -> dict:
-    """Load the correction experiment summaries and per-example records."""
+    """Load the correction experiment summaries and per-example records (published copies first, so a fresh clone builds)."""
     names = {
         "retry": "mixture_test_2b_prompted_retry_limit100.summary.json",
         "rerank": "mixture_test_2b_prompted_retry_reranked_limit100.summary.json",
         "best": "mixture_test_2b_best_of_five_limit100.summary.json",
         "deep": "mixture_test_2b_best_of_five_deep_limit100.summary.json",
     }
-    data = {key: load_json(RESULTS / name) for key, name in names.items() if (RESULTS / name).exists()}
-    deep_records = RESULTS / "mixture_test_2b_best_of_five_deep_limit100.jsonl"
+    data = {key: load_json(published(name)) for key, name in names.items() if published(name).exists()}
+    deep_records = published("mixture_test_2b_best_of_five_deep_limit100.jsonl")
     if deep_records.exists():
         data["deep_records"] = [json.loads(line) for line in deep_records.read_text(encoding="utf-8").splitlines() if line.strip()]
-    records = RESULTS / "mixture_test_2b_best_of_five_limit100.jsonl"
+    records = published("mixture_test_2b_best_of_five_limit100.jsonl")
     if records.exists():
         data["records"] = [json.loads(line) for line in records.read_text(encoding="utf-8").splitlines() if line.strip()]
     return data

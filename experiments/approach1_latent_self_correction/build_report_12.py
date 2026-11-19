@@ -5,7 +5,7 @@
 # One self-contained HTML file in the style of reports 10 and 11. Every number is read from a result
 # file; nothing is typed in by hand.
 #
-# Reads (results/):
+# Reads results/approach1/04_sweep_data/ (the published copies, so a fresh clone builds the report):
 #   candidate_ranker_v3.json            ranker v3 (train_ranker_v3.py)
 #   candidate_ranker_v3_ablation.json   the same with the *_nods variants (no dataset input)
 #   candidate_ranker_v3_multi.json      the same with sampled reasoning (--with-cot-samples)
@@ -67,7 +67,7 @@ def label(key: str) -> str:
 
 def load(name: str) -> dict:
     """One result file from results/."""
-    return json.loads((RESULTS / name).read_text())
+    return json.loads((REPO / "results" / "approach1" / "04_sweep_data" / name).read_text())
 
 
 def cost_chart(gating: dict, keys: list[tuple[str, str, str]]) -> str:

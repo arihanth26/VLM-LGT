@@ -47,7 +47,10 @@ are always made on validation; test is read once.
 | 12 | Training-free baselines on the same candidates | `E.compute_baselines` | `compute_baselines.sbatch` | `results/baselines.json` | 13 |
 | 13 | Transfer to unseen datasets (frozen pipeline) | `E.evaluate_unseen` | `run_unseen_pipeline.sh` | `results/unseen.json` | 13 |
 | 14 | Latency of every component on one H100 | `E.measure_latency` | `measure_latency.sbatch` | `results/latency.json` | 13 |
-| 15 | Another base model: the whole pipeline with Qwen3-VL-4B (`VLMLGT_MODEL=4b`) | stages 1, 3–6, 9, 10 | `run_base_model_pipeline.sh` | `results/base_4b/` | 13 |
+| 15 | Another base model: the whole pipeline with Qwen3-VL-4B or 8B (`VLMLGT_MODEL=4b` / `8b`) | stages 1, 3–6, 9, 10 | `run_base_model_pipeline.sh` | `results/base_4b/` | 13 |
+| 15b | The 8B answers as candidates and the routing study with another base model | `E.escalation_candidates`, `E.analyze_escalation` | `run_base_model_escalation_pipeline.sh` | `results/base_4b/` | 13 |
+| 16 | Analysis of the best ranker: paired comparisons, answer origins, oracle gap, abstention, examples | `E.analyze_best_ranker` | `run_batch.sbatch` (`best_ranker_analysis.txt`) | `results/best_ranker_analysis.json` | 13 |
+| 17 | Fixes from other model families: InternVL3-8B, Idefics3-8B (routing, ranker candidates `correction_v6`, `--with-other-families`) | `E.escalation`, `E.escalation_candidates`, `E.train_ranker_v3` | `run_families_pipeline.sh` | `results/escalation/model_*`, `results/correction_v6/` | in progress |
 
 ## Pipelines (one command submits a whole dependency chain)
 
@@ -82,3 +85,7 @@ are always made on validation; test is read once.
 - **Tests.** `python -m tests.run_tests tests.<module> ...` runs a test module without pytest (the cluster
   environment has none); the gating, ranker, escalation, baseline and transfer tests run on a GPU node before every
   analysis job.
+- **Constant detectors.** With a base model the 2B-trained heads cannot read, the head and probe score 0.5 everywhere;
+  a budget threshold on a constant score corrects every question, so `E.gate_ranker_v3` and `E.analyze_escalation` leave
+  out any detector that is constant on validation (and record which).
+- **Batches.** `slurm/run_batch.sbatch` runs every line of a file in `slurm/batches/` in one job (see `slurm/README.md`).

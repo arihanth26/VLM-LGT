@@ -12,6 +12,7 @@ import json
 from pathlib import Path
 
 RESULTS_DIR = Path(__file__).parent / "results"
+SWEEP = Path(__file__).parents[2] / "results" / "approach1" / "04_sweep_data"  # published copies, named correction_<file>
 DEFAULT_OUTPUT = RESULTS_DIR / "correction_experiments_report.html"
 DEFAULT_TAG = "limit100"
 DATASETS = ("chartqa_full", "textvqa", "docvqa", "scienceqa_img")
@@ -139,16 +140,17 @@ def detection_table(summary: dict) -> str:
 
 def build_report(results_dir: Path, output: Path, tag: str = DEFAULT_TAG) -> None:
     """Load completed experiments and write the combined correction report."""
+    found = lambda name: results_dir / name if (results_dir / name).exists() else SWEEP / f"correction_{name}"  # a fresh clone has only the published copies
     first_study = tag == "limit100"
-    reranked = load_json(results_dir / f"mixture_test_2b_prompted_retry_{'reranked_' if first_study else ''}{tag}.summary.json")
+    reranked = load_json(found(f"mixture_test_2b_prompted_retry_{'reranked_' if first_study else ''}{tag}.summary.json"))
     # The first study ran the plain retry separately; later runs record every retry policy in one pass.
-    retry = load_json(results_dir / f"mixture_test_2b_prompted_retry_{tag}.summary.json") if first_study else reranked
-    candidates = load_json(results_dir / f"mixture_test_2b_best_of_five_{tag}.summary.json")
-    deep_path = results_dir / f"mixture_test_2b_best_of_five_deep_{tag}.summary.json"
+    retry = load_json(found(f"mixture_test_2b_prompted_retry_{tag}.summary.json")) if first_study else reranked
+    candidates = load_json(found(f"mixture_test_2b_best_of_five_{tag}.summary.json"))
+    deep_path = found(f"mixture_test_2b_best_of_five_deep_{tag}.summary.json")
     deep = load_json(deep_path) if deep_path.exists() else None
     candidate_records = [
         json.loads(line)
-        for line in (results_dir / f"mixture_test_2b_best_of_five_{tag}.jsonl").read_text(encoding="utf-8").splitlines()
+        for line in (found(f"mixture_test_2b_best_of_five_{tag}.jsonl")).read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
     examples = candidates["policies"]["greedy"]["pooled"]["examples"]
