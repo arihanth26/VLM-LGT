@@ -131,10 +131,15 @@ committed data alone (checked); regenerating candidates needs GPUs and the Qwen3
 
 ## Contributors
 
-| Component | Contributor |
-|---|---|
-| Repository scaffold, Qwen3-VL loading and inference, dataset configs, Approach 2 scaffold | Arihanth Jayavijayan |
-| Full-image baseline, token-confidence evaluation, correctness heads, the original ChartQA study, and the first confidence-guided correction experiments | Aryan Roy |
-| Dataset extension, unified head, mixture and new loss, sequential training, full-split correction, candidate search, rankers v1–v2, gating, escalation and routing, rankers with larger-model candidates, baselines, robustness, transfer, base-model and other-family studies, latency | Arihanth Jayavijayan |
-| Ranker v3 (source agreement), its dataset-input ablation, sampled reasoning, accuracy against cost | Mehdi Heydari |
-| Base-model scaling study: the full pipeline with Qwen3-VL-8B as the frozen base model (candidates, ranker, gating) | Malhar Jadhav |
+- **Aryan Roy:** implemented the full-image baseline, token-confidence evaluation, correctness heads, the original
+  ChartQA study, and the first confidence-guided correction experiments.
+- **Arihanth Jayavijayan:** implemented the repository setup and Qwen3-VL inference, four-dataset detection,
+  full-scale correction with candidate search and rankers v1–v2, gating and the accuracy–cost frontier, the
+  robustness, transfer and latency experiments, and the Slurm pipelines.
+- **Malhar Jadhav:** implemented routing to 4B/8B and the 8B-candidate rankers, and ran the full pipeline
+  (candidates, ranker, gating) with a Qwen3-VL-8B base model to test whether correction still pays off on a stronger
+  model: the gain is only +0.41 at 8B (88.28%), shrinking as the base model grows (2B +3.60, 4B +1.71, 8B +0.41);
+  report and README.
+- **Mehdi Heydari:** ranker v3 with source-agreement inputs (+3.09 over greedy with no new generation), the base of
+  every later ranker; ablation of the dataset input; sampled reasoning as candidates (86.38%, +3.60); the first
+  accuracy-against-cost analysis. Report 12 is built on this work.
