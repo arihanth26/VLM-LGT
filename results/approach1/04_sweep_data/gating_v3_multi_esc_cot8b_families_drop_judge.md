@@ -73,33 +73,33 @@ Seconds: estimated wall-clock seconds per question on one H100, from the measure
 | best detector at a 30% budget | T1_k0_ground_cot_multi_esc8b_cot8b | after_head | 30% / 28.2% | 6.94 | 5.23 | 2.10 | 88.73% | +5.95 (+5.37 to +6.48) | +677 / -111 | +3.90 (+3.39 to +4.38) |
 | best detector at a 50% budget | T1_k0_ground_cot_multi_esc8b_cot8b | token | 50% / 49.7% | 9.94 | 8.46 | 3.52 | 89.32% | +6.55 (+5.92 to +7.12) | +750 / -127 | +3.11 (+2.65 to +3.57) |
 | smallest budget keeping 90% of the full validation gain | T1_k0_ground_cot_multi_esc8b_cot8b | token | 40% / 39.8% | 8.26 | 6.98 | 2.85 | 89.05% | +6.27 (+5.69 to +6.84) | +709 / -112 | +3.44 (+2.95 to +3.93) |
-| correct every question (no gate) | T1_k0_families | token | 100% / 100.0% | 11.02 | 9.00 | 0.24 | 88.65% | +5.87 (+5.23 to +6.48) | +766 / -207 | +0.00 (+0.00 to +0.00) |
-| best detector at a 20% budget | T1_k0_families | after_head | 20% / 19.2% | 3.84 | 2.54 | 0.20 | 86.90% | +4.12 (+3.64 to +4.63) | +508 / -116 | +3.08 (+2.62 to +3.55) |
-| best detector at a 30% budget | T1_k0_families | after_head | 30% / 28.2% | 4.66 | 3.25 | 0.20 | 87.60% | +4.82 (+4.28 to +5.37) | +611 / -152 | +3.22 (+2.73 to +3.70) |
-| best detector at a 50% budget | T1_k0_families | after_head | 50% / 47.7% | 6.42 | 4.81 | 0.22 | 88.35% | +5.57 (+4.94 to +6.17) | +719 / -189 | +2.70 (+2.25 to +3.14) |
-| smallest budget keeping 90% of the full validation gain | T1_k0_families | after_head | 45% / 43.2% | 6.02 | 4.45 | 0.21 | 88.28% | +5.51 (+4.90 to +6.10) | +706 / -182 | +2.93 (+2.46 to +3.39) |
-| correct every question (no gate) | T1_k0_esc8b_families | token | 100% / 100.0% | 15.16 | 13.00 | 0.40 | 89.78% | +7.00 (+6.34 to +7.63) | +846 / -180 | +0.00 (+0.00 to +0.00) |
-| best detector at a 20% budget | T1_k0_esc8b_families | after_head | 20% / 19.2% | 4.68 | 3.30 | 0.23 | 87.56% | +4.78 (+4.27 to +5.31) | +557 / -102 | +3.47 (+2.98 to +3.95) |
-| best detector at a 30% budget | T1_k0_esc8b_families | after_head | 30% / 28.2% | 5.88 | 4.38 | 0.25 | 88.39% | +5.61 (+5.04 to +6.17) | +667 / -133 | +3.59 (+3.11 to +4.08) |
-| best detector at a 50% budget | T1_k0_esc8b_families | token | 50% / 49.7% | 8.25 | 6.97 | 0.27 | 89.48% | +6.70 (+6.07 to +7.33) | +797 / -159 | +3.18 (+2.72 to +3.66) |
-| smallest budget keeping 90% of the full validation gain | T1_k0_esc8b_families | token | 45% / 45.1% | 7.60 | 6.41 | 0.26 | 89.31% | +6.54 (+5.92 to +7.15) | +777 / -155 | +3.35 (+2.88 to +3.84) |
-| correct every question (no gate) | T1_k0_ground_cot_multi_families | token | 100% / 100.0% | 18.91 | 16.00 | 4.82 | 89.09% | +6.32 (+5.64 to +6.96) | +801 / -200 | +0.00 (+0.00 to +0.00) |
-| best detector at a 20% budget | T1_k0_ground_cot_multi_families | after_head | 20% / 19.2% | 5.56 | 3.88 | 1.09 | 87.33% | +4.55 (+4.06 to +5.06) | +544 / -111 | +3.40 (+2.93 to +3.92) |
-| best detector at a 30% budget | T1_k0_ground_cot_multi_families | after_head | 30% / 28.2% | 7.12 | 5.23 | 1.51 | 88.03% | +5.25 (+4.70 to +5.80) | +650 / -150 | +3.52 (+3.05 to +4.02) |
-| best detector at a 50% budget | T1_k0_ground_cot_multi_families | after_head | 50% / 47.7% | 10.41 | 8.15 | 2.41 | 88.81% | +6.03 (+5.38 to +6.65) | +757 / -183 | +2.97 (+2.52 to +3.44) |
-| smallest budget keeping 90% of the full validation gain | T1_k0_ground_cot_multi_families | after_head | 45% / 43.2% | 9.67 | 7.48 | 2.21 | 88.76% | +5.98 (+5.36 to +6.59) | +746 / -177 | +3.25 (+2.78 to +3.72) |
-| correct every question (no gate) | T1_k0_ground_cot_multi_esc8b_cot8b_families | token | 100% / 100.0% | 27.14 | 24.00 | 6.98 | 89.91% | +7.13 (+6.48 to +7.78) | +863 / -184 | +0.00 (+0.00 to +0.00) |
-| best detector at a 20% budget | T1_k0_ground_cot_multi_esc8b_cot8b_families | after_head | 20% / 19.2% | 7.20 | 5.42 | 1.51 | 87.64% | +4.86 (+4.34 to +5.37) | +572 / -109 | +3.48 (+3.01 to +3.97) |
-| best detector at a 30% budget | T1_k0_ground_cot_multi_esc8b_cot8b_families | after_head | 30% / 28.2% | 9.50 | 7.48 | 2.12 | 88.56% | +5.78 (+5.20 to +6.33) | +688 / -138 | +3.72 (+3.22 to +4.21) |
-| best detector at a 50% budget | T1_k0_ground_cot_multi_esc8b_cot8b_families | token | 50% / 49.7% | 14.44 | 12.43 | 3.55 | 89.69% | +6.91 (+6.26 to +7.53) | +818 / -160 | +3.25 (+2.76 to +3.73) |
-| smallest budget keeping 90% of the full validation gain | T1_k0_ground_cot_multi_esc8b_cot8b_families | after_head | 45% / 43.2% | 13.28 | 10.93 | 3.14 | 89.48% | +6.70 (+6.06 to +7.30) | +796 / -158 | +3.44 (+2.96 to +3.90) |
+| correct every question (no gate) | T1_k0_families | token | 100% / 100.0% | 11.02 | 9.00 | 0.71 | 88.65% | +5.87 (+5.23 to +6.48) | +766 / -207 | +0.00 (+0.00 to +0.00) |
+| best detector at a 20% budget | T1_k0_families | after_head | 20% / 19.2% | 3.84 | 2.54 | 0.29 | 86.90% | +4.12 (+3.64 to +4.63) | +508 / -116 | +3.08 (+2.62 to +3.55) |
+| best detector at a 30% budget | T1_k0_families | after_head | 30% / 28.2% | 4.66 | 3.25 | 0.34 | 87.60% | +4.82 (+4.28 to +5.37) | +611 / -152 | +3.22 (+2.73 to +3.70) |
+| best detector at a 50% budget | T1_k0_families | after_head | 50% / 47.7% | 6.42 | 4.81 | 0.44 | 88.35% | +5.57 (+4.94 to +6.17) | +719 / -189 | +2.70 (+2.25 to +3.14) |
+| smallest budget keeping 90% of the full validation gain | T1_k0_families | after_head | 45% / 43.2% | 6.02 | 4.45 | 0.42 | 88.28% | +5.51 (+4.90 to +6.10) | +706 / -182 | +2.93 (+2.46 to +3.39) |
+| correct every question (no gate) | T1_k0_esc8b_families | token | 100% / 100.0% | 15.16 | 13.00 | 0.88 | 89.78% | +7.00 (+6.34 to +7.63) | +846 / -180 | +0.00 (+0.00 to +0.00) |
+| best detector at a 20% budget | T1_k0_esc8b_families | after_head | 20% / 19.2% | 4.68 | 3.30 | 0.32 | 87.56% | +4.78 (+4.27 to +5.31) | +557 / -102 | +3.47 (+2.98 to +3.95) |
+| best detector at a 30% budget | T1_k0_esc8b_families | after_head | 30% / 28.2% | 5.88 | 4.38 | 0.39 | 88.39% | +5.61 (+5.04 to +6.17) | +667 / -133 | +3.59 (+3.11 to +4.08) |
+| best detector at a 50% budget | T1_k0_esc8b_families | token | 50% / 49.7% | 8.25 | 6.97 | 0.51 | 89.48% | +6.70 (+6.07 to +7.33) | +797 / -159 | +3.18 (+2.72 to +3.66) |
+| smallest budget keeping 90% of the full validation gain | T1_k0_esc8b_families | token | 45% / 45.1% | 7.60 | 6.41 | 0.47 | 89.31% | +6.54 (+5.92 to +7.15) | +777 / -155 | +3.35 (+2.88 to +3.84) |
+| correct every question (no gate) | T1_k0_ground_cot_multi_families | token | 100% / 100.0% | 18.91 | 16.00 | 5.30 | 89.09% | +6.32 (+5.64 to +6.96) | +801 / -200 | +0.00 (+0.00 to +0.00) |
+| best detector at a 20% budget | T1_k0_ground_cot_multi_families | after_head | 20% / 19.2% | 5.56 | 3.88 | 1.18 | 87.33% | +4.55 (+4.06 to +5.06) | +544 / -111 | +3.40 (+2.93 to +3.92) |
+| best detector at a 30% budget | T1_k0_ground_cot_multi_families | after_head | 30% / 28.2% | 7.12 | 5.23 | 1.64 | 88.03% | +5.25 (+4.70 to +5.80) | +650 / -150 | +3.52 (+3.05 to +4.02) |
+| best detector at a 50% budget | T1_k0_ground_cot_multi_families | after_head | 50% / 47.7% | 10.41 | 8.15 | 2.64 | 88.81% | +6.03 (+5.38 to +6.65) | +757 / -183 | +2.97 (+2.52 to +3.44) |
+| smallest budget keeping 90% of the full validation gain | T1_k0_ground_cot_multi_families | after_head | 45% / 43.2% | 9.67 | 7.48 | 2.41 | 88.76% | +5.98 (+5.36 to +6.59) | +746 / -177 | +3.25 (+2.78 to +3.72) |
+| correct every question (no gate) | T1_k0_ground_cot_multi_esc8b_cot8b_families | token | 100% / 100.0% | 27.14 | 24.00 | 7.45 | 89.91% | +7.13 (+6.48 to +7.78) | +863 / -184 | +0.00 (+0.00 to +0.00) |
+| best detector at a 20% budget | T1_k0_ground_cot_multi_esc8b_cot8b_families | after_head | 20% / 19.2% | 7.20 | 5.42 | 1.60 | 87.64% | +4.86 (+4.34 to +5.37) | +572 / -109 | +3.48 (+3.01 to +3.97) |
+| best detector at a 30% budget | T1_k0_ground_cot_multi_esc8b_cot8b_families | after_head | 30% / 28.2% | 9.50 | 7.48 | 2.25 | 88.56% | +5.78 (+5.20 to +6.33) | +688 / -138 | +3.72 (+3.22 to +4.21) |
+| best detector at a 50% budget | T1_k0_ground_cot_multi_esc8b_cot8b_families | token | 50% / 49.7% | 14.44 | 12.43 | 3.79 | 89.69% | +6.91 (+6.26 to +7.53) | +818 / -160 | +3.25 (+2.76 to +3.73) |
+| smallest budget keeping 90% of the full validation gain | T1_k0_ground_cot_multi_esc8b_cot8b_families | after_head | 45% / 43.2% | 13.28 | 10.93 | 3.34 | 89.48% | +6.70 (+6.06 to +7.30) | +796 / -158 | +3.44 (+2.96 to +3.90) |
 | best under 2 passes per question (any configuration) | T1_k0_cot8b | token | 15% / 14.4% | 1.83 | 1.58 | 0.42 | 86.03% | +3.25 (+2.81 to +3.71) | +392 / -83 | +2.43 (+2.00 to +2.88) |
 | best under 3 passes per question (any configuration) | T1_k0_cot8b | token | 35% / 34.9% | 2.97 | 2.39 | 0.84 | 87.73% | +4.95 (+4.32 to +5.51) | +653 / -182 | +2.96 (+2.44 to +3.46) |
 | best under 5 passes per question (any configuration) | T1_k0_cot8b | token | 65% / 64.6% | 4.54 | 3.58 | 1.46 | 88.27% | +5.50 (+4.83 to +6.16) | +774 / -251 | +1.75 (+1.36 to +2.16) |
-| best under 0.3 s per question on one H100 (any configuration) | T1_k0_esc8b_families | token | 55% / 54.7% | 8.95 | 7.57 | 0.29 | 89.69% | +6.91 (+6.28 to +7.54) | +820 / -162 | +3.03 (+2.58 to +3.48) |
-| best under 0.5 s per question on one H100 (any configuration) | T1_k0_esc8b_families | after_head | 90% / 89.7% | 13.82 | 11.76 | 0.38 | 89.79% | +7.01 (+6.35 to +7.64) | +846 / -179 | +0.83 (+0.60 to +1.04) |
-| best under 1 s per question on one H100 (any configuration) | T1_k0_esc8b_families | after_head | 90% / 89.7% | 13.82 | 11.76 | 0.38 | 89.79% | +7.01 (+6.35 to +7.64) | +846 / -179 | +0.83 (+0.60 to +1.04) |
-| best under 2 s per question on one H100 (any configuration) | T1_k0_esc8b_families | after_head | 90% / 89.7% | 13.82 | 11.76 | 0.38 | 89.79% | +7.01 (+6.35 to +7.64) | +846 / -179 | +0.83 (+0.60 to +1.04) |
+| best under 0.3 s per question on one H100 (any configuration) | T1_k0_esc8b | token | 60% / 59.5% | 4.20 | 3.38 | 0.26 | 88.32% | +5.54 (+4.86 to +6.14) | +739 / -212 | +2.14 (+1.71 to +2.57) |
+| best under 0.5 s per question on one H100 (any configuration) | T1_k0_esc8b_families | token | 45% / 45.1% | 7.60 | 6.41 | 0.47 | 89.31% | +6.54 (+5.92 to +7.15) | +777 / -155 | +3.35 (+2.88 to +3.84) |
+| best under 1 s per question on one H100 (any configuration) | T1_k0_esc8b_families | after_head | 90% / 89.7% | 13.82 | 11.76 | 0.81 | 89.79% | +7.01 (+6.35 to +7.64) | +846 / -179 | +0.83 (+0.60 to +1.04) |
+| best under 2 s per question on one H100 (any configuration) | T1_k0_esc8b_families | after_head | 90% / 89.7% | 13.82 | 11.76 | 0.81 | 89.79% | +7.01 (+6.35 to +7.64) | +846 / -179 | +0.83 (+0.60 to +1.04) |
 
 Per dataset (gain over greedy on test):
 
@@ -193,7 +193,7 @@ Per dataset (gain over greedy on test):
 | best under 2 passes per question (any configuration) | T1_k0_cot8b | +6.60 (+5.52 to +7.72) | +1.64 (+0.84 to +2.44) | +1.32 (+0.80 to +1.84) | +3.47 (+2.53 to +4.51) |
 | best under 3 passes per question (any configuration) | T1_k0_cot8b | +9.48 (+8.16 to +10.84) | +1.84 (+0.84 to +2.84) | +2.52 (+1.60 to +3.44) | +6.20 (+5.01 to +7.54) |
 | best under 5 passes per question (any configuration) | T1_k0_cot8b | +10.24 (+8.80 to +11.68) | +1.16 (+0.00 to +2.32) | +2.96 (+1.96 to +3.96) | +8.13 (+6.69 to +9.72) |
-| best under 0.3 s per question on one H100 (any configuration) | T1_k0_esc8b_families | +8.00 (+6.64 to +9.32) | +5.24 (+4.00 to +6.44) | +4.56 (+3.52 to +5.60) | +10.56 (+9.17 to +12.00) |
-| best under 0.5 s per question on one H100 (any configuration) | T1_k0_esc8b_families | +8.32 (+6.92 to +9.68) | +5.20 (+3.92 to +6.36) | +4.44 (+3.36 to +5.48) | +10.81 (+9.42 to +12.30) |
+| best under 0.3 s per question on one H100 (any configuration) | T1_k0_esc8b | +6.72 (+5.40 to +8.08) | +3.92 (+2.72 to +5.08) | +4.36 (+3.36 to +5.32) | +7.54 (+6.10 to +9.02) |
+| best under 0.5 s per question on one H100 (any configuration) | T1_k0_esc8b_families | +7.84 (+6.52 to +9.16) | +5.16 (+3.92 to +6.32) | +4.40 (+3.40 to +5.44) | +9.27 (+7.98 to +10.71) |
 | best under 1 s per question on one H100 (any configuration) | T1_k0_esc8b_families | +8.32 (+6.92 to +9.68) | +5.20 (+3.92 to +6.36) | +4.44 (+3.36 to +5.48) | +10.81 (+9.42 to +12.30) |
 | best under 2 s per question on one H100 (any configuration) | T1_k0_esc8b_families | +8.32 (+6.92 to +9.68) | +5.20 (+3.92 to +6.36) | +4.44 (+3.36 to +5.48) | +10.81 (+9.42 to +12.30) |

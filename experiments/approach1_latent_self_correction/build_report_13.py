@@ -145,6 +145,7 @@ def build() -> str:
     g4, g4e, g8 = load("base_4b/gating_v3_multi.json"), load("base_4b/gating_v3_multi_esc_cot8b_drop_judge.json"), load("base_8b/gating_v3_multi.json")
     esc4, an4 = load("base_4b/escalation.json"), load("base_4b/best_ranker_analysis.json")
     lat_other = {name: load(f"latency_{name}.json") for name in ("A100-80GB", "L40S")}
+    lat_h100_fam = load("latency_H100_families.json")["components"]  # the two other-family helpers, timed on H100 in a later run
     H = {name: heads(g) for name, g in (("multi", g_multi), ("nj", g_nj), ("esc", g_esc), ("esc_nj", g_esc_nj), ("cot", g_cot), ("best", g_best), ("sec", g_sec), ("fam", g_fam))}
 
     greedy = g_best["greedy_test"]
@@ -357,6 +358,8 @@ def build() -> str:
     agreement_drop = abl_rows[1][4]
     fc = fam["choice"]; fam_best = fc["test"][fc["selector"]]["pooled"]
     fam_fast = H["fam"][("T1_k0_esc8b_families", "correct every question (no gate)")]
+    fam_full = H["fam"][(f"{K}_families", "correct every question (no gate)")]
+    fam_1s = next(h for h in g_fam["headlines"] if h["name"].startswith("best under 1 s"))
     intern_best = next(h for h in esc["fixes"]["internvl3_8b"]["headlines"] if h["name"] == "best detector, rule and budget")
     intern_all, idef_all = esc["fixes"]["internvl3_8b"]["fix_everything"]["pooled"], esc["fixes"]["idefics3_8b"]["fix_everything"]["pooled"]
     idef_best = next(h for h in esc["fixes"]["idefics3_8b"]["headlines"] if h["name"] == "best detector, rule and budget")
@@ -376,7 +379,7 @@ def build() -> str:
     for name in ("greedy", "reasoning", "grounding", "encode", "greedy_8b", "reasoning_8b", "greedy_internvl3_8b", "greedy_idefics3_8b"):
         row = [lat_names.get(name, name.replace("greedy_", "").replace("_8b", "-8B") + " short answer")]
         for L in (lat, lat_other["A100-80GB"], lat_other["L40S"]):
-            c = L["components"]
+            c = dict(L["components"], **(lat_h100_fam if L is lat else {}))
             row.append(f"{c[name]['mean']:.3f} ({c[name]['mean'] / c['greedy']['mean']:.1f}x)" if name in c else "—")
         gpu_rows.append(row)
     lat_names.update({"greedy_internvl3_8b": "InternVL3-8B short answer", "greedy_idefics3_8b": "Idefics3-8B short answer"})
@@ -482,7 +485,11 @@ larger-model proposals equal to the candidate). The rankers are retrained on the
 best possible pick from that set is close to 95%. The enlarged-image answers do not help the ranker. The answers of InternVL3-8B and Idefics3-8B,
 encoded the same way with their own source-agreement feature, raise the best ranker to {pct(fam_best['accuracy'])}, {ci(fam_best)} points (best possible pick
 {pct(fc['test']['oracle']['pooled']['accuracy'])}), and the greedy answer with the three larger-model answers alone reaches {pct(fam_fast['test']['pooled']['accuracy'])}
-at {fam_fast['test_passes']:.1f} passes. Their seconds need the H100 timing of the two models, which is in progress.</p>
+at {fam_fast['test_passes']:.1f} passes and {fam_fast['test_seconds']:.2f} s per question on one H100, against
+{fam_full['test_seconds']:.2f} s for the full set with them ({pct(fam_full['test']['pooled']['accuracy'])}) and {H['sec'][(best_key, 'correct every question (no gate)')]['test_seconds']:.2f} s for the best
+ranker without them ({pct(ungated['test']['pooled']['accuracy'])}): the larger-model short answers are cheap in seconds, the reasoning candidates are not.
+Chosen on validation under 1 s per question, gating that set gives {pct(fam_1s['test']['pooled']['accuracy'])} ({ci(fam_1s['test']['pooled'])}) at
+{fam_1s['test_seconds']:.2f} s.</p>
 
 <h2 id="inside">7. What the best ranker does</h2>
 <p>The saved best ranker scored again on test (analyze_best_ranker.py), compared question by question with the alternatives. Routing uses the setting
@@ -592,13 +599,13 @@ before the analyses run, under each base model.</li>
 <ul>
 <li>Two helpers from other families were tested (InternVL3-8B, Idefics3-8B); the detector and the ranker are still Qwen3-VL-2B.</li>
 <li>Pass counts are a convention; Section 14 shows they misstate the relative cost of 8B answers and reasoning.</li>
-<li>Latency is measured at batch size 1 on one GPU type; batched serving would change the ratios.</li>
+<li>Latency is measured at batch size 1 (on H100, A100 and L40S); batched serving would change the ratios.</li>
 <li>The ranker is trained with correctness labels on four datasets; Sections 11 and 12 test how far it carries.</li>
 </ul>
 
 <h2 id="progress">17. In progress</h2>
 <ul>
-<li>The H100 timing of InternVL3-8B and Idefics3-8B, and the seconds of the rankers that use them.</li>
+<li>Nothing: every run behind this report has finished.</li>
 </ul>
 
 <h2 id="reproduce">18. Reproduce</h2>

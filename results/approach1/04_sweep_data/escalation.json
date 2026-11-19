@@ -268,7 +268,15 @@
       "broken": 167,
       "p_value": 2.3806327506583736e-16
      },
-     "cost": 1.388988126510455
+     "cost": 1.388988126510455,
+     "vs_fix_everything": {
+      "difference": -0.0028370284753598822,
+      "ci_low": -0.007880634653777452,
+      "ci_high": 0.002104129452558565,
+      "fixed": 279,
+      "broken": 306,
+      "p_value": 0.28237866773330383
+     }
     },
     {
      "name": "best detector and rule at a 30% budget",
@@ -348,7 +356,15 @@
       "broken": 180,
       "p_value": 1.8833746840246988e-17
      },
-     "cost": 1.5911526741620259
+     "cost": 1.5911526741620259,
+     "vs_fix_everything": {
+      "difference": 0.0017862771881895555,
+      "ci_low": -0.002311652831774719,
+      "ci_high": 0.005989282336870863,
+      "fixed": 219,
+      "broken": 202,
+      "p_value": 0.43554907171833823
+     }
     },
     {
      "name": "best detector, rule and budget",
@@ -428,7 +444,15 @@
       "broken": 99,
       "p_value": 2.3961420043591096e-14
      },
-     "cost": 2.292213932962068
+     "cost": 2.292213932962068,
+     "vs_fix_everything": {
+      "difference": 0.007355259010192287,
+      "ci_low": 0.004203005148681307,
+      "ci_high": 0.010717663129137333,
+      "fixed": 158,
+      "broken": 88,
+      "p_value": 9.535760692279518e-06
+     }
     },
     {
      "name": "smallest budget keeping 80% of the best validation gain",
@@ -508,7 +532,15 @@
       "broken": 180,
       "p_value": 1.8833746840246988e-17
      },
-     "cost": 1.5911526741620259
+     "cost": 1.5911526741620259,
+     "vs_fix_everything": {
+      "difference": 0.0017862771881895555,
+      "ci_low": -0.002311652831774719,
+      "ci_high": 0.005989282336870863,
+      "fixed": 219,
+      "broken": 202,
+      "p_value": 0.43554907171833823
+     }
     }
    ],
    "curves": {
@@ -1353,7 +1385,15 @@
       "broken": 180,
       "p_value": 4.114022574508579e-24
      },
-     "cost": 1.77797625302091
+     "cost": 1.77797625302091,
+     "vs_fix_everything": {
+      "difference": -0.016076494693706,
+      "ci_low": -0.02080487548597247,
+      "ci_high": -0.011348113901439529,
+      "fixed": 190,
+      "broken": 343,
+      "p_value": 3.38481869021542e-11
+     }
     },
     {
      "name": "best detector and rule at a 30% budget",
@@ -1433,7 +1473,15 @@
       "broken": 140,
       "p_value": 1.536712305459792e-34
      },
-     "cost": 2.128927182935799
+     "cost": 2.128927182935799,
+     "vs_fix_everything": {
+      "difference": -0.005568981822002732,
+      "ci_low": -0.009877062099401071,
+      "ci_high": -0.0010507512871703267,
+      "fixed": 205,
+      "broken": 258,
+      "p_value": 0.015573548173386615
+     }
     },
     {
      "name": "best detector, rule and budget",
@@ -1513,7 +1561,15 @@
       "broken": 75,
       "p_value": 1.3842791718350572e-26
      },
-     "cost": 3.5844278659241358
+     "cost": 3.5844278659241358,
+     "vs_fix_everything": {
+      "difference": 0.004203005148681307,
+      "ci_low": 0.0009456761584532941,
+      "ci_high": 0.007565409267626353,
+      "fixed": 145,
+      "broken": 105,
+      "p_value": 0.013481449142602612
+     }
     },
     {
      "name": "smallest budget keeping 80% of the best validation gain",
@@ -1593,7 +1649,15 @@
       "broken": 136,
       "p_value": 3.0604082461034704e-37
      },
-     "cost": 2.3949774088473257
+     "cost": 2.3949774088473257,
+     "vs_fix_everything": {
+      "difference": -0.0027319533466428495,
+      "ci_low": -0.006829883366607124,
+      "ci_high": 0.0013659766733214247,
+      "fixed": 171,
+      "broken": 197,
+      "p_value": 0.1924312243641807
+     }
     }
    ],
    "curves": {
@@ -2438,7 +2502,15 @@
       "broken": 213,
       "p_value": 0.047202764591542726
      },
-     "cost": 1.77797625302091
+     "cost": 1.77797625302091,
+     "vs_fix_everything": {
+      "difference": 0.1427970999264474,
+      "ci_low": 0.1343910896290848,
+      "ci_high": 0.15130818535252705,
+      "fixed": 1640,
+      "broken": 281,
+      "p_value": 5.499824130723753e-233
+     }
     },
     {
      "name": "best detector and rule at a 30% budget",
@@ -2518,7 +2590,15 @@
       "broken": 182,
       "p_value": 3.2441808967196133e-06
      },
-     "cost": 2.135651991173689
+     "cost": 2.135651991173689,
+     "vs_fix_everything": {
+      "difference": 0.147945781233582,
+      "ci_low": 0.13974992119365345,
+      "ci_high": 0.15645949353787958,
+      "fixed": 1647,
+      "broken": 239,
+      "p_value": 2.556193944592311e-258
+     }
     },
     {
      "name": "best detector, rule and budget",
@@ -2598,7 +2678,15 @@
       "broken": 159,
       "p_value": 1.1783041915250556e-07
      },
-     "cost": 2.717347903751182
+     "cost": 2.717347903751182,
+     "vs_fix_everything": {
+      "difference": 0.14868130713460123,
+      "ci_low": 0.14090574760954083,
+      "ci_high": 0.15677209204581274,
+      "fixed": 1590,
+      "broken": 175,
+      "p_value": 1.9356857509259087e-285
+     }
     },
     {
      "name": "smallest budget keeping 80% of the best validation gain",
@@ -2678,7 +2766,15 @@
       "broken": 171,
       "p_value": 9.998011096557858e-09
      },
-     "cost": 2.128927182935799
+     "cost": 2.128927182935799,
+     "vs_fix_everything": {
+      "difference": 0.15036250919407376,
+      "ci_low": 0.14227172428286225,
+      "ci_high": 0.1587685194914364,
+      "fixed": 1653,
+      "broken": 222,
+      "p_value": 3.7090051669586964e-270
+     }
     }
    ],
    "curves": {
@@ -3523,7 +3619,15 @@
       "broken": 182,
       "p_value": 2.3745220464355533e-33
      },
-     "cost": 1.7628454344856572
+     "cost": 1.7628454344856572,
+     "vs_fix_everything": {
+      "difference": -0.0106125880004203,
+      "ci_low": -0.015658821057055794,
+      "ci_high": -0.0056740569507197644,
+      "fixed": 245,
+      "broken": 346,
+      "p_value": 3.7432514129359484e-05
+     }
     },
     {
      "name": "best detector and rule at a 30% budget",
@@ -3603,7 +3707,15 @@
       "broken": 211,
       "p_value": 2.851037322945059e-31
      },
-     "cost": 2.128927182935799
+     "cost": 2.128927182935799,
+     "vs_fix_everything": {
+      "difference": -0.005043606178417569,
+      "ci_low": -0.00903646106966481,
+      "ci_high": -0.0010507512871703267,
+      "fixed": 171,
+      "broken": 219,
+      "p_value": 0.017203900764339603
+     }
     },
     {
      "name": "best detector, rule and budget",
@@ -3683,7 +3795,15 @@
       "broken": 164,
       "p_value": 9.54626855048061e-32
      },
-     "cost": 3.1885047809183567
+     "cost": 3.1885047809183567,
+     "vs_fix_everything": {
+      "difference": 0.0039928548912472415,
+      "ci_low": 0.0017836503099716299,
+      "ci_high": 0.006199432594304928,
+      "fixed": 78,
+      "broken": 40,
+      "p_value": 0.0005978811310943142
+     }
     },
     {
      "name": "smallest budget keeping 80% of the best validation gain",
@@ -3763,7 +3883,15 @@
       "broken": 208,
       "p_value": 3.1411824271390903e-29
      },
-     "cost": 2.1823053483240518
+     "cost": 2.1823053483240518,
+     "vs_fix_everything": {
+      "difference": -0.006619733109173059,
+      "ci_low": -0.010717663129137333,
+      "ci_high": -0.0025218030892087844,
+      "fixed": 182,
+      "broken": 245,
+      "p_value": 0.0026548353541263254
+     }
     }
    ],
    "curves": {
@@ -4608,7 +4736,15 @@
       "broken": 77,
       "p_value": 0.00022097574550212657
      },
-     "cost": 1.4376116423242618
+     "cost": 1.4376116423242618,
+     "vs_fix_everything": {
+      "difference": 0.0022065777030576862,
+      "ci_low": -0.0015761269307554902,
+      "ci_high": 0.006094357465587895,
+      "fixed": 185,
+      "broken": 164,
+      "p_value": 0.2843439643639901
+     }
     },
     {
      "name": "best detector and rule at a 30% budget",
@@ -4688,7 +4824,15 @@
       "broken": 74,
       "p_value": 5.734010402615864e-06
      },
-     "cost": 1.665046758432279
+     "cost": 1.665046758432279,
+     "vs_fix_everything": {
+      "difference": 0.0039928548912472415,
+      "ci_low": 0.00042030051486813074,
+      "ci_high": 0.007775559525060418,
+      "fixed": 168,
+      "broken": 130,
+      "p_value": 0.031911548297389514
+     }
     },
     {
      "name": "best detector, rule and budget",
@@ -4768,7 +4912,15 @@
       "broken": 61,
       "p_value": 1.3240945319970375e-07
      },
-     "cost": 1.8965009982137229
+     "cost": 1.8965009982137229,
+     "vs_fix_everything": {
+      "difference": 0.004833455920983503,
+      "ci_low": 0.0013659766733214247,
+      "ci_high": 0.00830093516864558,
+      "fixed": 160,
+      "broken": 114,
+      "p_value": 0.006451928990872362
+     }
     },
     {
      "name": "smallest budget keeping 80% of the best validation gain",
@@ -4848,7 +5000,15 @@
       "broken": 76,
       "p_value": 3.044060513307376e-06
      },
-     "cost": 1.5484921719029106
+     "cost": 1.5484921719029106,
+     "vs_fix_everything": {
+      "difference": 0.003572554376379111,
+      "ci_low": -0.00010507512871703268,
+      "ci_high": 0.007460334138909321,
+      "fixed": 173,
+      "broken": 139,
+      "p_value": 0.06155283643107879
+     }
     }
    ],
    "curves": {
@@ -5693,7 +5853,15 @@
       "broken": 93,
       "p_value": 0.0005945715993311254
      },
-     "cost": 1.77797625302091
+     "cost": 1.77797625302091,
+     "vs_fix_everything": {
+      "difference": 0.004203005148681307,
+      "ci_low": 0.00021015025743406537,
+      "ci_high": 0.00830093516864558,
+      "fixed": 211,
+      "broken": 171,
+      "p_value": 0.04585611745952773
+     }
     },
     {
      "name": "best detector and rule at a 30% budget",
@@ -5773,7 +5941,15 @@
       "broken": 92,
       "p_value": 2.188945953694809e-05
      },
-     "cost": 2.1823053483240518
+     "cost": 2.1823053483240518,
+     "vs_fix_everything": {
+      "difference": 0.005463906693285699,
+      "ci_low": 0.0017862771881895555,
+      "ci_high": 0.00903646106966481,
+      "fixed": 186,
+      "broken": 134,
+      "p_value": 0.00428573878294856
+     }
     },
     {
      "name": "best detector, rule and budget",
@@ -5853,7 +6029,15 @@
       "broken": 81,
       "p_value": 1.909631986631768e-05
      },
-     "cost": 2.5937795523799516
+     "cost": 2.5937795523799516,
+     "vs_fix_everything": {
+      "difference": 0.005779132079436798,
+      "ci_low": 0.002311652831774719,
+      "ci_high": 0.009246611327098876,
+      "fixed": 177,
+      "broken": 122,
+      "p_value": 0.0017444456443333003
+     }
     },
     {
      "name": "smallest budget keeping 80% of the best validation gain",
@@ -5933,7 +6117,15 @@
       "broken": 93,
       "p_value": 1.4386572715087956e-05
      },
-     "cost": 1.9750971944940634
+     "cost": 1.9750971944940634,
+     "vs_fix_everything": {
+      "difference": 0.004938531049700536,
+      "ci_low": 0.0010507512871703267,
+      "ci_high": 0.00861616055479668,
+      "fixed": 194,
+      "broken": 147,
+      "p_value": 0.012623140236472671
+     }
     }
    ],
    "curves": {

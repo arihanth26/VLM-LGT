@@ -26,7 +26,7 @@ bash slurm/check_scripts.sh                                 # every script parse
 | `run_followups_pipeline.sh` | Seeds, leave-one-dataset-out, training-set size, gating in seconds; 8B reasoning on the unseen datasets | 13 |
 | `run_unseen_pipeline.sh` | AI2D and InfographicVQA through the frozen pipeline | 13 |
 | `run_base_model_pipeline.sh` (`SIZE=4b` or `8b`), `run_base_model_escalation_pipeline.sh` | The whole pipeline with another base model; with the 8B answers | 13 |
-| `run_families_pipeline.sh` | InternVL3-8B and Idefics3-8B as fixes and ranker candidates; latency on A100/L40S | in progress |
+| `run_families_pipeline.sh` | InternVL3-8B and Idefics3-8B as fixes and ranker candidates; latency on A100, L40S and H100 | 13 |
 
 ## Batches: several short runs in one job
 

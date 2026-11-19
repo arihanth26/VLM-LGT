@@ -39,7 +39,7 @@ validation; test was read once.
 | `best_ranker_analysis.*` | Paired comparisons with routing and 8B, answer origins, oracle gap, abstention, examples | 7 |
 | `candidate_ranker_v3_multi_drop_<inputs>.json`, `..._esc_cot8b_drop_<inputs>_judge.json`, `_states`, `_epochs20` | Input ablations and variants | 10 |
 | `*_seeds<n>.json`, `*_holdout_<ds>.json`, `*_train<n>.json` | Seeds, leave-one-dataset-out, training-set size | 11 |
-| `escalation.*` (fixes `internvl3_8b`, `idefics3_8b`), `*_families_drop_judge.*` | Helpers from other model families: routing, ranker and gating. Until their H100 timing lands, the seconds column of `gating_v3_multi_esc_cot8b_families_drop_judge.*` leaves out the two helpers' answers; passes and accuracy are final | 5, 6 |
+| `escalation.*` (fixes `internvl3_8b`, `idefics3_8b`), `*_families_drop_judge.*` | Helpers from other model families: routing, ranker and gating (with seconds) | 5, 6 |
 | `unseen.*` | The frozen pipeline on AI2D and InfographicVQA | 12 |
 | `base_4b/`, `base_8b/` | Qwen3-VL-4B and 8B as the base model (rankers; the 4B best-ranker analysis) | 13 |
-| `latency.json`, `latency_A100-80GB.json`, `latency_L40S.json` | Seconds per component on H100, A100 and L40S | 14 |
+| `latency.json`, `latency_H100_families.json`, `latency_A100-80GB.json`, `latency_L40S.json` | Seconds per component on H100 (the two other-family helpers in a separate run), A100 and L40S | 14 |
