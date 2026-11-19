@@ -35,8 +35,10 @@ plus the scoring passes of each distinct candidate (docs/pipeline.md, Convention
 
 Detection (test AUROC for "the answer is correct"): unified head 0.86–0.93 per dataset against 0.65–0.75 for the
 token probability (report 02). Measured on one H100, an 8B short answer takes 0.16 s against 0.12 s for the 2B one and a
-step-by-step answer 1.6–2.0 s (report 13). In progress: Qwen3-VL-4B as the base model, transfer to unseen datasets (AI2D,
-InfographicVQA), seeds, leave-one-dataset-out and training-set size for the best ranker, and gating with seconds as the cost.
+step-by-step answer 1.6–2.0 s (report 13). Report 13 also covers the accuracy–cost frontier with plain routing, paired comparisons
+(the best ranker is +1.24 points above routing to 8B, p < 0.0001), seeds, leave-one-dataset-out, training-set size, transfer to
+AI2D and InfographicVQA, and Qwen3-VL-4B and 8B as the base model. In progress: fixes from other model families (InternVL3-8B,
+Idefics3-8B) and the 4B/8B base-model gating tables.
 
 ## Reports
 
