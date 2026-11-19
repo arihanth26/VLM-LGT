@@ -1,35 +1,35 @@
 {
  "questions": 9517,
  "routing_setting": {
-  "detector": "pre_head",
+  "detector": "token",
   "rule": "confident",
-  "budget": 0.05
+  "budget": 0.65
  },
  "accuracy": {
   "2B greedy": 0.85835872648944,
   "2B-only ranker (no judge)": 0.8755910475990333,
   "8B on every question": 0.8787433014605442,
-  "routing to 8B (validation choice)": 0.880844804034885,
+  "routing to 8B (validation choice)": 0.8807397289061679,
   "best ranker, no gate": 0.8945045707680992,
   "best ranker, gated at 50%": 0.8928233687086267
  },
  "paired": {
   "best ranker minus routing to 8B": {
    "pooled": {
-    "difference": 0.013659766733214248,
-    "ci_low": 0.00945676158453294,
-    "ci_high": 0.017862771881895556,
-    "fixed": 282,
+    "difference": 0.013764841861931281,
+    "ci_low": 0.009561836713249974,
+    "ci_high": 0.01807292213932962,
+    "fixed": 283,
     "broken": 152,
-    "p_value": 4.4297037192759564e-10
+    "p_value": 3.391276384505642e-10
    },
    "chartqa_full": {
-    "difference": 0.038,
-    "ci_low": 0.0276,
-    "ci_high": 0.0484,
-    "fixed": 135,
+    "difference": 0.0384,
+    "ci_low": 0.028,
+    "ci_high": 0.0488,
+    "fixed": 136,
     "broken": 40,
-    "p_value": 3.014376828086386e-13
+    "p_value": 1.944787522241384e-13
    },
    "textvqa": {
     "difference": 0.0004,
@@ -58,20 +58,20 @@
   },
   "best ranker gated 50% minus routing to 8B": {
    "pooled": {
-    "difference": 0.011978564673741726,
-    "ci_low": 0.007985709782494483,
-    "ci_high": 0.015971419564988966,
+    "difference": 0.012083639802458758,
+    "ci_low": 0.008090784911211516,
+    "ci_high": 0.016076494693706,
     "fixed": 263,
-    "broken": 149,
-    "p_value": 2.120914598115856e-08
+    "broken": 148,
+    "p_value": 1.5214514648094393e-08
    },
    "chartqa_full": {
-    "difference": 0.0352,
-    "ci_low": 0.0252,
+    "difference": 0.0356,
+    "ci_low": 0.0256,
     "ci_high": 0.0452,
     "fixed": 126,
-    "broken": 38,
-    "p_value": 3.214592729970192e-12
+    "broken": 37,
+    "p_value": 1.473591352172994e-12
    },
    "textvqa": {
     "difference": 0.0,
@@ -184,20 +184,20 @@
   },
   "routing to 8B minus 8B on every question": {
    "pooled": {
-    "difference": 0.0021015025743406535,
-    "ci_low": -0.0019964274456236207,
-    "ci_high": 0.00588420720815383,
+    "difference": 0.0019964274456236207,
+    "ci_low": -0.0019990543238415466,
+    "ci_high": 0.005779132079436798,
     "fixed": 193,
-    "broken": 173,
-    "p_value": 0.3206407528608965
+    "broken": 174,
+    "p_value": 0.34743993196865797
    },
    "chartqa_full": {
-    "difference": 0.0024,
-    "ci_low": -0.0052,
-    "ci_high": 0.01,
+    "difference": 0.002,
+    "ci_low": -0.0056,
+    "ci_high": 0.009609999999999945,
     "fixed": 55,
-    "broken": 49,
-    "p_value": 0.624143515844679
+    "broken": 50,
+    "p_value": 0.6964676629916758
    },
    "textvqa": {
     "difference": 0.0044,
@@ -362,7 +362,7 @@
    "accuracy_at_80": 0.9334121355397951,
    "accuracy_at_90": 0.9231757151196731,
    "accuracy_at_100": 0.8945045707680992,
-   "aurc": 0.04272739046242084
+   "aurc": 0.042727374685374485
   },
   "best ranker's answer, by the greedy answer's probability": {
    "accuracy_at_50": 0.9762505254308533,
@@ -400,7 +400,7 @@
    "greedy": "No",
    "chosen": "Yes",
    "origin": "2B and 8B both",
-   "ranker_probability": 0.6255993247032166
+   "ranker_probability": 0.6255993843078613
   },
   {
    "dataset": "chartqa_full",
@@ -422,7 +422,7 @@
    "greedy": "Gray",
    "chosen": "Light green",
    "origin": "2B and 8B both",
-   "ranker_probability": 0.3180910050868988
+   "ranker_probability": 0.3180909752845764
   },
   {
    "dataset": "textvqa",
@@ -444,7 +444,7 @@
    "greedy": "budweiser clock",
    "chosen": "clock",
    "origin": "8B only",
-   "ranker_probability": 0.4679296314716339
+   "ranker_probability": 0.4679296612739563
   },
   {
    "dataset": "textvqa",
@@ -466,7 +466,7 @@
    "greedy": "red label",
    "chosen": "jim beam",
    "origin": "2B and 8B both",
-   "ranker_probability": 0.38220441341400146
+   "ranker_probability": 0.38220444321632385
   },
   {
    "dataset": "docvqa",
@@ -499,7 +499,7 @@
    "greedy": "( 89)",
    "chosen": "89",
    "origin": "8B only",
-   "ranker_probability": 0.370490700006485
+   "ranker_probability": 0.37049078941345215
   },
   {
    "dataset": "docvqa",

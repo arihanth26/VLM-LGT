@@ -50,7 +50,7 @@ Full test splits: 9,517 questions (ChartQA 2,500, TextVQA 2,500, DocVQA 2,500, S
 +0.40 points over greedy and was not distinguishable from zero.</p>
 <div class="toc"><a href="#summary">Summary</a><a href="#why">Why</a><a href="#setup">Setup</a><a href="#metrics">Measurements</a>
 <a href="#pools">Pools</a><a href="#selection">Selection</a><a href="#within">Within-question ranking</a><a href="#gates">Gates and compute</a>
-<a href="#prehead">Pre-generation head</a><a href="#meaning">What it means</a><a href="#limits">Limits</a><a href="#next">Next</a><a href="#appendix">Appendix</a></div>
+<a href="#prehead">Pre-generation head</a><a href="#meaning">What it means</a><a href="#limits">Limits</a><a href="#next">What came next</a><a href="#appendix">Appendix</a></div>
 
 <h2 id="summary">1. Summary</h2>
 <div class="stats">
@@ -185,10 +185,15 @@ state of each candidate in the same context, and candidates from strategies that
 <li>Pass rates use 8 samples at one temperature, so they are coarse (steps of 1/8).</li>
 <li>Correctness uses the same thresholds as before (VQA score ≥ 0.5, ANLS ≥ 0.9, exact option letter), which can mark near-misses as wrong.</li>
 </ul>
-<h2 id="next">12. Next</h2>
-<p>A learned within-question candidate ranker, trained on the 50,517 training pools with a softmax loss over each question's candidates, using the constant question
-embedding, each candidate's answer state, vote share, the head and probe scores and a teacher-forced answer probability; and two correction strategies that
-add candidates by changing what the model reads: visual contrastive decoding against a noised image, and zoomed crops. These runs are in progress.</p>
+<h2 id="next">12. What came next</h2>
+<p>The two steps proposed here were carried out in the reports that followed (numbers on the same test split, from <code>04_sweep_data/</code>):</p>
+<ul>
+<li><b>A learned within-question ranker</b> over the pools, crops and contrastive-decoding answers (report 11, ranker v1): +1.07 points (83.85%),
+against +0.44 for the best head-picked best-of-k here.</li>
+<li><b>One ranker over every correction source</b>, with source-agreement features (report 12, ranker v3): +3.09 points (85.87%); with sampled
+reasoning answers +3.60 (86.38%).</li>
+<li><b>Larger-model answers as candidates</b> (report 13): with the Qwen3-VL-8B short and step-by-step answers, +6.76 points (89.53%).</li>
+</ul>
 <h2 id="appendix">Appendix A. Files and jobs</h2>
 <ul>
 <li>Code: <code>models/run_inference.py</code> (<code>sample_with_confidence</code>), <code>candidate_pools.py</code>, <code>selection_metrics.py</code>,

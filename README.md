@@ -29,8 +29,9 @@ H100 at batch size 1 ([docs/pipeline.md](docs/pipeline.md#conventions), report 1
 | … without the judge, gated at 50% | 86.38% | +3.60 (+3.10 to +4.10) | 5.8 | 2.45 | 13 |
 | Route to Qwen3-VL-8B, no ranker (validation setting) | 88.29% | +5.52 (+4.93 to +6.10) | 3.6 | ≈0.22 | 13 |
 | Ranker over the greedy and 8B answers, best under 0.3 s | 88.34% | +5.56 | 4.2 | 0.26 | 13 |
-| Ranker v3 with the 8B answer and 8B reasoning as candidates, no judge | **89.53%** | **+6.76 (+6.10 to +7.37)** | 18.3 | 6.92 | 13 |
+| Ranker v3 with the 8B answer and 8B reasoning as candidates, no judge | 89.53% | +6.76 (+6.10 to +7.37) | 18.3 | 6.92 | 13 |
 | … gated at 50% | 89.31% | +6.54 (+5.89 to +7.15) | 9.9 | 3.52 | 13 |
+| … plus InternVL3-8B and Idefics3-8B answers as candidates (other families) | **89.91%** | **+7.13 (+6.48 to +7.78)** | 27.1 | | 13 |
 
 - **Ranker against routing:** below about 5 passes, routing the least-confident questions to the 8B model is as good
   as any ranker policy. The full ranker is above that routing by **+1.24 points (+0.78 to +1.68, p < 0.0001)** on the
@@ -41,13 +42,14 @@ H100 at batch size 1 ([docs/pipeline.md](docs/pipeline.md#conventions), report 1
   85–100% of its gain there. 750 training questions per dataset already reach 89.20%.
 - **Unseen datasets** (AI2D, InfographicVQA, frozen pipeline): the 2B-only ranker gains +3.85, as in-domain; the full
   system reaches 76.99% (+12.28), just above the 8B model on every question (76.52%).
+- **Other model families:** routing to InternVL3-8B (88.43%) is as good as routing to Qwen3-VL-8B (88.29%); Idefics3-8B
+  is a weak helper (68.89% on its own) and hurts when its answers replace the 2B ones.
 - **Other base models:** Qwen3-VL-4B gains +1.71 from its own candidates and +3.54 with the 8B answers (89.38%);
   Qwen3-VL-8B gains +0.41.
 - **Detection** (test AUROC for "the answer is correct"): unified head 0.86–0.93 per dataset, against 0.65–0.75 for
   the token probability (report 02).
 
-**In progress:** fixes from other model families (InternVL3-8B, Idefics3-8B), and the 4B/8B base-model gating tables
-(rerun without constant detectors).
+**In progress:** the H100 timing of InternVL3-8B and Idefics3-8B, for the seconds of the rankers that use them.
 
 ## Reports
 

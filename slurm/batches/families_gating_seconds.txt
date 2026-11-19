@@ -1,0 +1,2 @@
+# The other-family ranker gated again once both models are timed on the H100 (latency_H100_families.json), so its seconds are measured.
+gate_ranker_v3 --with-other-families --drop judge --scoring-passes 1 --tag _multi_esc_cot8b_families_drop_judge --models experiments/approach1_latent_self_correction/results/candidate_ranker_v3_multi_esc_cot8b_families_drop_judge_models.pt --reported experiments/approach1_latent_self_correction/results/candidate_ranker_v3_multi_esc_cot8b_families_drop_judge.json

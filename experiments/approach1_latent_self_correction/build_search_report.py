@@ -7,6 +7,7 @@
 # Reads results/candidate_search.json (analyze_candidate_pools.py), results/pre_head_sweep.json
 # (sweep_pre_head.py), and results/candidate_search_jobs.txt (the scheduler record of the run).
 
+import argparse
 import json
 from pathlib import Path
 
@@ -14,6 +15,7 @@ from experiments.approach1_latent_self_correction.build_report import CSS, Panel
 
 HERE = Path(__file__).parent
 RESULTS = HERE / "results"
+DATA = HERE.parents[1] / "results" / "approach1" / "04_sweep_data"  # the published copies, so a fresh clone builds the report
 OUTPUT = RESULTS / "candidate_search_report.html"
 DATASETS = {"chartqa_full": "ChartQA", "textvqa": "TextVQA", "docvqa": "DocVQA", "scienceqa_img": "ScienceQA"}
 TEMPS = (("0.7", "T = 0.7", "c-w0"), ("1", "T = 1.0", "c-w1"), ("1.3", "T = 1.3", "c-w2"))
@@ -96,8 +98,9 @@ def jobs_table(path: Path) -> tuple[str, dict]:
 
 def build() -> str:
     """Assemble report 10."""
-    search = json.loads((RESULTS / "candidate_search.json").read_text())
-    sweep = json.loads((RESULTS / "pre_head_sweep.json").read_text())
+    L = later_results()
+    search = json.loads((DATA / "candidate_search.json").read_text())
+    sweep = json.loads((DATA / "pre_head_sweep.json").read_text())
     val, test, report = search["validation"], search["test"], search["report"]
     choice = report["choice"]
     pooled_val = {t: {k: val[t][k]["pooled"] for k in val[t]} for t in val}
@@ -105,7 +108,7 @@ def build() -> str:
     chosen = report["per_dataset"]["pooled"]
     greedy_test = pooled_test["1"]["1"]["selectors"]["greedy"]["accuracy"]
     best_oracle = max(pooled_test[t][k]["pool"]["oracle_accuracy"] for t in pooled_test for k in pooled_test[t])
-    jobs_html, totals = jobs_table(RESULTS / "candidate_search_jobs.txt")
+    jobs_html, totals = jobs_table(DATA / "candidate_search_jobs.txt")
 
     # Pre-generation sweep summaries.
     configs = sweep["configs"]
@@ -127,7 +130,7 @@ Full test splits: 9,517 questions (ChartQA 2,500, TextVQA 2,500, DocVQA 2,500, S
 +0.40 points over greedy and was not distinguishable from zero.</p>
 <div class="toc"><a href="#summary">Summary</a><a href="#why">Why</a><a href="#setup">Setup</a><a href="#metrics">Measurements</a>
 <a href="#pools">Pools</a><a href="#selection">Selection</a><a href="#within">Within-question ranking</a><a href="#gates">Gates and compute</a>
-<a href="#prehead">Pre-generation head</a><a href="#meaning">What it means</a><a href="#limits">Limits</a><a href="#next">Next</a><a href="#appendix">Appendix</a></div>
+<a href="#prehead">Pre-generation head</a><a href="#meaning">What it means</a><a href="#limits">Limits</a><a href="#next">What came next</a><a href="#appendix">Appendix</a></div>
 
 <h2 id="summary">1. Summary</h2>
 <div class="stats">
@@ -354,10 +357,15 @@ state of each candidate in the same context, and candidates from strategies that
 <li>Pass rates use 8 samples at one temperature, so they are coarse (steps of 1/8).</li>
 <li>Correctness uses the same thresholds as before (VQA score ≥ 0.5, ANLS ≥ 0.9, exact option letter), which can mark near-misses as wrong.</li>
 </ul>
-<h2 id="next">12. Next</h2>
-<p>A learned within-question candidate ranker, trained on the 50,517 training pools with a softmax loss over each question's candidates, using the constant question
-embedding, each candidate's answer state, vote share, the head and probe scores and a teacher-forced answer probability; and two correction strategies that
-add candidates by changing what the model reads: visual contrastive decoding against a noised image, and zoomed crops. These runs are in progress.</p>
+<h2 id="next">12. What came next</h2>
+<p>The two steps proposed here were carried out in the reports that followed (numbers on the same test split, from <code>04_sweep_data/</code>):</p>
+<ul>
+<li><b>A learned within-question ranker</b> over the pools, crops and contrastive-decoding answers (report 11, ranker v1): {L['v1']} points ({L['v1_acc']}),
+against +0.44 for the best head-picked best-of-k here.</li>
+<li><b>One ranker over every correction source</b>, with source-agreement features (report 12, ranker v3): {L['v3']} points ({L['v3_acc']}); with sampled
+reasoning answers {L['v3m']} ({L['v3m_acc']}).</li>
+<li><b>Larger-model answers as candidates</b> (report 13): with the Qwen3-VL-8B short and step-by-step answers, {L['best']} points ({L['best_acc']}).</li>
+</ul>
 <h2 id="appendix">Appendix A. Files and jobs</h2>
 <ul>
 <li>Code: <code>models/run_inference.py</code> (<code>sample_with_confidence</code>), <code>candidate_pools.py</code>, <code>selection_metrics.py</code>,
@@ -372,10 +380,34 @@ add candidates by changing what the model reads: visual contrastive decoding aga
     return "".join(parts)
 
 
+def later_results() -> dict:
+    """The results of the reports that followed, read from the published data, for the "What came next" section."""
+    load = lambda name: json.loads((DATA / name).read_text())
+    choice = lambda r: r["choice"]["test"][r["choice"].get("selector") or f"ranker_{r['choice']['variant']}"]["pooled"]  # v1 names its selector by variant
+    pct = lambda x: f"{100 * x:.2f}%"
+    pts = lambda x: f"{100 * x:+.2f}"
+    v1, v3, v3m = choice(load("candidate_ranker.json")), choice(load("candidate_ranker_v3.json")), choice(load("candidate_ranker_v3_multi.json"))
+    best = choice(load("candidate_ranker_v3_multi_esc_cot8b_drop_judge.json"))
+    gm = next(h for h in load("gating_v3_multi.json")["headlines"]
+              if h["configuration"] == "T1_k0_ground_cot_multi" and h["name"] == "best detector at a 50% budget")
+    key = "T1_k0_ground_cot_multi_esc8b_cot8b"
+    t750 = load("candidate_ranker_v3_multi_esc_cot8b_drop_judge_train750.json")["test"][key]["ranker_v3_scalars_ds"]["pooled"]["accuracy"]
+    judge = load("candidate_ranker_v3_multi_drop_judge.json")["test"]["T1_k0_ground_cot_multi"]["ranker_v3_scalars_ds"]["pooled"]["accuracy"] \
+        - load("candidate_ranker_v3_multi.json")["test"]["T1_k0_ground_cot_multi"]["ranker_v3_scalars_ds"]["pooled"]["accuracy"]
+    b4, b4e = choice(load("base_4b/candidate_ranker_v3_multi.json")), choice(load("base_4b/candidate_ranker_v3_multi_esc_cot8b_drop_judge.json"))
+    return {"v1": pts(v1["difference"]), "v1_acc": pct(v1["accuracy"]), "v3": pts(v3["difference"]), "v3_acc": pct(v3["accuracy"]),
+            "v3m": pts(v3m["difference"]), "v3m_acc": pct(v3m["accuracy"]), "best": pts(best["difference"]), "best_acc": pct(best["accuracy"]),
+            "gated_acc": pct(gm["test"]["pooled"]["accuracy"]), "gated_passes": f"{gm['test_passes']:.1f}", "gated_share": f"{100 * gm['test_share']:.0f}%",
+            "t750": pct(t750), "judge": pts(judge), "b4": pts(b4["difference"]), "b4e": pts(b4e["difference"]), "b4e_acc": pct(b4e["accuracy"])}
+
+
 def main() -> None:
     """Write the report."""
-    OUTPUT.write_text(build(), encoding="utf-8")
-    print(f"[done] wrote {OUTPUT}")
+    parser = argparse.ArgumentParser(description="Build report 10.")
+    parser.add_argument("--output", type=Path, default=OUTPUT)
+    args = parser.parse_args()
+    args.output.write_text(build(), encoding="utf-8")
+    print(f"[done] wrote {args.output}")
 
 
 if __name__ == "__main__":

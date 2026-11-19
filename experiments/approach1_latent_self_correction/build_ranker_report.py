@@ -17,6 +17,7 @@ from experiments.approach1_latent_self_correction.build_report import CSS, Panel
 HERE = Path(__file__).parent
 RESULTS = HERE / "results"
 REPO = HERE.parents[1]
+DATA = REPO / "results" / "approach1" / "04_sweep_data"  # the published copies, so a fresh clone builds the report
 OUTPUT = RESULTS / "correction_ranker_report.html"
 DATASETS = {"chartqa_full": "ChartQA", "textvqa": "TextVQA", "docvqa": "DocVQA", "scienceqa_img": "ScienceQA"}
 SET_LABEL = {"none": "samples only", "vcd": "samples + contrastive decoding", "zoom": "samples + zoomed crops", "all": "samples + both corrections"}
@@ -237,9 +238,10 @@ def jobs_table(path: Path) -> tuple[str, dict]:
 
 def build(analysis_path: Path) -> str:
     """Assemble report 11."""
-    ranker = json.loads((RESULTS / "candidate_ranker.json").read_text())
+    L = later_results()
+    ranker = json.loads((DATA / "candidate_ranker.json").read_text())
     analysis = json.loads(analysis_path.read_text())
-    search = json.loads((RESULTS / "candidate_search.json").read_text())
+    search = json.loads((DATA / "candidate_search.json").read_text())
     best5_path = REPO / "results" / "approach1" / "04_sweep_data" / "correction_full_mixture_test_2b_best_of_five_full.summary.json"
     best5 = json.loads(best5_path.read_text())["policies"] if best5_path.exists() else None
     curve = {k: v for k, v in analysis["test_curve"].items() if k != "longest_pool"}
@@ -250,7 +252,7 @@ def build(analysis_path: Path) -> str:
     main_val = ranker["choice"]["val"]
     greedy = main["pooled"]["greedy"] if "greedy" in main["pooled"] else ranker["choice"]["test"]["greedy"]["pooled"]["accuracy"]
     oracle_main = ranker["choice"]["test"]["oracle"]["pooled"]["accuracy"]
-    jobs_html, totals = jobs_table(RESULTS / "correction_jobs.txt")
+    jobs_html, totals = jobs_table(DATA / "correction_jobs.txt")
     zoom0 = curve.get("T1_k0_zoom", {}).get("ranker", {}).get("pooled")
     within_main = curve["T1_k5_all"]["within"]
 
@@ -262,7 +264,7 @@ def build(analysis_path: Path) -> str:
     for name in DATASETS:
         main[name]["greedy"] = ranker["choice"]["test"]["greedy"][name]["accuracy"]
 
-    v2_file = RESULTS / "candidate_ranker_v2.json"
+    v2_file = DATA / "candidate_ranker_v2.json"
     v2_summary = ""
     if v2_file.exists():
         v2c = json.loads(v2_file.read_text())["choice"]
@@ -285,7 +287,7 @@ within-question measurements).</p>
 <div class="toc"><a href="#summary">Summary</a><a href="#story">Where this fits</a><a href="#idea">The idea</a><a href="#sources">Candidate sources</a>
 <a href="#ranker">The ranker</a><a href="#result">Main result</a><a href="#k">Best-of-5, 7, 9, 11+</a><a href="#contrib">What each source adds</a>
 <a href="#why">Why it works</a><a href="#ablation">Ablations</a><a href="#compute">Compute</a><a href="#cases">Cases</a><a href="#round2">Second round</a><a href="#meaning">What it means</a>
-<a href="#limits">Limits</a><a href="#next">Next</a><a href="#appendix">Appendix</a></div>
+<a href="#limits">Limits</a><a href="#next">What came next</a><a href="#appendix">Appendix</a></div>
 
 <h2 id="summary">1. Summary</h2>
 <div class="stats">
@@ -550,7 +552,7 @@ good signal of where alternative answers exist. With crops only and the same gat
 {gating_zoom['token']['0.3']['passes_per_question']:.1f} passes per question, about three times the cost of greedy decoding for almost the whole gain. That makes the step usable
 as an adaptive-compute layer: a cheap score decides where to spend, the correction step spends it.</p>""")
 
-    v2_path = RESULTS / "candidate_ranker_v2.json"
+    v2_path = DATA / "candidate_ranker_v2.json"
     v2 = json.loads(v2_path.read_text()) if v2_path.exists() else None
     cases = analysis.get("cases", [])
     parts.append(f"""<h2 id="cases">12. Case studies</h2>
@@ -581,14 +583,20 @@ itself asked to compare candidates against the image, or a ranker trained with m
 <li>Correctness uses the thresholds of the earlier reports (VQA score ≥ 0.5, ANLS ≥ 0.9, option letter), which can count near-misses as wrong both ways.</li>
 <li>Contrastive decoding uses one noise strength and one plausibility cutoff; neither was tuned.</li>
 </ul>
-<h2 id="next">16. Next</h2>
+<h2 id="next">16. What came next</h2>
+<p>The four next steps proposed here, and what the later reports found (same test split, from <code>04_sweep_data/</code>):</p>
 <ol>
-<li>Combine the best sources of both rounds per question (reasoning for chart and science questions, crops for text questions) and train the ranker on all
-50,517 training questions with every source; the 12,000-question training set of ranker v2 is still a quarter of the data.</li>
-<li>Gate the second-round step like the first (Section 11): reasoning costs one long generation, and most questions keep the greedy answer.</li>
-<li>Improve the judge: it says Yes to most fluent answers; asking it to compare two candidates, or calibrating it per dataset, should make it a stronger feature.</li>
-<li>Repeat on Qwen3-VL-4B to see whether the gains hold with a stronger base model.</li>
+<li><b>Combine the best sources of both rounds.</b> Report 12's ranker v3 reads every source at once, with features saying which sources proposed each
+candidate: {L['v3']} points ({L['v3_acc']}); with sampled reasoning answers {L['v3m']} ({L['v3m_acc']}). Training on all 50,517 questions was not needed:
+report 13 finds that 750 training questions per dataset already reach {L['t750']} for its best ranker.</li>
+<li><b>Gate the second-round step.</b> Report 12 gates ranker v3 with a threshold on the answer probability fixed on validation: correcting
+{L['gated_share']} of questions keeps the full gain ({L['gated_acc']}) at {L['gated_passes']} model passes per question.</li>
+<li><b>Improve the judge.</b> Not needed: removing the judge from the ranker's inputs changes accuracy by {L['judge']} points (report 13), so it was dropped,
+which saves one scoring pass per candidate.</li>
+<li><b>Repeat on Qwen3-VL-4B.</b> Report 13: with 4B as the base model the ranker gains {L['b4']} points from its own candidates, and {L['b4e']}
+({L['b4e_acc']}) with the Qwen3-VL-8B answers as candidates.</li>
 </ol>
+<p>Report 13's best ranker, with the 8B short and step-by-step answers as candidates, reaches {L['best_acc']} ({L['best']} points).</p>
 <h2 id="appendix">Appendix A. Files and jobs</h2>
 <ul>
 <li>Second round: <code>correction_v2.py</code> (grounded crops, reasoning, judge), <code>train_ranker_v2.py</code>, <code>repair_v2_shards.py</code> (re-encodes the
@@ -607,10 +615,31 @@ itself asked to compare candidates against the image, or a ranker trained with m
     return "".join(parts)
 
 
+def later_results() -> dict:
+    """The results of the reports that followed, read from the published data, for the "What came next" section."""
+    load = lambda name: json.loads((DATA / name).read_text())
+    choice = lambda r: r["choice"]["test"][r["choice"].get("selector") or f"ranker_{r['choice']['variant']}"]["pooled"]  # v1 names its selector by variant
+    pct = lambda x: f"{100 * x:.2f}%"
+    pts = lambda x: f"{100 * x:+.2f}"
+    v1, v3, v3m = choice(load("candidate_ranker.json")), choice(load("candidate_ranker_v3.json")), choice(load("candidate_ranker_v3_multi.json"))
+    best = choice(load("candidate_ranker_v3_multi_esc_cot8b_drop_judge.json"))
+    gm = next(h for h in load("gating_v3_multi.json")["headlines"]
+              if h["configuration"] == "T1_k0_ground_cot_multi" and h["name"] == "best detector at a 50% budget")
+    key = "T1_k0_ground_cot_multi_esc8b_cot8b"
+    t750 = load("candidate_ranker_v3_multi_esc_cot8b_drop_judge_train750.json")["test"][key]["ranker_v3_scalars_ds"]["pooled"]["accuracy"]
+    judge = load("candidate_ranker_v3_multi_drop_judge.json")["test"]["T1_k0_ground_cot_multi"]["ranker_v3_scalars_ds"]["pooled"]["accuracy"] \
+        - load("candidate_ranker_v3_multi.json")["test"]["T1_k0_ground_cot_multi"]["ranker_v3_scalars_ds"]["pooled"]["accuracy"]
+    b4, b4e = choice(load("base_4b/candidate_ranker_v3_multi.json")), choice(load("base_4b/candidate_ranker_v3_multi_esc_cot8b_drop_judge.json"))
+    return {"v1": pts(v1["difference"]), "v1_acc": pct(v1["accuracy"]), "v3": pts(v3["difference"]), "v3_acc": pct(v3["accuracy"]),
+            "v3m": pts(v3m["difference"]), "v3m_acc": pct(v3m["accuracy"]), "best": pts(best["difference"]), "best_acc": pct(best["accuracy"]),
+            "gated_acc": pct(gm["test"]["pooled"]["accuracy"]), "gated_passes": f"{gm['test_passes']:.1f}", "gated_share": f"{100 * gm['test_share']:.0f}%",
+            "t750": pct(t750), "judge": pts(judge), "b4": pts(b4["difference"]), "b4e": pts(b4e["difference"]), "b4e_acc": pct(b4e["accuracy"])}
+
+
 def main() -> None:
     """Write the report."""
     parser = argparse.ArgumentParser(description="Build report 11.")
-    parser.add_argument("--analysis", type=Path, default=RESULTS / "ranker_analysis.json")
+    parser.add_argument("--analysis", type=Path, default=DATA / "ranker_analysis.json")
     parser.add_argument("--output", type=Path, default=OUTPUT)
     args = parser.parse_args()
     args.output.write_text(build(args.analysis), encoding="utf-8")

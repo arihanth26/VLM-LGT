@@ -62,6 +62,66 @@ Detector AUROC on test (2B answer right / fix would help):
 | after_probe | 0.877 | 0.831 |
 | token | 0.847 | 0.829 |
 
+## Fix: idefics3_8b
+
+Questions {'val': 6420, 'test': 9517}, missing fix answers {'val': 0, 'test': 0}. 2B greedy on test: 82.78%. Fix everything: 68.89% (-13.89). Oracle (either answer right): 88.59%.
+
+| Setting | Detector | Rule | Budget (val) / share routed (test) | Cost (2B passes) | Test accuracy | Gain (95% interval) | Fixed / broken | Gain over random, same budget |
+|---|---|---|---:|---:|---:|---|---|---|
+| best detector and rule at a 20% budget | token | confident | 20% / 19.4% | 1.78 | 83.17% | +0.39 (-0.06 to +0.86) | +272 / -235 | +0.46 (+0.01 to +0.91) |
+| best detector and rule at a 30% budget | pre_probe | confident | 30% / 28.4% | 2.14 | 83.68% | +0.90 (+0.42 to +1.40) | +314 / -228 | +1.06 (+0.62 to +1.49) |
+| best detector, rule and budget | after_head | confident | 45% / 42.9% | 2.72 | 83.76% | +0.98 (+0.45 to +1.51) | +378 / -285 | +1.16 (+0.73 to +1.58) |
+| smallest budget keeping 80% of the best validation gain | after_head | confident | 30% / 28.2% | 2.13 | 83.92% | +1.15 (+0.67 to +1.65) | +331 / -222 | +1.30 (+0.85 to +1.76) |
+
+Per dataset, first headline (20% budget):
+
+| Dataset | Greedy | Chosen | Gain (95% interval) | Fix everything |
+|---|---:|---:|---|---:|
+| chartqa_full | 76.48% | 77.08% | +0.60 (-0.40 to +1.56) | 67.60% |
+| textvqa | 81.52% | 81.52% | +0.00 (-0.92 to +0.92) | 64.12% |
+| docvqa | 87.04% | 86.28% | -0.76 (-1.52 to -0.04) | 58.64% |
+| scienceqa_img | 86.86% | 88.89% | +2.03 (+0.99 to +3.17) | 89.09% |
+
+Detector AUROC on test (2B answer right / fix would help):
+
+| Detector | 2B right | Fix helps |
+|---|---:|---:|
+| pre_head | 0.857 | 0.790 |
+| pre_probe | 0.856 | 0.793 |
+| after_head | 0.881 | 0.816 |
+| after_probe | 0.877 | 0.814 |
+| token | 0.847 | 0.803 |
+
+## Fix: internvl3_8b
+
+Questions {'val': 6420, 'test': 9517}, missing fix answers {'val': 0, 'test': 0}. 2B greedy on test: 82.78%. Fix everything: 88.03% (+5.25). Oracle (either answer right): 92.19%.
+
+| Setting | Detector | Rule | Budget (val) / share routed (test) | Cost (2B passes) | Test accuracy | Gain (95% interval) | Fixed / broken | Gain over random, same budget |
+|---|---|---|---:|---:|---:|---|---|---|
+| best detector and rule at a 20% budget | after_head | replace | 20% / 19.1% | 1.76 | 86.97% | +4.19 (+3.65 to +4.73) | +550 / -151 | +3.23 (+2.70 to +3.75) |
+| best detector and rule at a 30% budget | after_head | replace | 30% / 28.2% | 2.13 | 87.53% | +4.75 (+4.14 to +5.37) | +677 / -225 | +3.27 (+2.71 to +3.85) |
+| best detector, rule and budget | token | replace | 55% / 54.7% | 3.19 | 88.43% | +5.65 (+4.94 to +6.33) | +856 / -318 | +3.01 (+2.51 to +3.54) |
+| smallest budget keeping 80% of the best validation gain | token | replace | 30% / 29.6% | 2.18 | 87.37% | +4.59 (+3.99 to +5.17) | +651 / -214 | +3.11 (+2.54 to +3.68) |
+
+Per dataset, first headline (20% budget):
+
+| Dataset | Greedy | Chosen | Gain (95% interval) | Fix everything |
+|---|---:|---:|---|---:|
+| chartqa_full | 76.48% | 82.56% | +6.08 (+4.84 to +7.36) | 83.96% |
+| textvqa | 81.52% | 83.68% | +2.16 (+1.20 to +3.12) | 83.00% |
+| docvqa | 87.04% | 88.56% | +1.52 (+0.84 to +2.20) | 88.96% |
+| scienceqa_img | 86.86% | 94.55% | +7.68 (+6.49 to +8.97) | 98.17% |
+
+Detector AUROC on test (2B answer right / fix would help):
+
+| Detector | 2B right | Fix helps |
+|---|---:|---:|
+| pre_head | 0.857 | 0.810 |
+| pre_probe | 0.856 | 0.812 |
+| after_head | 0.881 | 0.832 |
+| after_probe | 0.877 | 0.830 |
+| token | 0.847 | 0.823 |
+
 ## Fix: up1.5
 
 Questions {'val': 6420, 'test': 9517}, missing fix answers {'val': 0, 'test': 0}. 2B greedy on test: 82.78%. Fix everything: 83.36% (+0.58). Oracle (either answer right): 86.15%.

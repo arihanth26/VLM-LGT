@@ -4,7 +4,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:1
-#SBATCH -p coc-gpu,ice-gpu
+#SBATCH -p ice-gpu
 #SBATCH -C "H100"
 #SBATCH --mem=64G
 #SBATCH -t 04:00:00
@@ -20,5 +20,6 @@ cd "$SLURM_SUBMIT_DIR"
 module load anaconda3
 export HF_HOME="${HF_HOME:-$SLURM_SUBMIT_DIR/.hf_cache}"
 PYTHON_BIN="$SLURM_SUBMIT_DIR/.venv/bin/python"
+# Partition ice-gpu only: the H100 nodes are there (coc-gpu has none). With another GPU (-C A100-80GB, L40S), add -p coc-gpu,ice-gpu.
 # LATENCY_ARGS: options for measure_latency.py, e.g. "--models 2b 8b internvl3_8b idefics3_8b --output <file>"
 srun "$PYTHON_BIN" -m experiments.approach1_latent_self_correction.measure_latency ${LATENCY_ARGS:-}

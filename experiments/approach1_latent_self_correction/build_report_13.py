@@ -40,10 +40,13 @@ SETS = {
     "ground_cot_multi_esc": "2B set + 8B answer + 2B on enlarged images", "everything_multi_esc": "every 2B source + 8B + enlarged images",
     "cot8b": "greedy + 8B reasoning", "ground_cot_multi_cot8b": "2B set + 8B reasoning",
     "ground_cot_multi_esc8b_cot8b": "2B set + 8B answer + 8B reasoning",
+    "families": "greedy + InternVL3-8B + Idefics3-8B answers", "esc8b_families": "greedy + Qwen3-VL-8B + InternVL3-8B + Idefics3-8B answers",
+    "ground_cot_multi_families": "2B set + InternVL3-8B + Idefics3-8B", "ground_cot_multi_esc8b_cot8b_families": "2B set + 8B answer + 8B reasoning + InternVL3-8B + Idefics3-8B",
 }
 DETECTOR = {"token": "answer probability", "pre_head": "pre-generation head", "after_head": "head on the greedy answer",
             "judge": "the model's yes/no judgement", "pre_probe": "pre-generation probe", "after_probe": "probe on the greedy answer", "random": "random"}
-FIX = {"4b": "Qwen3-VL-4B answer", "8b": "Qwen3-VL-8B answer", "up1.5": "2B on the image enlarged 1.5x", "up2": "2B on the image enlarged 2x"}
+FIX = {"4b": "Qwen3-VL-4B answer", "8b": "Qwen3-VL-8B answer", "up1.5": "2B on the image enlarged 1.5x", "up2": "2B on the image enlarged 2x",
+       "internvl3_8b": "InternVL3-8B answer (other family)", "idefics3_8b": "Idefics3-8B answer (other family)"}
 BASELINE = {"greedy": "2B greedy answer", "self_consistency_5": "self-consistency, 5 answers", "self_consistency_10": "self-consistency, 10 answers",
             "reasoning_vote": "vote over 4 reasoning answers", "reasoning_greedy_vote": "vote over greedy + 4 reasoning answers",
             "set_vote": "vote over the 2B candidate set", "set_judge_best": "candidate the judge likes most",
@@ -138,7 +141,11 @@ def build() -> str:
     g_cot, g_best = load("gating_v3_multi_esc_cot8b.json"), load("gating_v3_multi_esc_cot8b_drop_judge.json")
     g_sec = load("gating_v3_multi_esc_cot8b_drop_judge_seconds.json")
     analysis, unseen = load("best_ranker_analysis.json"), load("unseen.json")
-    H = {name: heads(g) for name, g in (("multi", g_multi), ("nj", g_nj), ("esc", g_esc), ("esc_nj", g_esc_nj), ("cot", g_cot), ("best", g_best), ("sec", g_sec))}
+    fam, g_fam = load("candidate_ranker_v3_multi_esc_cot8b_families_drop_judge.json"), load("gating_v3_multi_esc_cot8b_families_drop_judge.json")
+    g4, g4e, g8 = load("base_4b/gating_v3_multi.json"), load("base_4b/gating_v3_multi_esc_cot8b_drop_judge.json"), load("base_8b/gating_v3_multi.json")
+    esc4, an4 = load("base_4b/escalation.json"), load("base_4b/best_ranker_analysis.json")
+    lat_other = {name: load(f"latency_{name}.json") for name in ("A100-80GB", "L40S")}
+    H = {name: heads(g) for name, g in (("multi", g_multi), ("nj", g_nj), ("esc", g_esc), ("esc_nj", g_esc_nj), ("cot", g_cot), ("best", g_best), ("sec", g_sec), ("fam", g_fam))}
 
     greedy = g_best["greedy_test"]
     bc = best["choice"]
@@ -202,7 +209,7 @@ def build() -> str:
 
     # Section 5: routing to each fix.
     route_rows = []
-    for fix in ("4b", "8b", "up1.5", "up2"):
+    for fix in ("4b", "8b", "internvl3_8b", "idefics3_8b", "up1.5", "up2"):
         f = esc["fixes"][fix]
         for h in f["headlines"]:
             if h["name"].startswith("best detector and rule at a 30%") or h["name"] == "best detector, rule and budget":
@@ -218,7 +225,8 @@ def build() -> str:
     for name, ranker, H_, keys in (("v3, sampled reasoning", multi, H["multi"], (TWO,)),
                                    ("v3 + 8B and enlarged images", r_esc, H["esc"], ("T1_k0_esc8b", "T1_k0_ground_cot_multi_esc8b", "T1_k0_ground_cot_multi_esc")),
                                    ("v3 + 8B reasoning", r_cot, H["cot"], ("T1_k0_cot8b", "T1_k0_ground_cot_multi_cot8b", K)),
-                                   ("v3 + 8B reasoning, no judge", best, H["best"], ("T1_k0_esc8b", "T1_k0_cot8b", "T1_k0_ground_cot_multi_cot8b", K))):
+                                   ("v3 + 8B reasoning, no judge", best, H["best"], ("T1_k0_esc8b", "T1_k0_cot8b", "T1_k0_ground_cot_multi_cot8b", K)),
+                                   ("v3 + other families, no judge", fam, H["fam"], ("T1_k0_families", "T1_k0_esc8b_families", "T1_k0_ground_cot_multi_families", f"{K}_families"))):
         for key in keys:
             if (key, "correct every question (no gate)") not in H_:
                 continue
@@ -344,6 +352,36 @@ def build() -> str:
     ], greedy, "model passes per question (greedy = 1; an 8B answer counts 4)")
 
     agreement_drop = abl_rows[1][4]
+    fc = fam["choice"]; fam_best = fc["test"][fc["selector"]]["pooled"]
+    fam_fast = H["fam"][("T1_k0_esc8b_families", "correct every question (no gate)")]
+    intern_best = next(h for h in esc["fixes"]["internvl3_8b"]["headlines"] if h["name"] == "best detector, rule and budget")
+    intern_all, idef_all = esc["fixes"]["internvl3_8b"]["fix_everything"]["pooled"], esc["fixes"]["idefics3_8b"]["fix_everything"]["pooled"]
+    idef_best = next(h for h in esc["fixes"]["idefics3_8b"]["headlines"] if h["name"] == "best detector, rule and budget")
+    # other base models: gating and routing, rerun without constant detectors
+    def gate_rows(g, label_):
+        out = []
+        for h in g["headlines"]:
+            if h["name"].startswith("best under") or h["name"] == "best detector at a 50% budget" and h["configuration"] in ("T1_k0_ground_cot_multi", K):
+                out.append([label_, h["name"].replace(" per question (any configuration)", "").replace("best detector at a 50% budget", "50% gate"), label(h["configuration"]).replace(" (2B only)", "").replace("2B set", "base-model set"),
+                            f"{h['test_passes']:.2f}", pct(h["test"]["pooled"]["accuracy"]), ci(h["test"]["pooled"])])
+        return out
+    base_gate_rows = gate_rows(g4, "Qwen3-VL-4B") + gate_rows(g4e, "Qwen3-VL-4B + 8B answers") + gate_rows(g8, "Qwen3-VL-8B")
+    r4 = next(h for h in esc4["fixes"]["8b"]["headlines"] if h["name"] == "best detector, rule and budget")
+    p4 = an4["paired"]["best ranker minus routing to 8B"]["pooled"]
+    # latency on three GPU types
+    gpu_rows = []
+    for name in ("greedy", "reasoning", "grounding", "encode", "greedy_8b", "reasoning_8b", "greedy_internvl3_8b", "greedy_idefics3_8b"):
+        row = [lat_names.get(name, name.replace("greedy_", "").replace("_8b", "-8B") + " short answer")]
+        for L in (lat, lat_other["A100-80GB"], lat_other["L40S"]):
+            c = L["components"]
+            row.append(f"{c[name]['mean']:.3f} ({c[name]['mean'] / c['greedy']['mean']:.1f}x)" if name in c else "—")
+        gpu_rows.append(row)
+    lat_names.update({"greedy_internvl3_8b": "InternVL3-8B short answer", "greedy_idefics3_8b": "Idefics3-8B short answer"})
+    for row, name in zip(gpu_rows, ("greedy", "reasoning", "grounding", "encode", "greedy_8b", "reasoning_8b", "greedy_internvl3_8b", "greedy_idefics3_8b")):
+        row[0] = lat_names.get(name, name)
+    unseen_family_rows = [[n.split(",")[0].replace("internvl3_8b", "InternVL3-8B").replace("idefics3_8b", "Idefics3-8B").replace("8b on", "Qwen3-VL-8B on") + ", 50% gate",
+                           pct(v["pooled"]["accuracy"]), ci(v["pooled"])] + [pts(v[d]["difference"]) for d in ("ai2d", "infovqa")]
+                          for n, v in unseen["pipeline"].items() if " on gated questions, gate 50%" in n]
     toc = [("summary", "Summary"), ("pipeline", "Where this fits"), ("result", "Main result"), ("frontier", "Accuracy against cost"), ("routing", "Routing"),
            ("candidates", "Larger-model candidates"), ("inside", "What the best ranker does"), ("cascade", "Cascade"), ("baselines", "Baselines"),
            ("inputs", "Which inputs matter"), ("robust", "Robustness"), ("unseen", "Unseen datasets"), ("bases", "Other base models"), ("latency", "Measured time"),
@@ -377,6 +415,10 @@ the more confident of the two answers gives {pct(route_best['test']['pooled']['a
 question no ranker policy does better (Section 4). The full ranker is above it by {pci(paired['best ranker minus routing to 8B']['pooled'])} points
 (p {pval(paired['best ranker minus routing to 8B']['pooled']['p_value'])}), and by {pci(paired['best ranker gated 50% minus routing to 8B']['pooled'])}
 when gated at 50% (Section 7).</li>
+<li><b>A helper from another model family works as well.</b> Routing to InternVL3-8B gives {pct(intern_best['test']['pooled']['accuracy'])}
+({intern_best['cost']:.1f} passes), as good as routing to Qwen3-VL-8B; Idefics3-8B is a weak helper ({pct(idef_all['accuracy'])} on its own). With both as further
+candidates the ranker reaches <b>{pct(fam_best['accuracy'])}, {ci(fam_best)} points</b>, and the greedy answer with only the three larger-model answers
+{pct(fam_fast['test']['pooled']['accuracy'])} (Sections 5–6).</li>
 <li><b>Source agreement is what the ranker relies on.</b> Without it the best ranker falls by {agreement_drop.lstrip('+-')} points; the judge can be
 dropped at no cost, which saves one scoring pass per candidate (Section 10).</li>
 <li><b>The result is stable.</b> Two further seed sets move the best ranker by less than 0.1 point; trained without one dataset it keeps most of its gain
@@ -423,13 +465,20 @@ chosen on validation. Cost in 2B passes: a 4B answer counts 2, an 8B answer 4, a
 <p>The trained head is the better judge of whether the 2B answer is right; for finding the questions the 8B model fixes, the answer probability is as good.
 Enlarging the image helps little (about a point at best): the processor already reads images at their native size. Routing 30% of questions to 4B
 (86.03%) and running 4B on every question (85.85%) are equal within noise.</p>
+<p><b>Helpers from other model families.</b> InternVL3-8B (InternViT vision encoder, Qwen2.5 language model) on every question reaches
+{pct(intern_all['accuracy'])}, and routing to it {pct(intern_best['test']['pooled']['accuracy'])}: the detector and routing do not depend on the helper being a Qwen3-VL model.
+Idefics3-8B (SigLIP, Llama 3.1) reaches only {pct(idef_all['accuracy'])} on its own; routing to it with the <i>confident</i> rule still gains a little
+({pts(idef_best['test']['pooled']['difference'])} points), because the 2B answer is kept whenever it is more confident.</p>
 
 <h2 id="candidates">6. Larger-model answers as ranker candidates</h2>
 <p>The 8B answers are encoded by the 2B model exactly like the 2B candidates, and the ranker gets one more source-agreement feature (the share of
 larger-model proposals equal to the candidate). The rankers are retrained on the 12,000 training questions, for which the 8B answers were generated too.</p>
 {table(["Ranker", "Candidates", "No gate", "Gain (95% interval)", "Passes", "Gated 50%", "Passes", "Best possible pick"], cand_rows, left_cols=(0, 1))}
 <p>The 8B short answer alone already carries most of the gain; the 8B reasoning answer adds to it when the 2B candidates are present, and the
-best possible pick from that set is close to 95%. The enlarged-image answers do not help the ranker.</p>
+best possible pick from that set is close to 95%. The enlarged-image answers do not help the ranker. The answers of InternVL3-8B and Idefics3-8B,
+encoded the same way with their own source-agreement feature, raise the best ranker to {pct(fam_best['accuracy'])}, {ci(fam_best)} points (best possible pick
+{pct(fc['test']['oracle']['pooled']['accuracy'])}), and the greedy answer with the three larger-model answers alone reaches {pct(fam_fast['test']['pooled']['accuracy'])}
+at {fam_fast['test_passes']:.1f} passes. Their seconds need the H100 timing of the two models, which is in progress.</p>
 
 <h2 id="inside">7. What the best ranker does</h2>
 <p>The saved best ranker scored again on test (analyze_best_ranker.py), compared question by question with the alternatives. Routing uses the setting
@@ -488,9 +537,11 @@ the learning-rate choice, then tested on that dataset; against the same ranker t
 as in-domain, the saved rankers without their dataset input, configurations chosen on in-domain validation, and gate thresholds from in-domain
 validation. Nothing is trained, tuned or chosen on these datasets.</p>
 {table(["Policy", "Accuracy", "Gain over greedy (95% interval)", "Fixed / broken", *UNSEEN.values()], unseen_rows, left_cols=(0,))}
+<p>Routing to each larger model on the unseen datasets (its answer replaces the 2B answer on the gated questions):</p>
+{table(["Policy", "Accuracy", "Gain over greedy (95% interval)", *UNSEEN.values()], unseen_family_rows, left_cols=(0,))}
 <p>The 2B-only ranker transfers with a gain similar to in-domain. These datasets are harder for the 2B model, so the in-domain thresholds correct far more
 of their questions ({corrected_share} at the 50% budget). The larger-model candidates carry most of the gain here: the best ranker is only a little above
-running the 8B model on every question.</p>
+running the 8B model on every question. Replacing answers with a weak helper is harmful at that share: Idefics3-8B loses about ten points.</p>
 
 <h2 id="bases">13. Other base models</h2>
 <p>The whole pipeline repeated with Qwen3-VL-4B and Qwen3-VL-8B as the base model in place of 2B: their own candidates, encodings and rankers, on the same
@@ -499,7 +550,12 @@ training questions (1,500 per dataset; Section 11 shows little loss from that).<
 {table(["Base model", "Candidates", "Training questions", "Greedy", "Ranker", "Gain (95% interval)", "Best possible pick"], base_rows_m, left_cols=(0, 1))}
 <p>The gain shrinks as the base model gets stronger: its own corrections rarely beat its greedy answer. With the 8B answers as candidates, the 4B base model
 gains {base_rows_m[3][5].split(' ')[0]} points, about what the 2B model gains from its own candidates ({base_rows_m[0][5].split(' ')[0]}), and ends at {base_rows_m[3][4]},
-close to the 2B system with the 8B answers ({base_rows_m[1][4]}). The 4B and 8B gating and routing tables are being rerun (Section 15).</p>
+close to the 2B system with the 8B answers ({base_rows_m[1][4]}).</p>
+<p>Gating and budget-capped policies of the other base models (passes in base-model calls: an 8B answer counts 2 against 4B), chosen on validation:</p>
+{table(["Base model", "Setting", "Candidates", "Passes", "Test accuracy", "Gain (95% interval)"], base_gate_rows, left_cols=(0, 1, 2))}
+<p>Routing with 4B as the base model and 8B as the fix (no ranker), setting chosen on validation: {pct(r4['test']['pooled']['accuracy'])}
+({ci(r4['test']['pooled'])}) at {r4['cost']:.2f} passes; the best 4B ranker with the 8B answers is above it by {pts(p4['difference'])}
+({pts(p4['ci_low'])} to {pts(p4['ci_high'])}) points on the same questions, as with the 2B base model.</p>
 
 <h2 id="latency">14. Measured time</h2>
 <p>Mean, median and 90th-percentile seconds per question of every component on one {lat['gpu']}, on the first {lat['per_dataset']} test questions of
@@ -510,6 +566,9 @@ each dataset (batch size 1; the first question of each run is a warm-up and not 
 more slowly than parameter count. A step-by-step answer counts as 1 call but takes {comp['reasoning']['mean'] / comp['greedy']['mean']:.0f} times a
 short answer, because it generates up to 256–384 tokens. In seconds, an 8B answer costs about as much as one zoomed-crop answer and is the most
 effective single fix, while the reasoning candidates are the most expensive (Section 4 gives the policies chosen under seconds caps).</p>
+<p>The same measurement on two more GPU types (mean seconds, and the ratio to that GPU's 2B short answer):</p>
+{table(["Component", lat['gpu'], lat_other['A100-80GB']['gpu'], lat_other['L40S']['gpu']], gpu_rows, left_cols=(0,))}
+<p>The ratios hold across GPUs: a larger model's short answer costs 1.3 to 3.9 times a 2B one, and a step-by-step answer 12 to 17 times.</p>
 
 <h2 id="checks">15. Checks</h2>
 <ul><li><b>Gating uses the exact saved rankers.</b> Before gating, each configuration's ungated accuracy is recomputed and compared with the training
@@ -519,15 +578,15 @@ run's report on validation and test; the script stops otherwise:</li></ul>
 <li><b>Complete inputs.</b> Every validation and test question has its 4B and 8B answers (0 missing), and the escalation candidates cover all
 12,000 training questions.</li>
 <li><b>Constant detectors.</b> With the 4B and 8B base models the 2B-trained head and probe score a constant 0.5, which a budget threshold turns into
-"correct every question". The gating and routing scripts now leave out any detector that is constant on validation; this changes no 2B result, and the
-4B and 8B gating and routing tables are being rerun with it.</li>
+"correct every question". The gating and routing scripts leave out any detector that is constant on validation; this changes no 2B result, and the
+4B and 8B gating and routing tables in Section 13 were rerun with it.</li>
 <li><b>Tests.</b> Unit tests for the routing simulation, the cascade, the escalation candidates, the gate, the rankers and the analysis pass on a GPU node
 before the analyses run, under each base model.</li>
 </ul>
 
 <h2 id="limits">16. Limits</h2>
 <ul>
-<li>The larger models are of the same family as the 2B model; fixes from other families are in progress.</li>
+<li>Two helpers from other families were tested (InternVL3-8B, Idefics3-8B); the detector and the ranker are still Qwen3-VL-2B.</li>
 <li>Pass counts are a convention; Section 14 shows they misstate the relative cost of 8B answers and reasoning.</li>
 <li>Latency is measured at batch size 1 on one GPU type; batched serving would change the ratios.</li>
 <li>The ranker is trained with correctness labels on four datasets; Sections 11 and 12 test how far it carries.</li>
@@ -535,9 +594,7 @@ before the analyses run, under each base model.</li>
 
 <h2 id="progress">17. In progress</h2>
 <ul>
-<li>The 4B and 8B base-model gating and routing tables, rerun without the constant detectors.</li>
-<li>Fixes from other model families (InternVL3-8B, Idefics3-8B): routing, as ranker candidates, and on the unseen datasets; component times on A100 and
-L40S.</li>
+<li>The H100 timing of InternVL3-8B and Idefics3-8B, and the seconds of the rankers that use them.</li>
 </ul>
 
 <h2 id="reproduce">18. Reproduce</h2>
@@ -548,6 +605,7 @@ bash slurm/run_next_steps_pipeline.sh            # cascade; rankers without the 
 bash slurm/run_followups_pipeline.sh             # seeds, leave-one-dataset-out, training-set size, gating in seconds, unseen
 bash slurm/run_unseen_pipeline.sh                # the unseen datasets through the frozen pipeline
 bash slurm/run_base_model_pipeline.sh            # another base model (SIZE=4b or 8b); run_base_model_escalation_pipeline.sh adds the 8B answers
+bash slurm/run_families_pipeline.sh              # InternVL3-8B and Idefics3-8B: routing, ranker candidates, unseen answers, latency
 sbatch --export=ALL,BATCH=best_ranker_analysis.txt slurm/run_batch.sbatch   # Section 7
 sbatch --export=ALL,BATCH=headline_ablations.txt slurm/run_batch.sbatch     # Section 10 (also headline_variants.txt, nojudge_seeds.txt)
 sbatch slurm/compute_baselines.sbatch            # training-free baselines

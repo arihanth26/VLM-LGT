@@ -51,7 +51,7 @@ within-question measurements).</p>
 <div class="toc"><a href="#summary">Summary</a><a href="#story">Where this fits</a><a href="#idea">The idea</a><a href="#sources">Candidate sources</a>
 <a href="#ranker">The ranker</a><a href="#result">Main result</a><a href="#k">Best-of-5, 7, 9, 11+</a><a href="#contrib">What each source adds</a>
 <a href="#why">Why it works</a><a href="#ablation">Ablations</a><a href="#compute">Compute</a><a href="#cases">Cases</a><a href="#round2">Second round</a><a href="#meaning">What it means</a>
-<a href="#limits">Limits</a><a href="#next">Next</a><a href="#appendix">Appendix</a></div>
+<a href="#limits">Limits</a><a href="#next">What came next</a><a href="#appendix">Appendix</a></div>
 
 <h2 id="summary">1. Summary</h2>
 <div class="stats">
@@ -309,14 +309,20 @@ itself asked to compare candidates against the image, or a ranker trained with m
 <li>Correctness uses the thresholds of the earlier reports (VQA score ≥ 0.5, ANLS ≥ 0.9, option letter), which can count near-misses as wrong both ways.</li>
 <li>Contrastive decoding uses one noise strength and one plausibility cutoff; neither was tuned.</li>
 </ul>
-<h2 id="next">16. Next</h2>
+<h2 id="next">16. What came next</h2>
+<p>The four next steps proposed here, and what the later reports found (same test split, from <code>04_sweep_data/</code>):</p>
 <ol>
-<li>Combine the best sources of both rounds per question (reasoning for chart and science questions, crops for text questions) and train the ranker on all
-50,517 training questions with every source; the 12,000-question training set of ranker v2 is still a quarter of the data.</li>
-<li>Gate the second-round step like the first (Section 11): reasoning costs one long generation, and most questions keep the greedy answer.</li>
-<li>Improve the judge: it says Yes to most fluent answers; asking it to compare two candidates, or calibrating it per dataset, should make it a stronger feature.</li>
-<li>Repeat on Qwen3-VL-4B to see whether the gains hold with a stronger base model.</li>
+<li><b>Combine the best sources of both rounds.</b> Report 12's ranker v3 reads every source at once, with features saying which sources proposed each
+candidate: +3.09 points (85.87%); with sampled reasoning answers +3.60 (86.38%). Training on all 50,517 questions was not needed:
+report 13 finds that 750 training questions per dataset already reach 89.20% for its best ranker.</li>
+<li><b>Gate the second-round step.</b> Report 12 gates ranker v3 with a threshold on the answer probability fixed on validation: correcting
+50% of questions keeps the full gain (86.38%) at 7.0 model passes per question.</li>
+<li><b>Improve the judge.</b> Not needed: removing the judge from the ranker's inputs changes accuracy by -0.02 points (report 13), so it was dropped,
+which saves one scoring pass per candidate.</li>
+<li><b>Repeat on Qwen3-VL-4B.</b> Report 13: with 4B as the base model the ranker gains +1.71 points from its own candidates, and +3.54
+(89.38%) with the Qwen3-VL-8B answers as candidates.</li>
 </ol>
+<p>Report 13's best ranker, with the 8B short and step-by-step answers as candidates, reaches 89.53% (+6.76 points).</p>
 <h2 id="appendix">Appendix A. Files and jobs</h2>
 <ul>
 <li>Second round: <code>correction_v2.py</code> (grounded crops, reasoning, judge), <code>train_ranker_v2.py</code>, <code>repair_v2_shards.py</code> (re-encodes the

@@ -1,16 +1,16 @@
 # The best ranker: paired comparisons, where its answers come from, abstention
 
-Test, 9517 questions. Best ranker: ground_cot_multi_esc8b_cot8b, no judge input. Routing setting chosen on validation: {'detector': 'pre_head', 'rule': 'confident', 'budget': 0.05}.
+Test, 9517 questions. Best ranker: ground_cot_multi_esc8b_cot8b, no judge input. Routing setting chosen on validation: {'detector': 'token', 'rule': 'confident', 'budget': 0.65}.
 
 ## Paired comparisons (row minus column, same questions)
 
 | Comparison | Pooled | chartqa_full | textvqa | docvqa | scienceqa_img |
 |---|---|---|---|---|---|
-| best ranker minus routing to 8B | +1.37 (+0.95 to +1.79), p = 4.4e-10 | +3.80 | +0.04 | +0.84 | +0.64 |
-| best ranker gated 50% minus routing to 8B | +1.20 (+0.80 to +1.60), p = 2.1e-08 | +3.52 | +0.00 | +0.84 | +0.25 |
+| best ranker minus routing to 8B | +1.38 (+0.96 to +1.81), p = 3.4e-10 | +3.84 | +0.04 | +0.84 | +0.64 |
+| best ranker gated 50% minus routing to 8B | +1.21 (+0.81 to +1.61), p = 1.5e-08 | +3.56 | +0.00 | +0.84 | +0.25 |
 | best ranker minus 8B on every question | +1.58 (+1.09 to +2.05), p = 1.9e-11 | +4.04 | +0.48 | +0.24 | +1.54 |
 | best ranker minus 2B-only ranker | +1.89 (+1.49 to +2.29), p = 3.1e-19 | +2.88 | +1.52 | +1.40 | +1.74 |
-| routing to 8B minus 8B on every question | +0.21 (-0.20 to +0.59), p = 0.32 | +0.24 | +0.44 | -0.60 | +0.89 |
+| routing to 8B minus 8B on every question | +0.20 (-0.20 to +0.58), p = 0.35 | +0.20 | +0.44 | -0.60 | +0.89 |
 | 2B-only ranker minus 2B greedy | +1.72 (+1.38 to +2.06), p = 4.1e-22 | +3.04 | +1.16 | +1.12 | +1.54 |
 
 ## Accuracy of each method
@@ -20,7 +20,7 @@ Test, 9517 questions. Best ranker: ground_cot_multi_esc8b_cot8b, no judge input.
 | 2B greedy | 85.84% |
 | 2B-only ranker (no judge) | 87.56% |
 | 8B on every question | 87.87% |
-| routing to 8B (validation choice) | 88.08% |
+| routing to 8B (validation choice) | 88.07% |
 | best ranker, no gate | 89.45% |
 | best ranker, gated at 50% | 89.28% |
 

@@ -39,6 +39,10 @@ Questions: {'ai2d': 3088, 'infovqa': 2801}. Ranker variant: scalars_nods (no dat
 | T1_k0_ground_cot_multi_cot8b (8B reasoning, no judge), gate 50% (corrected 70.1%) | 76.45% | +11.73 (+10.68 to +12.75) | +918 / -227 | +7.25 (+5.96 to +8.55) | +16.67 (+14.92 to +18.28) |
 | 8b on gated questions, gate 30% (corrected 49.0%) | 74.60% | +9.88 (+8.86 to +10.92) | +789 / -207 | +6.96 (+5.67 to +8.23) | +13.10 (+11.64 to +14.64) |
 | 8b on gated questions, gate 50% (corrected 70.1%) | 76.18% | +11.46 (+10.37 to +12.58) | +933 / -258 | +7.97 (+6.57 to +9.29) | +15.32 (+13.67 to +16.99) |
+| idefics3_8b on gated questions, gate 30% (corrected 49.0%) | 58.62% | -6.10 (-7.10 to -5.08) | +285 / -644 | +0.23 (-1.20 to +1.55) | -13.07 (-14.57 to -11.67) |
+| idefics3_8b on gated questions, gate 50% (corrected 70.1%) | 54.27% | -10.44 (-11.68 to -9.27) | +357 / -972 | -0.65 (-2.27 to +0.84) | -21.24 (-22.99 to -19.60) |
+| internvl3_8b on gated questions, gate 30% (corrected 49.0%) | 73.37% | +8.66 (+7.59 to +9.70) | +772 / -262 | +6.83 (+5.51 to +8.19) | +10.67 (+9.03 to +12.25) |
+| internvl3_8b on gated questions, gate 50% (corrected 70.1%) | 74.85% | +10.14 (+8.95 to +11.29) | +928 / -331 | +7.71 (+6.25 to +9.23) | +12.82 (+11.07 to +14.57) |
 | baseline: greedy | 64.71% | +0.00 (+0.00 to +0.00) | +0 / -0 | +0.00 (+0.00 to +0.00) | +0.00 (+0.00 to +0.00) |
 | baseline: self_consistency_5 | 64.48% | -0.24 (-0.61 to +0.14) | +57 / -71 | -0.58 (-1.10 to -0.10) | +0.14 (-0.43 to +0.71) |
 | baseline: self_consistency_10 | 64.70% | -0.02 (-0.37 to +0.36) | +59 / -60 | -0.29 (-0.74 to +0.19) | +0.29 (-0.32 to +0.89) |
@@ -48,3 +52,5 @@ Questions: {'ai2d': 3088, 'infovqa': 2801}. Ranker variant: scalars_nods (no dat
 | baseline: set_judge_best | 62.40% | -2.31 (-3.28 to -1.43) | +336 / -472 | -4.15 (-5.47 to -2.85) | -0.29 (-1.64 to +1.07) |
 | baseline: set_token_best | 64.66% | -0.05 (-0.34 to +0.24) | +37 / -40 | -0.03 (-0.32 to +0.29) | -0.07 (-0.57 to +0.43) |
 | baseline: model_8b | 76.52% | +11.80 (+10.68 to +12.94) | +986 / -291 | +8.26 (+6.74 to +9.68) | +15.71 (+13.99 to +17.42) |
+| baseline: model_idefics3_8b | 44.57% | -20.14 (-21.53 to -18.80) | +379 / -1565 | -1.62 (-3.34 to -0.06) | -40.56 (-42.73 to -38.63) |
+| baseline: model_internvl3_8b | 74.72% | +10.00 (+8.76 to +11.19) | +973 / -384 | +7.90 (+6.35 to +9.49) | +12.32 (+10.42 to +14.14) |

@@ -89,7 +89,9 @@ LATENCY: dict = {}  # component -> mean seconds, from results/latency.json (empt
 SECONDS_OF = {"cot": ("reasoning", 1.0), "cot_s0": ("reasoning_x3", 1 / 3), "cot_s1": ("reasoning_x3", 1 / 3), "cot_s2": ("reasoning_x3", 1 / 3),
               "vcd_0.5": ("vcd", 1.0), "vcd_1": ("vcd", 1.0), "zoom_0": ("zoom", 1.0), "zoom_1": ("zoom", 1.0), "zoom_2": ("zoom", 1.0),
               "zoom_3": ("zoom", 1.0), "esc_8b": ("greedy_8b", 1.0), "cot_8b": ("reasoning_8b", 1.0),
-              "up1.5": ("greedy", 2.25), "up2": ("greedy", 4.0)}
+              "up1.5": ("greedy", 2.25), "up2": ("greedy", 4.0),
+              "esc_internvl": ("greedy_internvl3_8b", 1.0), "esc_idefics": ("greedy_idefics3_8b", 1.0)}
+TWO_B_FREE = {"ground", "ground_ctx"}  # grounding is counted once below, whatever the number of grounded sources
 DETECTOR_SECONDS = {"token": None, "pre_head": None, "after_head": "encode", "judge": "judge", "random": None}
 
 
@@ -99,9 +101,12 @@ def generation_seconds(k: int, sources: tuple) -> float:
     if any(s in ("ground", "ground_ctx") for s in sources):
         total += LATENCY["grounding"]
     for s in sources:
-        if s in SECONDS_OF:
-            component, factor = SECONDS_OF[s]
-            total += LATENCY[component] * factor
+        if s in TWO_B_FREE:
+            continue
+        component, factor = SECONDS_OF.get(s, (None, 0.0))
+        if component not in LATENCY:  # a source without a measured time: no estimate, rather than a silent zero
+            return float("nan")
+        total += LATENCY[component] * factor
     return total
 
 
@@ -271,6 +276,12 @@ def pts(x: float) -> str:
     return f"{100 * x:+.2f}"
 
 
+def secs(h: dict) -> str:
+    """Estimated seconds of a headline, or a dash when a component has no measured time."""
+    value = h.get("test_seconds", float("nan"))
+    return f"{value:.2f}" if value == value else "—"
+
+
 def markdown(result: dict) -> str:
     """Headline table and per-dataset rows of the gated settings."""
     lines = ["# Gating the v3 correction step", "",
@@ -287,7 +298,7 @@ def markdown(result: dict) -> str:
     for h in result["headlines"]:
         t, v = h["test"]["pooled"], h["vs_random"]
         lines.append(f"| {h['name']} | {h['configuration']} | {h['detector']} | {int(round(100 * h['budget']))}% / {100 * h['test_share']:.1f}% | "
-                     f"{h['test_passes']:.2f} | {h['test_calls']:.2f} | {h.get('test_seconds', 0):.2f} | {pct(t['accuracy'])} | {pts(t['difference'])} ({pts(t['ci_low'])} to {pts(t['ci_high'])}) | "
+                     f"{h['test_passes']:.2f} | {h['test_calls']:.2f} | {secs(h)} | {pct(t['accuracy'])} | {pts(t['difference'])} ({pts(t['ci_low'])} to {pts(t['ci_high'])}) | "
                      f"+{t['fixed']} / -{t['broken']} | {pts(v['difference'])} ({pts(v['ci_low'])} to {pts(v['ci_high'])}) |")
     lines += ["", "Per dataset (gain over greedy on test):", "", "| Setting | Configuration | " + " | ".join(DATASET_NAMES) + " |",
               "|---|---|" + "---|" * len(DATASET_NAMES)]
@@ -337,6 +348,9 @@ def main() -> None:
     SCORING["passes"] = args.scoring_passes
     if args.latency.exists():
         LATENCY.update({name: c["mean"] for name, c in json.loads(args.latency.read_text())["components"].items()})
+        # Further components measured on the same GPU type later (latency_H100_*.json, e.g. the other-family models).
+        for extra in sorted(args.latency.parent.glob("latency_H100_*.json")):
+            LATENCY.update({name: c["mean"] for name, c in json.loads(extra.read_text())["components"].items() if name not in LATENCY})
     output = RESULTS / f"gating_v3{args.tag}.json"
     configs = CONFIGS
     args.with_reasoning_8b = args.with_reasoning_8b or args.with_other_families

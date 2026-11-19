@@ -78,3 +78,17 @@ def test_evaluate_reports_seconds_when_timed():
         assert e["share"] == 0.5 and abs(e["seconds"] - (0.1 + 2.0) / 2) < 1e-9
     finally:
         g.LATENCY.clear(); g.LATENCY.update(saved)
+
+
+def test_seconds_estimate_is_missing_without_a_measured_component():
+    import math
+    from experiments.approach1_latent_self_correction import gate_ranker_v3 as g
+    saved = dict(g.LATENCY)
+    try:
+        g.LATENCY.clear(); g.LATENCY.update({"greedy": 0.1, "samples_10": 0.2, "greedy_8b": 0.15})
+        assert abs(g.generation_seconds(0, ("esc_8b",)) - 0.25) < 1e-9
+        assert math.isnan(g.generation_seconds(0, ("esc_8b", "esc_internvl")))  # InternVL3 not timed: no estimate
+        g.LATENCY["greedy_internvl3_8b"] = 0.3
+        assert abs(g.generation_seconds(0, ("esc_8b", "esc_internvl")) - 0.55) < 1e-9
+    finally:
+        g.LATENCY.clear(); g.LATENCY.update(saved)
