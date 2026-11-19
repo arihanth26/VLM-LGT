@@ -182,9 +182,11 @@ def analyze(fix: str, greedy: dict, fixes: dict) -> dict:
     heads = [headline(val, test, val_curves, f"best detector and rule at a {int(b * 100)}% budget", b) for b in (0.2, 0.3)]
     best = headline(val, test, val_curves, "best detector, rule and budget", None)
     heads += [best, efficient(val, test, val_curves, best)]
+    everything = final(test, np.ones(len(test["greedy"]), dtype=bool), "replace")
     for h in heads:
         h["cost"] = cost(h["detector"], h["rule"], h["test_share"], fix)
-    everything = final(test, np.ones(len(test["greedy"]), dtype=bool), "replace")
+        # Paired on the same test questions: this routing setting minus running the fix on every question.
+        h["vs_fix_everything"] = paired_difference(everything.tolist(), outcome(test, h["detector"], h["rule"], h["budget"], val).tolist())
     oracle = test["greedy"] | test["fix"]
     return {"fix": fix, "questions": {"val": len(val["greedy"]), "test": len(test["greedy"])},
             "missing_answers": {"val": val["missing"], "test": test["missing"]},
@@ -202,6 +204,14 @@ def pts(x: float) -> str:
     return f"{100 * x:+.2f}"
 
 
+def vs_everything(h: dict) -> str:
+    """The paired difference against fixing every question, as a table cell."""
+    e = h.get("vs_fix_everything")
+    if e is None:
+        return "n/a"
+    return f"{pts(e['difference'])} ({pts(e['ci_low'])} to {pts(e['ci_high'])}), p = {e['p_value']:.2g}"
+
+
 def markdown(result: dict) -> str:
     """Headline tables for every fix."""
     lines = ["# Escalation study: our detector, new fixes", "",
@@ -212,14 +222,14 @@ def markdown(result: dict) -> str:
                   f"Questions {r['questions']}, missing fix answers {r['missing_answers']}. 2B greedy on test: {pct(r['greedy_test_accuracy'])}. "
                   f"Fix everything: {pct(r['fix_everything']['pooled']['accuracy'])} ({pts(r['fix_everything']['pooled']['difference'])}). "
                   f"Oracle (either answer right): {pct(r['oracle']['pooled']['accuracy'])}.", "",
-                  "| Setting | Detector | Rule | Budget (val) / share routed (test) | Cost (2B passes) | Test accuracy | Gain (95% interval) | Fixed / broken | Gain over random, same budget |",
-                  "|---|---|---|---:|---:|---:|---|---|---|"]
+                  "| Setting | Detector | Rule | Budget (val) / share routed (test) | Cost (2B passes) | Test accuracy | Gain (95% interval) | Fixed / broken | Gain over random, same budget | Minus fix everything (p) |",
+                  "|---|---|---|---:|---:|---:|---|---|---|---|"]
         for h in r["headlines"]:
             t = h["test"]["pooled"]
             v = h["vs_random"]
             lines.append(f"| {h['name']} | {h['detector']} | {h['rule']} | {int(round(100 * h['budget']))}% / {100 * h['test_share']:.1f}% | {h['cost']:.2f} | {pct(t['accuracy'])} | "
                          f"{pts(t['difference'])} ({pts(t['ci_low'])} to {pts(t['ci_high'])}) | +{t['fixed']} / -{t['broken']} | "
-                         f"{pts(v['difference'])} ({pts(v['ci_low'])} to {pts(v['ci_high'])}) |")
+                         f"{pts(v['difference'])} ({pts(v['ci_low'])} to {pts(v['ci_high'])}) | {vs_everything(h)} |")
         lines += ["", "Per dataset, first headline (20% budget):", "", "| Dataset | Greedy | Chosen | Gain (95% interval) | Fix everything |", "|---|---:|---:|---|---:|"]
         h = r["headlines"][0]
         for d in DATASET_NAMES:

@@ -464,7 +464,10 @@ chosen on validation. Cost in 2B passes: a 4B answer counts 2, an 8B answer 4, a
 {table(["Detector", "2B answer right", "8B fix helps"], detq, left_cols=(0,))}
 <p>The trained head is the better judge of whether the 2B answer is right; for finding the questions the 8B model fixes, the answer probability is as good.
 Enlarging the image helps little (about a point at best): the processor already reads images at their native size. Routing 30% of questions to 4B
-(86.03%) and running 4B on every question (85.85%) are equal within noise.</p>
+({pct(route4_30['test']['pooled']['accuracy'])} at {route4_30['cost']:.2f} passes) and running 4B on every question
+({pct(e4['fix_everything']['pooled']['accuracy'])} at 2.00) are equal within noise: on the same questions the routing is
+{pts(route4_30['vs_fix_everything']['difference'])} ({pts(route4_30['vs_fix_everything']['ci_low'])} to {pts(route4_30['vs_fix_everything']['ci_high'])}) points
+above it, p = {route4_30['vs_fix_everything']['p_value']:.2f}, at about {100 * route4_30['cost'] / 2:.0f}% of its cost.</p>
 <p><b>Helpers from other model families.</b> InternVL3-8B (InternViT vision encoder, Qwen2.5 language model) on every question reaches
 {pct(intern_all['accuracy'])}, and routing to it {pct(intern_best['test']['pooled']['accuracy'])}: the detector and routing do not depend on the helper being a Qwen3-VL model.
 Idefics3-8B (SigLIP, Llama 3.1) reaches only {pct(idef_all['accuracy'])} on its own; routing to it with the <i>confident</i> rule still gains a little
