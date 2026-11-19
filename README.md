@@ -134,6 +134,7 @@ committed data alone (checked); regenerating candidates needs GPUs and the Qwen3
 | Component | Contributor |
 |---|---|
 | Repository scaffold, Qwen3-VL loading and inference, dataset configs, Approach 2 scaffold | Arihanth Jayavijayan |
-| Full-image baseline, token confidence, correctness heads, original ChartQA study, first correction experiments (100 examples) | Aryan Roy |
+| Full-image baseline, token-confidence evaluation, correctness heads, the original ChartQA study, and the first confidence-guided correction experiments | Aryan Roy |
 | Dataset extension, unified head, mixture and new loss, sequential training, full-split correction, candidate search, rankers v1–v2, gating, escalation and routing, rankers with larger-model candidates, baselines, robustness, transfer, base-model and other-family studies, latency | Arihanth Jayavijayan |
 | Ranker v3 (source agreement), its dataset-input ablation, sampled reasoning, accuracy against cost | Mehdi Heydari |
+| Base-model scaling study: the full pipeline with Qwen3-VL-8B as the frozen base model (candidates, ranker, gating) | Malhar Jadhav |
