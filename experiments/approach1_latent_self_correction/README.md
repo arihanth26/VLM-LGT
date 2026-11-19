@@ -70,8 +70,7 @@ is in [`docs/pipeline.md`](../../docs/pipeline.md); the reports built from these
 | `build_search_report.py`, `build_ranker_report.py`, `build_report_12.py`, `build_report_13.py` | Reports 10–13 |
 | `publish_results.py` | Copies working results into `results/approach1/04_sweep_data/` |
 
-Reports 07, 08, 12 and 13 read the published copies in `results/approach1/04_sweep_data/`; reports 07, 12 and 13 were
-checked to rebuild from a fresh clone (report 08's builder also needs `openpyxl` for its workbook).
+Reports 07, 08 and 10–13 read the published copies in `results/approach1/04_sweep_data/`; reports 07 and 10–13 were
+checked to rebuild byte for byte from a fresh clone (report 08's builder also needs `openpyxl` for its workbook).
 Reports 02 and 05 also read seven files kept in `results/` for that reason (`analysis_*.json`, the original ChartQA report
-and its validation runs). Reports 10 and 11 read working outputs that are not committed; their published data is in
-`04_sweep_data/` (`candidate_search.json`, `candidate_ranker.json`, `ranker_analysis.json`).
+and its validation runs).

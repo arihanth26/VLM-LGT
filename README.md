@@ -120,8 +120,7 @@ python -m experiments.approach1_latent_self_correction.build_report_13   # rebui
 ```
 
 Every pipeline is described in [slurm/README.md](slurm/README.md); the detection-stage commands are in
-[docs/approach1_detailed_notes.md](docs/approach1_detailed_notes.md). Reports 07, 12 and 13 rebuild from the
-committed data alone (checked); regenerating candidates needs GPUs and the Qwen3-VL checkpoints.
+[docs/approach1_detailed_notes.md](docs/approach1_detailed_notes.md). Reports 07 and 10–13 rebuild byte for byte from a fresh clone (checked); regenerating candidates needs GPUs and the Qwen3-VL checkpoints.
 
 ## Branches
 
