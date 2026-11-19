@@ -160,6 +160,9 @@ def build() -> str:
     route_best = next(h for h in e8["headlines"] if h["name"] == "best detector, rule and budget")
     route30 = next(h for h in e8["headlines"] if "30% budget" in h["name"])
     route4_30 = next(h for h in e4["headlines"] if "30% budget" in h["name"])
+    tie = route4_30.get("vs_fix_everything")  # paired with 4B on every question; absent in routing results written before it was added
+    route4_tie = (f": on the same questions the routing is {pts(tie['difference'])} ({pts(tie['ci_low'])} to {pts(tie['ci_high'])}) points "
+                  f"above it, p = {tie['p_value']:.2f}") if tie else ""
     all8, all4 = base["test"]["model_8b"], base["test"]["model_4b"]
     comp = lat["components"]
     paired = analysis["paired"]
@@ -465,9 +468,7 @@ chosen on validation. Cost in 2B passes: a 4B answer counts 2, an 8B answer 4, a
 <p>The trained head is the better judge of whether the 2B answer is right; for finding the questions the 8B model fixes, the answer probability is as good.
 Enlarging the image helps little (about a point at best): the processor already reads images at their native size. Routing 30% of questions to 4B
 ({pct(route4_30['test']['pooled']['accuracy'])} at {route4_30['cost']:.2f} passes) and running 4B on every question
-({pct(e4['fix_everything']['pooled']['accuracy'])} at 2.00) are equal within noise: on the same questions the routing is
-{pts(route4_30['vs_fix_everything']['difference'])} ({pts(route4_30['vs_fix_everything']['ci_low'])} to {pts(route4_30['vs_fix_everything']['ci_high'])}) points
-above it, p = {route4_30['vs_fix_everything']['p_value']:.2f}, at about {100 * route4_30['cost'] / 2:.0f}% of its cost.</p>
+({pct(e4['fix_everything']['pooled']['accuracy'])} at 2.00) are equal within noise{route4_tie}, at about {100 * route4_30['cost'] / 2:.0f}% of its cost.</p>
 <p><b>Helpers from other model families.</b> InternVL3-8B (InternViT vision encoder, Qwen2.5 language model) on every question reaches
 {pct(intern_all['accuracy'])}, and routing to it {pct(intern_best['test']['pooled']['accuracy'])}: the detector and routing do not depend on the helper being a Qwen3-VL model.
 Idefics3-8B (SigLIP, Llama 3.1) reaches only {pct(idef_all['accuracy'])} on its own; routing to it with the <i>confident</i> rule still gains a little

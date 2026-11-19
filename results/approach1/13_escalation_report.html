@@ -116,7 +116,8 @@ chosen on validation. Cost in 2B passes: a 4B answer counts 2, an 8B answer 4, a
 <div class="tablewrap"><table><thead><tr><th class="l">Detector</th><th class="">2B answer right</th><th class="">8B fix helps</th></tr></thead><tbody><tr><td class="l">pre-generation head</td><td class="">0.857</td><td class="">0.813</td></tr><tr><td class="l">pre-generation probe</td><td class="">0.856</td><td class="">0.816</td></tr><tr><td class="l">head on the greedy answer</td><td class="">0.881</td><td class="">0.831</td></tr><tr><td class="l">probe on the greedy answer</td><td class="">0.877</td><td class="">0.831</td></tr><tr><td class="l">answer probability</td><td class="">0.847</td><td class="">0.829</td></tr></tbody></table></div>
 <p>The trained head is the better judge of whether the 2B answer is right; for finding the questions the 8B model fixes, the answer probability is as good.
 Enlarging the image helps little (about a point at best): the processor already reads images at their native size. Routing 30% of questions to 4B
-(86.03%) and running 4B on every question (85.85%) are equal within noise.</p>
+(86.03% at 1.59 passes) and running 4B on every question
+(85.85% at 2.00) are equal within noise, at about 80% of its cost.</p>
 <p><b>Helpers from other model families.</b> InternVL3-8B (InternViT vision encoder, Qwen2.5 language model) on every question reaches
 88.03%, and routing to it 88.43%: the detector and routing do not depend on the helper being a Qwen3-VL model.
 Idefics3-8B (SigLIP, Llama 3.1) reaches only 68.89% on its own; routing to it with the <i>confident</i> rule still gains a little
